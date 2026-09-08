@@ -23,3 +23,7 @@ Os dados ficam salvos **no próprio aparelho** (no navegador, via localStorage).
 
 O arquivo `index.html` é o sistema inteiro. O workflow em `.github/workflows/pages.yml` publica automaticamente no GitHub Pages a cada alteração no branch `main`.
 Para atualizar o sistema, basta substituir o `index.html` e enviar para o `main`.
+
+## Pasta `npp_modis/`
+
+Script Python independente do app: produtividade MODIS (MOD17 v6.1) por bioma na Bahia via Google Earth Engine. Veja `npp_modis/README.md`.
