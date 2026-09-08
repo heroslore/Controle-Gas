@@ -365,7 +365,8 @@
       <div class="status" id="statusVoz"></div>
 
       <button class="btn btn-azul" id="btnImprimir" style="margin-bottom:8px; padding:13px; font-size:1rem;">🖨️ Imprimir lista de entregas (pra equipe)</button>
-      <button class="btn btn-verde" id="btnWhats" style="margin-bottom:12px; padding:13px; font-size:1rem;">📱 Enviar lista pelo WhatsApp (PDF)</button>
+      <button class="btn btn-verde" id="btnWhats" style="margin-bottom:8px; padding:13px; font-size:1rem;">📱 Enviar lista pelo WhatsApp (PDF)</button>
+      <button class="btn btn-verde" id="btnRelVendas" style="margin-bottom:12px; padding:13px; font-size:1rem; background:var(--azul);">📋 Relatório de quem comprou (PDF pelo WhatsApp)</button>
 
       <div class="filtro-prod" id="filtroProd">
         <button data-f="todos" class="sel">Todos</button>
@@ -514,9 +515,11 @@
       <div class="painel" id="painelAgua"></div>
       <div class="titulo-secao"><span>📊 Geral da semana</span></div>
       <div class="painel" id="painelGeral"></div>
-      <button class="btn btn-azul" id="btnExportar" style="padding:14px; font-size:1rem;">📊 Exportar semana (CSV)</button>
+      <button class="btn btn-verde" id="btnResumoImg" style="padding:14px; font-size:1rem;">📱 Enviar resumo pelo WhatsApp (imagem)</button>
+      <button class="btn btn-verde" id="btnResumoPdf" style="margin-top:8px; padding:14px; font-size:1rem; background:var(--azul);">📄 Enviar resumo em PDF</button>
+      <button class="btn btn-cinza" id="btnExportar" style="margin-top:8px; padding:13px; font-size:0.98rem;">📊 Exportar semana (CSV)</button>
 
-      <div class="titulo-secao" style="margin-top:24px;"><span>📆 Análise do mês</span></div>
+      <div class="titulo-secao" id="tituloMes" style="margin-top:24px;"><span>📆 Análise do mês</span></div>
       <div class="lista-clientes" id="selMes" style="max-height:60px;"></div>
       <div class="painel" id="painelMes"></div>
     </div>
@@ -2617,6 +2620,180 @@
       else alert("Não consegui gerar o PDF agora (precisa de internet na primeira vez). Alternativa: use o botão Imprimir e escolha \"Salvar como PDF\".");
     }
     btn.disabled = false; btn.textContent = "📱 Enviar lista pelo WhatsApp (PDF)";
+  });
+
+  // ================= RELATÓRIOS PELO WHATSAPP =================
+  function carregarScript(url, pronto){
+    return new Promise(function(res, rej){
+      if (pronto()){ res(); return; }
+      var sc = document.createElement("script");
+      sc.src = url;
+      sc.onload = function(){ res(); };
+      sc.onerror = function(){ rej(new Error("sem internet")); };
+      document.head.appendChild(sc);
+    });
+  }
+  function carregarHtml2Canvas(){
+    return carregarScript("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js", function(){ return typeof window.html2canvas==="function"; });
+  }
+  async function compartilharArquivo(blob, nomeArq, tipo, titulo){
+    var file = new File([blob], nomeArq, { type:tipo });
+    if (navigator.share && navigator.canShare && navigator.canShare({ files:[file] })){
+      await navigator.share({ files:[file], title:titulo });
+      return "compartilhado";
+    }
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = nomeArq;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 10000);
+    alert("Arquivo baixado: \""+nomeArq+"\". Abra o WhatsApp, toque no clipe 📎 e anexe (pasta Downloads).");
+    return "baixado";
+  }
+  function situacaoVenda(v){
+    var t = v.pago ? "PAGO"+(v.forma?" "+v.forma:"") : (v.status==="prazo" ? "FIADO/PRAZO" : "A RECEBER");
+    if (!v.entregue) t += " · nao entregue";
+    return t;
+  }
+  async function gerarRelatorioVendas(sem){
+    await carregarJsPDF();
+    var jsPDF = window.jspdf.jsPDF;
+    var doc = new jsPDF({ unit:"mm", format:"a4" });
+    var y = 14, LARG = 200, ALT_MAX = 285;
+    function quebra(alt){ if (y + alt > ALT_MAX){ doc.addPage(); y = 14; } }
+    function R(v){ return fmt(v).replace("R$ ","R$ "); }
+    doc.setFont("helvetica","bold"); doc.setFontSize(14);
+    doc.text("RELATORIO DE VENDAS — QUEM COMPROU", 10, y); y += 6;
+    doc.setFont("helvetica","normal"); doc.setFontSize(10);
+    doc.text("Semana "+fmtDataFull(sem.inicio)+" a "+fmtDataFull(sem.fim)+" — gerado em "+fmtDataFull(hojeISO()), 10, y); y += 4;
+    var vendas = sem.vendas||[];
+    var rotas = {};
+    vendas.forEach(function(v){ var r = v.rota||"Sem rota"; (rotas[r]=rotas[r]||[]).push(v); });
+    var C = { cliente:10, qtd:82, preco:96, total:118, sit:145 };
+    var geral = { gas:{qtd:0,val:0,rec:0}, agua:{qtd:0,val:0,rec:0} };
+    Object.keys(rotas).sort(function(a,b){ return a.localeCompare(b,"pt-BR"); }).forEach(function(r){
+      quebra(14); y += 5;
+      doc.setDrawColor(60); doc.setLineWidth(0.5); doc.line(10, y, LARG, y); y += 6;
+      doc.setFont("helvetica","bold"); doc.setFontSize(12);
+      doc.text("ROTA: "+r, 10, y); y += 3;
+      ["gas","agua"].forEach(function(p){
+        var lista = rotas[r].filter(function(v){ return v.produto===p; })
+          .sort(function(a,b){ return (a.cliente||"").localeCompare(b.cliente||"","pt-BR"); });
+        if (lista.length===0) return;
+        var nomeProd = p==="gas" ? "GAS (botijao)" : "AGUA (galao)";
+        var tQtd=0, tVal=0, tRec=0;
+        lista.forEach(function(v){ tQtd+=v.qtd; tVal+=v.qtd*v.preco; if (v.pago) tRec+=v.qtd*v.preco; });
+        geral[p].qtd+=tQtd; geral[p].val+=tVal; geral[p].rec+=tRec;
+        quebra(16); y += 6;
+        doc.setFont("helvetica","bold"); doc.setFontSize(11);
+        doc.text(nomeProd+" — "+tQtd+" vendidos, "+R(tVal)+" (recebido "+R(tRec)+", a receber "+R(tVal-tRec)+")", 10, y); y += 5;
+        doc.setFontSize(8.5);
+        doc.text("Cliente", C.cliente, y); doc.text("Qtd", C.qtd, y); doc.text("Preco", C.preco, y); doc.text("Total", C.total, y); doc.text("Situacao", C.sit, y);
+        y += 1.5; doc.setLineWidth(0.2); doc.setDrawColor(120); doc.line(10, y, LARG, y);
+        doc.setFont("helvetica","normal"); doc.setFontSize(9.5);
+        lista.forEach(function(v){
+          quebra(8); y += 6;
+          var nome = (v.cliente||"-") + (v.povo ? " [POVO]" : "");
+          if (nome.length>36) nome = nome.slice(0,35)+"…";
+          doc.text(nome, C.cliente, y);
+          doc.text(String(v.qtd), C.qtd, y);
+          doc.text(R(v.preco), C.preco, y);
+          doc.text(R(v.qtd*v.preco), C.total, y);
+          if (!v.pago) doc.setFont("helvetica","bold");
+          doc.text(situacaoVenda(v), C.sit, y);
+          doc.setFont("helvetica","normal");
+          doc.setDrawColor(200); doc.line(10, y+1.8, LARG, y+1.8); doc.setDrawColor(120);
+        });
+      });
+    });
+    quebra(30); y += 10;
+    doc.setDrawColor(60); doc.setLineWidth(0.5); doc.line(10, y, LARG, y); y += 7;
+    doc.setFont("helvetica","bold"); doc.setFontSize(12);
+    doc.text("TOTAL DA SEMANA", 10, y); y += 6;
+    doc.setFontSize(10.5);
+    doc.text("Gas: "+geral.gas.qtd+" botijoes — "+R(geral.gas.val)+" (recebido "+R(geral.gas.rec)+", a receber "+R(geral.gas.val-geral.gas.rec)+")", 10, y); y += 6;
+    doc.text("Agua: "+geral.agua.qtd+" galoes — "+R(geral.agua.val)+" (recebido "+R(geral.agua.rec)+", a receber "+R(geral.agua.val-geral.agua.rec)+")", 10, y); y += 6;
+    var tv = geral.gas.val+geral.agua.val, tr = geral.gas.rec+geral.agua.rec;
+    doc.text("Geral: "+R(tv)+" vendidos — recebido "+R(tr)+" — a receber "+R(tv-tr), 10, y);
+    return doc.output("blob");
+  }
+  document.getElementById("btnRelVendas").addEventListener("click", async function(){
+    var sem = s(); if(!sem) return;
+    if (!(sem.vendas||[]).length){ alert("Nenhuma venda lançada nesta semana."); return; }
+    var btn = this, txt = btn.textContent;
+    btn.disabled = true; btn.textContent = "Gerando PDF...";
+    try {
+      var blob = await gerarRelatorioVendas(sem);
+      await compartilharArquivo(blob, "vendas-"+sem.inicio+".pdf", "application/pdf", "Relatório de vendas");
+    } catch(e){
+      if (String(e && e.name)!=="AbortError") alert("Não consegui gerar o PDF agora (precisa de internet na primeira vez).");
+    }
+    btn.disabled = false; btn.textContent = txt;
+  });
+
+  // Resumo do jeito que está na tela (imagem) e em PDF
+  async function capturarResumo(){
+    await carregarHtml2Canvas();
+    var sem = semanaVisao();
+    var ignorar = { selSemanaResumo:1, btnExportar:1, btnResumoImg:1, btnResumoPdf:1, tituloMes:1, selMes:1, painelMes:1 };
+    var alvo = document.getElementById("resumoConteudo");
+    return await window.html2canvas(alvo, {
+      scale: 2, backgroundColor: "#f7f3ec", useCORS: true, logging: false,
+      ignoreElements: function(el){ return !!(el.id && ignorar[el.id]); },
+      onclone: function(docClone){
+        var c = docClone.getElementById("resumoConteudo");
+        if (!c) return;
+        c.style.padding = "12px";
+        var h = docClone.createElement("div");
+        h.style.cssText = "background:#16324a; color:#fff; border-radius:14px; padding:12px 14px; margin-bottom:12px; font-weight:700;";
+        h.innerHTML = "🔥💧 Resumo da semana "+(sem ? fmtDataFull(sem.inicio)+" a "+fmtDataFull(sem.fim) : "")+
+          '<div style="font-weight:400; font-size:0.85rem; opacity:0.85; margin-top:2px;">gerado em '+fmtDataFull(hojeISO())+"</div>";
+        c.insertBefore(h, c.firstChild);
+      }
+    });
+  }
+  function canvasParaBlob(canvas){
+    return new Promise(function(res){ canvas.toBlob(function(b){ res(b); }, "image/png"); });
+  }
+  document.getElementById("btnResumoImg").addEventListener("click", async function(){
+    var sem = semanaVisao(); if(!sem) return;
+    var btn = this, txt = btn.textContent;
+    btn.disabled = true; btn.textContent = "Gerando imagem...";
+    try {
+      var canvas = await capturarResumo();
+      var blob = await canvasParaBlob(canvas);
+      await compartilharArquivo(blob, "resumo-"+sem.inicio+".png", "image/png", "Resumo da semana");
+    } catch(e){
+      if (String(e && e.name)!=="AbortError") alert("Não consegui gerar a imagem agora (precisa de internet na primeira vez).");
+    }
+    btn.disabled = false; btn.textContent = txt;
+  });
+  document.getElementById("btnResumoPdf").addEventListener("click", async function(){
+    var sem = semanaVisao(); if(!sem) return;
+    var btn = this, txt = btn.textContent;
+    btn.disabled = true; btn.textContent = "Gerando PDF...";
+    try {
+      await carregarJsPDF();
+      var canvas = await capturarResumo();
+      var jsPDF = window.jspdf.jsPDF;
+      var doc = new jsPDF({ unit:"mm", format:"a4" });
+      var margem = 8, largPag = 210 - margem*2, altPag = 297 - margem*2;
+      var altImg = canvas.height * largPag / canvas.width;
+      var img = canvas.toDataURL("image/jpeg", 0.85);
+      var resta = altImg, pos = 0;
+      doc.addImage(img, "JPEG", margem, margem, largPag, altImg);
+      resta -= altPag;
+      while (resta > 0){
+        pos -= altPag;
+        doc.addPage();
+        doc.addImage(img, "JPEG", margem, margem + pos, largPag, altImg);
+        resta -= altPag;
+      }
+      await compartilharArquivo(doc.output("blob"), "resumo-"+sem.inicio+".pdf", "application/pdf", "Resumo da semana");
+    } catch(e){
+      if (String(e && e.name)!=="AbortError") alert("Não consegui gerar o PDF agora (precisa de internet na primeira vez).");
+    }
+    btn.disabled = false; btn.textContent = txt;
   });
 
   // ================= IMPRESSÃO (lista de entregas) =================
