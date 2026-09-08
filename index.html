@@ -351,24 +351,6 @@
       <button class="btn" id="btnApagarSemana" style="margin-top:8px; background:none; border:2px solid var(--vermelho); color:var(--vermelho); padding:12px; font-size:0.95rem;">🗑️ Apagar esta semana (tudo dela)</button>
     </div>
 
-    <!-- Backup -->
-    <div class="cartao" id="cartaoBackup">
-      <h2>💾 Backup dos dados</h2>
-      <p style="font-size:0.9rem; color:var(--cinza); margin-bottom:10px; line-height:1.45;">Tudo fica salvo neste aparelho. Mande o backup pelo WhatsApp de vez em quando, principalmente ao fechar a semana. Quem receber o arquivo abre o mesmo sistema, toca em <b>Restaurar</b> e consulta todas as semanas.</p>
-      <div id="backupInfo"></div>
-      <button class="btn btn-verde" id="btnBackupEnviar">📤 Enviar backup pelo WhatsApp</button>
-      <div class="linha2" style="margin-top:8px">
-        <button class="btn btn-cinza" id="btnBackupBaixar" style="padding:13px; font-size:0.98rem;">⬇️ Baixar arquivo</button>
-        <button class="btn btn-cinza" id="btnBackupCopiar" style="padding:13px; font-size:0.98rem;">📋 Copiar texto</button>
-      </div>
-      <button class="btn btn-azul" id="btnBackupRestaurar" style="margin-top:8px; padding:13px; font-size:0.98rem;">📥 Restaurar backup (arquivo)</button>
-      <button class="btn" id="btnBackupColarMostrar" style="margin-top:8px; background:none; border:2px dashed #d5d0c6; color:var(--cinza); padding:10px; font-size:0.9rem;">Ou colar o texto do backup</button>
-      <div id="areaColar" style="display:none; margin-top:8px;">
-        <textarea id="txtColar" style="width:100%; min-height:110px; padding:10px; border:1.5px solid #d5d0c6; border-radius:10px; font-size:0.85rem; font-family:monospace;" placeholder="Cole aqui o texto do backup"></textarea>
-        <button class="btn btn-azul" id="btnBackupColar" style="margin-top:8px; padding:13px; font-size:0.98rem;">📥 Restaurar do texto colado</button>
-      </div>
-      <input type="file" id="backupArquivo" accept=".txt,.json,text/plain,application/json" style="display:none">
-    </div>
     <button class="btn" id="btnZerarTudo" style="display:none; margin-top:6px; background:none; border:2px dashed var(--vermelho); color:var(--vermelho); padding:12px; font-size:0.92rem;">🧹 Zerar TUDO e recomeçar (apaga todas as semanas)</button>
   </div>
 
@@ -512,6 +494,8 @@
     <div id="rotasSemSemana" class="vazio" style="display:none">Nenhuma semana registrada ainda.</div>
     <div id="rotasConteudo" style="display:none">
       <div class="lista-clientes" id="selSemanaRotas" style="max-height:80px;"></div>
+      <div class="titulo-secao"><span>💰 Totais da semana</span></div>
+      <div class="painel" id="painelRotasTotais"></div>
       <div class="titulo-secao"><span>📍 Rota de cada dia</span></div>
       <div id="listaDias"><div class="vazio">Sem movimento ainda.</div></div>
     </div>
@@ -534,6 +518,24 @@
       <div class="titulo-secao" style="margin-top:24px;"><span>📆 Análise do mês</span></div>
       <div class="lista-clientes" id="selMes" style="max-height:60px;"></div>
       <div class="painel" id="painelMes"></div>
+    </div>
+    <!-- Backup -->
+    <div class="cartao" id="cartaoBackup">
+      <h2>💾 Backup dos dados</h2>
+      <p style="font-size:0.9rem; color:var(--cinza); margin-bottom:10px; line-height:1.45;">Tudo fica salvo neste aparelho. Mande o backup pelo WhatsApp de vez em quando, principalmente ao fechar a semana. Quem receber o arquivo abre o mesmo sistema, toca em <b>Restaurar</b> e consulta todas as semanas.</p>
+      <div id="backupInfo"></div>
+      <button class="btn btn-verde" id="btnBackupEnviar">📤 Enviar backup pelo WhatsApp</button>
+      <div class="linha2" style="margin-top:8px">
+        <button class="btn btn-cinza" id="btnBackupBaixar" style="padding:13px; font-size:0.98rem;">⬇️ Baixar arquivo</button>
+        <button class="btn btn-cinza" id="btnBackupCopiar" style="padding:13px; font-size:0.98rem;">📋 Copiar texto</button>
+      </div>
+      <button class="btn btn-azul" id="btnBackupRestaurar" style="margin-top:8px; padding:13px; font-size:0.98rem;">📥 Restaurar backup (arquivo)</button>
+      <button class="btn" id="btnBackupColarMostrar" style="margin-top:8px; background:none; border:2px dashed #d5d0c6; color:var(--cinza); padding:10px; font-size:0.9rem;">Ou colar o texto do backup</button>
+      <div id="areaColar" style="display:none; margin-top:8px;">
+        <textarea id="txtColar" style="width:100%; min-height:110px; padding:10px; border:1.5px solid #d5d0c6; border-radius:10px; font-size:0.85rem; font-family:monospace;" placeholder="Cole aqui o texto do backup"></textarea>
+        <button class="btn btn-azul" id="btnBackupColar" style="margin-top:8px; padding:13px; font-size:0.98rem;">📥 Restaurar do texto colado</button>
+      </div>
+      <input type="file" id="backupArquivo" accept=".txt,.json,text/plain,application/json" style="display:none">
     </div>
   </div>
 
@@ -1235,8 +1237,24 @@
     });
   }
 
+  function renderTotaisRotas(sem){
+    var compraGas=0, compraAgua=0, puxadas=0;
+    (sem.compras||[]).forEach(function(c){
+      if (c.produto==="gas") compraGas += c.qtd*c.preco; else compraAgua += c.qtd*c.preco;
+      puxadas += (c.gMotorista||0)+(c.gCombustivel||0)+(c.gFrete||0)+(c.gVaso||0)+(c.gOutros||0);
+    });
+    var gastos = (sem.gastos||[]).reduce(function(x,g){return x+Number(g.valor||0);},0);
+    var foraProduto = puxadas + gastos;
+    document.getElementById("painelRotasTotais").innerHTML =
+      box("🔥 Compra de botijão (só o produto)", fmt(compraGas), "", "b-gas") +
+      box("💧 Compra de água (só o produto)", fmt(compraAgua), "", "b-agua") +
+      box("🛻 Puxadas (motorista, combustível, frete, vaso)", fmt(puxadas)) +
+      box("💸 Gastos de rota e outros", fmt(gastos)) +
+      boxDestaque("Total de gastos fora o produto (puxadas + gastos)", fmt(foraProduto));
+  }
   function renderRotas(){
     var sem = semanaVisao(); if(!sem) return;
+    renderTotaisRotas(sem);
     var el = document.getElementById("listaDias");
     var g = calcProduto(sem,"gas"), a = calcProduto(sem,"agua");
     // agrupa por data + rota
