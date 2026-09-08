@@ -2005,11 +2005,15 @@
     if (!sem.saidas) sem.saidas = [];
     if (!document.getElementById("sdData").value) document.getElementById("sdData").value = hojeISO();
     var el = document.getElementById("chipsRotaSaida");
-    // Só as rotas que têm pré-venda pendente (ainda não entregue) nesta semana
-    var pend = {};
-    (sem.vendas||[]).forEach(function(v){ if(!v.entregue){ var r=v.rota||"Sem rota"; pend[r]=(pend[r]||0)+v.qtd; } });
+    // Só as rotas que tiveram pré-venda nesta semana (entregue ou não)
+    var pend = {}, tot = {};
+    (sem.vendas||[]).forEach(function(v){
+      var r=v.rota||"Sem rota";
+      tot[r]=(tot[r]||0)+v.qtd;
+      if(!v.entregue) pend[r]=(pend[r]||0)+v.qtd;
+    });
     var todas = rotasDe(null);
-    var lista = Object.keys(pend).sort(function(a,b){
+    var lista = Object.keys(tot).sort(function(a,b){
       var ia=todas.indexOf(a), ib=todas.indexOf(b);
       if (ia<0) ia=99; if (ib<0) ib=99;
       return ia-ib || a.localeCompare(b,"pt-BR");
@@ -2017,13 +2021,13 @@
     if (rotaSaidaSel && lista.indexOf(rotaSaidaSel)<0) rotaSaidaSel = null;
     el.innerHTML = "";
     if (lista.length===0){
-      el.innerHTML = '<div style="font-size:0.92rem; color:var(--cinza); padding:6px 2px;">Nenhuma rota com pré-venda pendente. Lance as pré-vendas na aba Vendas primeiro — a rota aparece aqui na hora.</div>';
+      el.innerHTML = '<div style="font-size:0.92rem; color:var(--cinza); padding:6px 2px;">Nenhuma rota com pré-venda nesta semana. Lance as pré-vendas na aba Vendas primeiro — a rota aparece aqui na hora.</div>';
     }
     lista.forEach(function(r){
       var chip = document.createElement("button");
       chip.type="button";
       chip.className = "chip"+(r===rotaSaidaSel?" escolhido":"");
-      chip.innerHTML = '<span class="nome-chip">📍 '+esc(r)+'</span><span class="preco-chip">'+pend[r]+' pend.</span>';
+      chip.innerHTML = '<span class="nome-chip">📍 '+esc(r)+'</span><span class="preco-chip">'+(pend[r] ? pend[r]+' pend.' : tot[r]+' entregue'+(tot[r]>1?'s':''))+'</span>';
       chip.addEventListener("click", function(){ rotaSaidaSel=r; renderSaida(); });
       el.appendChild(chip);
     });
@@ -2061,7 +2065,7 @@
   document.getElementById("btnRegistrarSaida").addEventListener("click", async function(){
     var sem = s(); if(!sem) return;
     if (!sem.saidas) sem.saidas = [];
-    if (!rotaSaidaSel){ alert("Escolha a rota da saída. Só aparecem rotas com pré-venda pendente na semana."); return; }
+    if (!rotaSaidaSel){ alert("Escolha a rota da saída. Só aparecem rotas que tiveram pré-venda na semana."); return; }
     var g = Number(document.getElementById("sdGas").value)||0;
     var a = Number(document.getElementById("sdAgua").value)||0;
     if (g<=0 && a<=0){ alert("Informe quantos botijões e/ou galões saíram."); return; }
