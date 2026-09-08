@@ -20,7 +20,7 @@ jobs:
       - name: Monta a pasta do site
         run: |
           mkdir -p site
-          cp index.html site/
+          cp index.html manifest.json icon-192.png icon-512.png site/
           touch site/.nojekyll
       - name: Envia para o branch gh-pages
         uses: peaceiris/actions-gh-pages@v4
