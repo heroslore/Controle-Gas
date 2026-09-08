@@ -737,7 +737,10 @@
 (function(){
   var CHAVE = "gas-agua-semanal-v4";
   var dados = { semanaAtiva:null, historico:[], clientes:{ gas:{}, agua:{} } };
-  var CLIENTES_GAS_INICIAIS = ["Netinha","Chico","Gil","Pio","João Trevo","Moises","Dadau","Valdomiro","Luciano","Ubiraci","Dhão","Miguel","Jajal","Jó Caobi","Liziane","Antonio M","Catia 02","Benedito","Eliseu","Gaso M","M. Litoral","Lurdes","Vado","Zinga","Jorge","Junio","Nilson","Dona Nana","Nailson","Leticia","Mario","Mercado JM","Zé Flúor","Beca","Enoque","Sebastião","Nega","Petisco","Da Hora","Dely","Afasto"];
+  // Clientes fixos do depósito (para mudar, edite aqui e suba o número da versão logo abaixo)
+  var CLIENTES_GAS_INICIAIS = ["Netinha","Chico","Gil","Pio","João Trevo","Moises","Dadau","Valdomiro","Luciano","Ubiraci","Dhão","Miguel","Jajal","Jó Caobi","Liziane","Antonio M","Catia 02","Benedito","Eliseu","Gaso M","M. Litoral","Lurdes","Vado","Zinga","Jorge","Junio","Nilson","Dona Nana","Nailson","Leticia","Mario","Mercado JM","Zé Flúor","Beca","Enoque","Sebastião","Nega","Petisco","Da Hora","Dely","Afasto","M.C Assunsão","Meda","Zenita","Preto","Ivete"];
+  var CLIENTES_AGUA_INICIAIS = ["Romênio","Daniel","Léo Gás","Fernando","Danilo","Miguel","Dadau","Valdomiro","Luciano","Tituca","M.C Assunsão","Moises","Onofre","Lusuane","Dona Rita","Catia 02","Eliseu","Benedito","Lurdes","Zé Flúor","Alex","Gaso M","Maicon","Tete de Thiago","Savio Gongogi","Dalquinho","Faisqueira","Meridian","Jó Caobi","Val","Preto","Marines","Nailson"];
+  var CLIENTES_VERSAO = 2; // suba para 3, 4... quando mudar as listas acima
   function garantirClientes(){
     if (!dados.clientes) dados.clientes = { gas:{}, agua:{} };
     if (!dados.clientes.gas) dados.clientes.gas = {};
@@ -751,12 +754,17 @@
         dados.clientes[v.produto][v.cliente] = { preco:v.preco };
       }
     });
-    // carrega a lista da folha de entregas (uma vez só; respeita quem você tirar depois)
-    if (!dados.clientesGasSemeados){
+    // carrega as listas fixas (uma vez por versão; respeita quem você tirar depois)
+    if ((dados.clientesVersao||0) < CLIENTES_VERSAO){
       CLIENTES_GAS_INICIAIS.forEach(function(nome){
         if (!dados.clientes.gas[nome]) dados.clientes.gas[nome] = { preco:null };
       });
+      CLIENTES_AGUA_INICIAIS.forEach(function(nome){
+        if (!dados.clientes.agua[nome]) dados.clientes.agua[nome] = { preco:null };
+      });
       dados.clientesGasSemeados = true;
+      dados.clientesVersao = CLIENTES_VERSAO;
+      persistir();
     }
   }
   var PROD = {
