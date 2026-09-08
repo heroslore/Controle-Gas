@@ -79,6 +79,8 @@
   .linha2 { display:flex; gap:10px; }
   .linha2 .campo { flex:1; min-width:0; }
   .campo input, .campo select { min-width:0; }
+  .lista-clientes .chip.lancada, .chip.lancada { border-color:var(--verde) !important; background:var(--verde-claro) !important; }
+  .lista-clientes .chip.lancada .preco-chip, .chip.lancada .preco-chip { color:var(--verde) !important; font-weight:700; }
   .aviso-backup { background:var(--amarelo-claro); color:var(--amarelo); border-radius:10px; padding:10px 12px; font-size:0.92rem; font-weight:700; margin-bottom:10px; }
   .ok-backup { background:var(--verde-claro); color:var(--verde); border-radius:10px; padding:10px 12px; font-size:0.92rem; margin-bottom:10px; }
 
@@ -2012,13 +2014,18 @@
       tot[r]=(tot[r]||0)+v.qtd;
       if(!v.entregue) pend[r]=(pend[r]||0)+v.qtd;
     });
+    // rota já lançada = tem saída registrada depois da última venda dela
+    var ultVenda = {}, ultSaida = {};
+    (sem.vendas||[]).forEach(function(v){ var r=v.rota||"Sem rota"; ultVenda[r]=Math.max(ultVenda[r]||0, Number(v.id)||0); });
+    (sem.saidas||[]).forEach(function(x){ var r=x.rota||"Sem rota"; ultSaida[r]=Math.max(ultSaida[r]||0, Number(x.id)||0); });
+    function lancada(r){ return !!ultSaida[r] && ultSaida[r] >= (ultVenda[r]||0); }
     var todas = rotasDe(null);
     var lista = Object.keys(tot).sort(function(a,b){
       var ia=todas.indexOf(a), ib=todas.indexOf(b);
       if (ia<0) ia=99; if (ib<0) ib=99;
       return ia-ib || a.localeCompare(b,"pt-BR");
     });
-    if (rotaSaidaSel && lista.indexOf(rotaSaidaSel)<0) rotaSaidaSel = null;
+    if (rotaSaidaSel && (lista.indexOf(rotaSaidaSel)<0 || lancada(rotaSaidaSel))) rotaSaidaSel = null;
     el.innerHTML = "";
     if (lista.length===0){
       el.innerHTML = '<div style="font-size:0.92rem; color:var(--cinza); padding:6px 2px;">Nenhuma rota com pré-venda nesta semana. Lance as pré-vendas na aba Vendas primeiro — a rota aparece aqui na hora.</div>';
@@ -2026,9 +2033,14 @@
     lista.forEach(function(r){
       var chip = document.createElement("button");
       chip.type="button";
-      chip.className = "chip"+(r===rotaSaidaSel?" escolhido":"");
-      chip.innerHTML = '<span class="nome-chip">📍 '+esc(r)+'</span><span class="preco-chip">'+(pend[r] ? pend[r]+' pend.' : tot[r]+' entregue'+(tot[r]>1?'s':''))+'</span>';
-      chip.addEventListener("click", function(){ rotaSaidaSel=r; renderSaida(); });
+      var jaLancada = lancada(r);
+      chip.className = "chip"+(r===rotaSaidaSel?" escolhido":"")+(jaLancada?" lancada":"");
+      chip.innerHTML = '<span class="nome-chip">📍 '+esc(r)+'</span><span class="preco-chip">'+
+        (jaLancada ? '✓ saída lançada' : (pend[r] ? pend[r]+' pend.' : tot[r]+' entregue'+(tot[r]>1?'s':'')))+'</span>';
+      chip.addEventListener("click", function(){
+        if (jaLancada){ alert("A saída de "+r+" já foi lançada nesta semana (veja em Saídas registradas). Para lançar outra, faça primeiro uma nova venda nessa rota."); return; }
+        rotaSaidaSel=r; renderSaida();
+      });
       el.appendChild(chip);
     });
     // lista de saídas registradas
