@@ -77,7 +77,10 @@
     background:var(--areia); color:var(--azul);
   }
   .linha2 { display:flex; gap:10px; }
-  .linha2 .campo { flex:1; }
+  .linha2 .campo { flex:1; min-width:0; }
+  .campo input, .campo select { min-width:0; }
+  .aviso-backup { background:var(--amarelo-claro); color:var(--amarelo); border-radius:10px; padding:10px 12px; font-size:0.92rem; font-weight:700; margin-bottom:10px; }
+  .ok-backup { background:var(--verde-claro); color:var(--verde); border-radius:10px; padding:10px 12px; font-size:0.92rem; margin-bottom:10px; }
 
   /* escolha de produto dentro de formulários */
   .escolha-prod { display:flex; gap:8px; margin-bottom:12px; }
@@ -278,7 +281,6 @@
       </div>
       <div class="titulo-secao"><span>Semanas fechadas</span></div>
       <div id="historico"><div class="vazio">Nenhuma semana fechada ainda.</div></div>
-      <button class="btn" id="btnZerarTudo" style="margin-top:20px; background:none; border:2px dashed var(--vermelho); color:var(--vermelho); padding:12px; font-size:0.92rem;">🧹 Zerar TUDO e recomeçar (apaga todas as semanas)</button>
     </div>
 
     <!-- Semana ativa -->
@@ -341,6 +343,26 @@
       <button class="btn btn-vermelho" id="btnFecharSemana" style="margin-top:14px">🔒 FECHAR SEMANA</button>
       <button class="btn" id="btnApagarSemana" style="margin-top:8px; background:none; border:2px solid var(--vermelho); color:var(--vermelho); padding:12px; font-size:0.95rem;">🗑️ Apagar esta semana (tudo dela)</button>
     </div>
+
+    <!-- Backup -->
+    <div class="cartao" id="cartaoBackup">
+      <h2>💾 Backup dos dados</h2>
+      <p style="font-size:0.9rem; color:var(--cinza); margin-bottom:10px; line-height:1.45;">Tudo fica salvo neste aparelho. Mande o backup pelo WhatsApp de vez em quando, principalmente ao fechar a semana. Quem receber o arquivo abre o mesmo sistema, toca em <b>Restaurar</b> e consulta todas as semanas.</p>
+      <div id="backupInfo"></div>
+      <button class="btn btn-verde" id="btnBackupEnviar">📤 Enviar backup pelo WhatsApp</button>
+      <div class="linha2" style="margin-top:8px">
+        <button class="btn btn-cinza" id="btnBackupBaixar" style="padding:13px; font-size:0.98rem;">⬇️ Baixar arquivo</button>
+        <button class="btn btn-cinza" id="btnBackupCopiar" style="padding:13px; font-size:0.98rem;">📋 Copiar texto</button>
+      </div>
+      <button class="btn btn-azul" id="btnBackupRestaurar" style="margin-top:8px; padding:13px; font-size:0.98rem;">📥 Restaurar backup (arquivo)</button>
+      <button class="btn" id="btnBackupColarMostrar" style="margin-top:8px; background:none; border:2px dashed #d5d0c6; color:var(--cinza); padding:10px; font-size:0.9rem;">Ou colar o texto do backup</button>
+      <div id="areaColar" style="display:none; margin-top:8px;">
+        <textarea id="txtColar" style="width:100%; min-height:110px; padding:10px; border:1.5px solid #d5d0c6; border-radius:10px; font-size:0.85rem; font-family:monospace;" placeholder="Cole aqui o texto do backup"></textarea>
+        <button class="btn btn-azul" id="btnBackupColar" style="margin-top:8px; padding:13px; font-size:0.98rem;">📥 Restaurar do texto colado</button>
+      </div>
+      <input type="file" id="backupArquivo" accept=".txt,.json,text/plain,application/json" style="display:none">
+    </div>
+    <button class="btn" id="btnZerarTudo" style="display:none; margin-top:6px; background:none; border:2px dashed var(--vermelho); color:var(--vermelho); padding:12px; font-size:0.92rem;">🧹 Zerar TUDO e recomeçar (apaga todas as semanas)</button>
   </div>
 
   <!-- TELA: VENDAS -->
@@ -642,6 +664,8 @@
       <button class="btn btn-cinza" id="btnFCancelar">Voltar</button>
       <button class="btn btn-vermelho" id="btnFConfirmar">🔒 FECHAR</button>
     </div>
+    <button class="btn btn-verde" id="btnFConfirmarBackup" style="margin-top:10px; padding:14px; font-size:1.02rem;">🔒 Fechar e 📤 enviar backup pelo WhatsApp</button>
+    <p style="font-size:0.85rem; color:var(--cinza); margin-top:8px; text-align:center;">Recomendado: assim a semana fica guardada fora do aparelho.</p>
   </div>
 </div>
 
@@ -759,6 +783,7 @@
     renderTudo();
   }
   async function persistir(){
+    if (!persistir.marcandoBackup) dados.ultimaAlteracao = new Date().toISOString();
     var ok = await gravarDados(JSON.stringify(dados));
     if (!ok) alert("Não consegui salvar neste navegador. Não use aba anônima/privada e tente de novo.");
   }
@@ -1008,6 +1033,7 @@
       : "Nenhuma semana aberta";
     document.getElementById("semAberta").style.display = sem ? "none" : "block";
     document.getElementById("semAtiva").style.display = sem ? "block" : "none";
+    document.getElementById("btnZerarTudo").style.display = sem ? "none" : "block";
     ["vendas","saida","gastos"].forEach(function(t){
       document.getElementById(t+"SemSemana").style.display = sem ? "none" : "block";
       document.getElementById(t+"Conteudo").style.display = sem ? "block" : "none";
@@ -1018,6 +1044,7 @@
       document.getElementById(t+"Conteudo").style.display = temVisao ? "block" : "none";
     });
     renderHistorico();
+    renderBackupInfo();
     renderFiado();
     renderSeletorSemana();
     if (temVisao){ renderRotas(); renderResumo(); }
@@ -1420,7 +1447,8 @@
       var d = document.createElement("div");
       d.className="hist-item";
       d.innerHTML='<div class="h-datas" style="display:flex; justify-content:space-between; align-items:center;"><span>📅 '+fmtDataFull(h.inicio)+' a '+fmtDataFull(h.fim)+'</span>'+
-        '<button data-hid="'+h.id+'" style="border:none; background:none; color:var(--cinza); font-size:1.15rem; cursor:pointer; padding:4px 6px;">🗑️</button></div>'+
+        '<span style="white-space:nowrap; flex-shrink:0; margin-left:8px;"><button data-ver="'+h.id+'" style="border:none; background:var(--azul); color:#fff; font-size:0.85rem; font-weight:700; cursor:pointer; padding:7px 12px; border-radius:20px;">👁️ Consultar</button>'+
+        '<button data-hid="'+h.id+'" style="border:none; background:none; color:var(--cinza); font-size:1.15rem; cursor:pointer; padding:4px 6px; margin-left:4px;">🗑️</button></span></div>'+
         '<div class="h-lucro" style="color:'+(c.lucro>=0?'var(--verde)':'var(--vermelho)')+'">Lucro líquido: '+fmt(c.lucro)+'</div>'+
         '<div class="h-det">🔥 '+c.gas.vendidos+' vendidos (bruto '+fmt(c.gas.lucroBruto)+') · 💧 '+c.agua.vendidos+' vendidos (bruto '+fmt(c.agua.lucroBruto)+')<br>'+
         'Receita '+fmt(c.receita)+' · Gastos '+fmt(c.gastos)+
@@ -1429,6 +1457,13 @@
     });
   }
   document.getElementById("historico").addEventListener("click", async function(e){
+    var ver = e.target.closest("button[data-ver]");
+    if (ver){
+      semanaVisaoId = String(ver.dataset.ver);
+      renderSeletorSemana(); renderRotas(); renderResumo();
+      document.querySelector('nav button[data-tela="resumo"]').click();
+      return;
+    }
     var btn = e.target.closest("button[data-hid]");
     if (!btn) return;
     var h = dados.historico.find(function(x){return String(x.id)===String(btn.dataset.hid);});
@@ -2218,8 +2253,8 @@
   document.getElementById("btnFCancelar").addEventListener("click", function(){
     document.getElementById("modalFechar").classList.remove("aberto");
   });
-  document.getElementById("btnFConfirmar").addEventListener("click", async function(){
-    var sem = s(); if(!sem) return;
+  async function fecharSemana(){
+    var sem = s(); if(!sem) return false;
     dados.historico.push(sem);
     dados.semanaAtiva = null;
     await persistir();
@@ -2227,6 +2262,133 @@
     prepararAbertura();
     renderTudo();
     document.querySelector('nav button[data-tela="semana"]').click();
+    return true;
+  }
+  document.getElementById("btnFConfirmar").addEventListener("click", async function(){
+    await fecharSemana();
+  });
+  document.getElementById("btnFConfirmarBackup").addEventListener("click", async function(){
+    if (await fecharSemana()) await enviarBackup();
+  });
+
+  // ================= BACKUP =================
+  function textoBackup(){ return JSON.stringify(dados); }
+  function nomeArquivoBackup(){ return "backup-gas-agua-"+hojeISO()+".txt"; }
+  function renderBackupInfo(){
+    var el = document.getElementById("backupInfo");
+    if (!el) return;
+    var movimento = dados.historico.length + (s()?1:0);
+    if (!dados.ultimoBackup){
+      el.innerHTML = movimento>0 ? '<div class="aviso-backup">⚠️ Nenhum backup enviado ainda.</div>' : '';
+      return;
+    }
+    var dt = new Date(dados.ultimoBackup);
+    var dias = Math.floor((Date.now()-dt.getTime())/86400000);
+    var quando = dt.toLocaleDateString("pt-BR")+" às "+dt.toTimeString().slice(0,5);
+    var houveMovimento = dados.ultimaAlteracao && dados.ultimaAlteracao > dados.ultimoBackup;
+    if (dias>=7 && houveMovimento) el.innerHTML = '<div class="aviso-backup">⚠️ Último backup há '+dias+' dias ('+quando+'). Mande um novo.</div>';
+    else el.innerHTML = '<div class="ok-backup">✓ Último backup: '+quando+(houveMovimento?' (houve lançamentos depois)':'')+'</div>';
+  }
+  async function marcarBackup(){
+    dados.ultimoBackup = new Date().toISOString();
+    persistir.marcandoBackup = true;
+    try { await persistir(); } finally { persistir.marcandoBackup = false; }
+    renderBackupInfo();
+  }
+  function baixarBackup(){
+    try {
+      var blob = new Blob([textoBackup()], {type:"text/plain;charset=utf-8"});
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = nomeArquivoBackup();
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(a.href); }, 10000);
+      return true;
+    } catch(e){ return false; }
+  }
+  async function enviarBackup(){
+    var txt = textoBackup();
+    try {
+      if (navigator.share && navigator.canShare && typeof File==="function"){
+        var f = new File([txt], nomeArquivoBackup(), {type:"text/plain"});
+        if (navigator.canShare({files:[f]})){
+          await navigator.share({files:[f], title:"Backup Controle Gás e Água", text:"Backup do Controle Gás e Água de "+fmtDataFull(hojeISO())});
+          await marcarBackup();
+          return;
+        }
+      }
+    } catch(e){
+      if (e && e.name==="AbortError") return; // pessoa cancelou o compartilhamento
+    }
+    // Sem compartilhamento (ex.: computador): baixa o arquivo
+    if (baixarBackup()){
+      await marcarBackup();
+      alert("Este navegador não compartilha arquivos direto. O backup foi BAIXADO — mande o arquivo pelo WhatsApp.");
+    } else {
+      alert("Não consegui gerar o arquivo. Use o botão 'Copiar texto' e cole no WhatsApp.");
+    }
+  }
+  async function copiarBackup(){
+    var txt = textoBackup();
+    var ok = false;
+    try { await navigator.clipboard.writeText(txt); ok = true; } catch(e){}
+    if (!ok){
+      var ta = document.createElement("textarea"); ta.value = txt; ta.style.position="fixed"; ta.style.opacity="0";
+      document.body.appendChild(ta); ta.select();
+      try { ok = document.execCommand("copy"); } catch(e){}
+      document.body.removeChild(ta);
+    }
+    if (ok){ await marcarBackup(); alert("✓ Backup copiado. Agora cole no WhatsApp ou em um bloco de notas."); }
+    else alert("Não consegui copiar. Use 'Enviar backup pelo WhatsApp' ou 'Baixar arquivo'.");
+  }
+  function validarBackup(txt){
+    var d;
+    try { d = JSON.parse(txt); } catch(e){ return { erro:"Esse texto não é um backup válido." }; }
+    if (!d || typeof d!=="object" || !Array.isArray(d.historico) || !("semanaAtiva" in d)) return { erro:"Esse arquivo não é um backup deste sistema." };
+    return { dados:d };
+  }
+  async function restaurarBackup(txt){
+    var r = validarBackup(txt);
+    if (r.erro){ alert(r.erro); return; }
+    var d = r.dados;
+    var nSemanas = d.historico.length + (d.semanaAtiva?1:0);
+    var atual = dados.historico.length + (s()?1:0);
+    if (!confirm("Restaurar backup com "+nSemanas+" semana(s)"+(d.semanaAtiva?" (uma aberta)":"")+"?\n\nOs dados que estão neste aparelho agora ("+atual+" semana(s)) serão SUBSTITUÍDOS.")) return;
+    dados = d;
+    semanaVisaoId = "atual"; mesVisao = null;
+    garantirClientes();
+    await persistir();
+    prepararAbertura();
+    renderTudo();
+    document.getElementById("areaColar").style.display = "none";
+    document.getElementById("txtColar").value = "";
+    alert("✓ Backup restaurado. "+nSemanas+" semana(s) carregada(s).");
+  }
+  document.getElementById("btnBackupEnviar").addEventListener("click", function(){ enviarBackup(); });
+  document.getElementById("btnBackupBaixar").addEventListener("click", async function(){
+    if (baixarBackup()) await marcarBackup(); else alert("Não consegui gerar o arquivo. Use 'Copiar texto'.");
+  });
+  document.getElementById("btnBackupCopiar").addEventListener("click", function(){ copiarBackup(); });
+  document.getElementById("btnBackupRestaurar").addEventListener("click", function(){
+    document.getElementById("backupArquivo").value = "";
+    document.getElementById("backupArquivo").click();
+  });
+  document.getElementById("backupArquivo").addEventListener("change", function(){
+    var f = this.files && this.files[0]; if (!f) return;
+    var rd = new FileReader();
+    rd.onload = function(){ restaurarBackup(String(rd.result||"")); };
+    rd.onerror = function(){ alert("Não consegui ler o arquivo."); };
+    rd.readAsText(f);
+  });
+  document.getElementById("btnBackupColarMostrar").addEventListener("click", function(){
+    var a = document.getElementById("areaColar");
+    a.style.display = a.style.display==="none" ? "block" : "none";
+    if (a.style.display==="block") document.getElementById("txtColar").focus();
+  });
+  document.getElementById("btnBackupColar").addEventListener("click", function(){
+    var t = document.getElementById("txtColar").value.trim();
+    if (!t){ alert("Cole o texto do backup primeiro."); return; }
+    restaurarBackup(t);
   });
 
   // ===== Enviar lista pelo WhatsApp =====
@@ -2493,6 +2655,16 @@
     setTimeout(function(){
       try { el.scrollIntoView({ block:"center", behavior:"smooth" }); } catch(err){}
     }, 300);
+  });
+
+  // Pede ao navegador para guardar os dados de forma permanente (não apagar para liberar espaço)
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch(e){}
+
+  // Se der algum erro, mostra a mensagem para mandar print pro suporte
+  window.addEventListener("error", function(ev){
+    var m = (ev && ev.message) ? ev.message : "erro desconhecido";
+    if (/ResizeObserver|Script error/.test(m)) return;
+    try { alert("⚠️ Deu um erro no sistema:\n\n"+m+(ev.lineno?" (linha "+ev.lineno+")":"")+"\n\nTire um print desta mensagem e mande pro suporte. Seus dados continuam salvos."); } catch(e){}
   });
 
   carregar();
