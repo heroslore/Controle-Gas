@@ -2983,7 +2983,12 @@
   var nuvem = { token:"", repo:"", branch:"main", sha:null, ultimaSync:null, pendente:false, ocupado:false, erro:"" };
   var nuvemTimer = null, nuvemPoll = null;
   // Tira espaços, quebras de linha e caracteres invisíveis que vêm no copiar/colar
-  function limparChave(t){ return String(t||"").replace(/[^\x21-\x7E]/g,""); }
+  function limparChave(t){
+    var limpo = String(t||"").replace(/[^\x21-\x7E]/g,"");
+    try { if (/%[0-9A-Fa-f]{2}/.test(limpo)) limpo = decodeURIComponent(limpo).replace(/[^\x21-\x7E]/g,""); } catch(e){}
+    var m = limpo.match(/(github_pat_[A-Za-z0-9_]+|ghp_[A-Za-z0-9]+)/);
+    return m ? m[1] : limpo;
+  }
   function limparRepo(t){ return String(t||"").replace(/[^\x21-\x7E]/g,"").replace(/^https?:\/\/github\.com\//,"").replace(/\.git$/,"").replace(/\/+$/,""); }
   function nuvemLerConfig(){
     try { var c = JSON.parse(localStorage.getItem(NUVEM_CHAVE)||"null"); if (c && c.token && c.repo){ nuvem.token=limparChave(c.token); nuvem.repo=limparRepo(c.repo); nuvem.branch=c.branch||"main"; nuvem.sha=c.sha||null; nuvem.ultimaSync=c.ultimaSync||null; nuvem.pendente=!!c.pendente; } } catch(e){}
@@ -3031,7 +3036,7 @@
       return;
     }
     var txt;
-    if (nuvem.erro) txt = '<div class="aviso-backup">⚠️ '+esc(nuvem.erro)+'</div>';
+    if (nuvem.erro) txt = '<div class="aviso-backup">⚠️ '+esc(nuvem.erro)+'<div style="font-weight:400; font-size:0.85rem; margin-top:4px;">Chave salva: '+esc(nuvem.token.slice(0,15))+'… ('+nuvem.token.length+' caracteres) · repositório: '+esc(nuvem.repo)+'</div></div>';
     else if (nuvem.pendente) txt = '<div class="aviso-backup">⏳ Tem lançamento esperando para subir (sem sinal?). Vai sozinho quando voltar a internet.</div>';
     else txt = '<div class="ok-backup">✓ Conectado a <b>'+esc(nuvem.repo)+'</b>'+(nuvem.ultimaSync?' · última sincronização '+horaCurta(nuvem.ultimaSync):'')+'</div>';
     info.innerHTML = txt;
