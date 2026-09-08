@@ -328,10 +328,17 @@
             <input type="number" id="cpCombustivel" step="0.01" inputmode="decimal" placeholder="0,00">
           </div>
         </div>
-        <div class="campo">
-          <label>📦 Outros gastos da puxada (R$)</label>
-          <input type="number" id="cpOutros" step="0.01" inputmode="decimal" placeholder="0,00">
+        <div class="linha2">
+          <div class="campo">
+            <label>🛻 Frete (R$)</label>
+            <input type="number" id="cpFrete" step="0.01" inputmode="decimal" placeholder="0,00">
+          </div>
+          <div class="campo">
+            <label>🫙 Compra de vaso (R$)</label>
+            <input type="number" id="cpVaso" step="0.01" inputmode="decimal" placeholder="0,00">
+          </div>
         </div>
+        <input type="number" id="cpOutros" style="display:none" value="">
         <div id="cpPreview" style="font-size:1.05rem; font-weight:700; color:var(--verde); margin-bottom:10px; min-height:24px;"></div>
         <button class="btn btn-laranja" id="btnAddCompra">ADICIONAR COMPRA</button>
       </div>
@@ -901,7 +908,7 @@
     var compras = (sem.compras||[]).filter(function(c){return c.produto===p;});
     var vendas = (sem.vendas||[]).filter(function(v){return v.produto===p;});
     var compQtd = compras.reduce(function(a,c){return a+c.qtd;},0);
-    function puxadaDe(c){ return (c.gMotorista||0)+(c.gCombustivel||0)+(c.gOutros||0); }
+    function puxadaDe(c){ return (c.gMotorista||0)+(c.gCombustivel||0)+(c.gFrete||0)+(c.gVaso||0)+(c.gOutros||0); }
     var puxadaTotal = compras.reduce(function(a,c){return a+puxadaDe(c);},0);
     var compVal = compras.reduce(function(a,c){return a+c.qtd*c.preco;},0) + puxadaTotal;
     var disponivel = ini.qtd + compQtd;
@@ -1113,7 +1120,7 @@
   function renderCompras(){
     var sem = s();
     var el = document.getElementById("listaCompras");
-    var total = (sem.compras||[]).reduce(function(x,c){return x+c.qtd*c.preco+(c.gMotorista||0)+(c.gCombustivel||0)+(c.gOutros||0);},0);
+    var total = (sem.compras||[]).reduce(function(x,c){return x+c.qtd*c.preco+(c.gMotorista||0)+(c.gCombustivel||0)+(c.gFrete||0)+(c.gVaso||0)+(c.gOutros||0);},0);
     document.getElementById("totalCompras").textContent = fmt(total);
     // média das compras da semana (com puxadas), por produto
     var medias = [];
@@ -1121,7 +1128,7 @@
       var doProd = (sem.compras||[]).filter(function(c){return c.produto===p;});
       var q = doProd.reduce(function(x,c){return x+c.qtd;},0);
       if (q<=0) return;
-      var v = doProd.reduce(function(x,c){return x+c.qtd*c.preco+(c.gMotorista||0)+(c.gCombustivel||0)+(c.gOutros||0);},0);
+      var v = doProd.reduce(function(x,c){return x+c.qtd*c.preco+(c.gMotorista||0)+(c.gCombustivel||0)+(c.gFrete||0)+(c.gVaso||0)+(c.gOutros||0);},0);
       medias.push(PROD[p].emoji+" média das cargas: "+fmt(v/q)+"/"+PROD[p].un);
     });
     document.getElementById("mediaCompras").textContent = medias.join("  ·  ");
@@ -1129,7 +1136,7 @@
     el.innerHTML="";
     sem.compras.slice().reverse().forEach(function(c){
       var P = PROD[c.produto];
-      var puxada = (c.gMotorista||0)+(c.gCombustivel||0)+(c.gOutros||0);
+      var puxada = (c.gMotorista||0)+(c.gCombustivel||0)+(c.gFrete||0)+(c.gVaso||0)+(c.gOutros||0);
       var totalCompra = c.qtd*c.preco + puxada;
       var custoReal = c.qtd>0 ? totalCompra/c.qtd : 0;
       var d = document.createElement("div");
@@ -1139,6 +1146,8 @@
         var partes = [];
         if (c.gMotorista>0) partes.push("🚚 "+(c.gMotoristaNome?esc(c.gMotoristaNome)+" ":"Motorista ")+fmt(c.gMotorista));
         if (c.gCombustivel>0) partes.push("⛽ "+fmt(c.gCombustivel));
+        if (c.gFrete>0) partes.push("🛻 Frete "+fmt(c.gFrete));
+        if (c.gVaso>0) partes.push("🫙 Vaso "+fmt(c.gVaso));
         if (c.gOutros>0) partes.push("📦 "+fmt(c.gOutros));
         detPuxada = '<div class="il-sub">puxada: '+partes.join(" · ")+'</div>';
       }
@@ -1318,10 +1327,12 @@
         linhas += secao("Compras do dia (subida/puxada)");
         d.comprasList.forEach(function(c){
           var P = PROD[c.produto];
-          var pux = (c.gMotorista||0)+(c.gCombustivel||0)+(c.gOutros||0);
+          var pux = (c.gMotorista||0)+(c.gCombustivel||0)+(c.gFrete||0)+(c.gVaso||0)+(c.gOutros||0);
           linhas += '<div class="dr-linha"><span>'+P.emoji+' '+c.qtd+' × '+fmt(c.preco)+(c.fornecedor?' ('+esc(c.fornecedor)+')':'')+'</span><span>'+fmt(c.qtd*c.preco)+'</span></div>';
           if (c.gMotorista>0) linhas += '<div class="dr-linha"><span>· 🚚 Motorista'+(c.gMotoristaNome?' ('+esc(c.gMotoristaNome)+')':'')+'</span><span>'+fmt(c.gMotorista)+'</span></div>';
           if (c.gCombustivel>0) linhas += '<div class="dr-linha"><span>· ⛽ Combustível</span><span>'+fmt(c.gCombustivel)+'</span></div>';
+          if (c.gFrete>0) linhas += '<div class="dr-linha"><span>· 🛻 Frete</span><span>'+fmt(c.gFrete)+'</span></div>';
+          if (c.gVaso>0) linhas += '<div class="dr-linha"><span>· 🫙 Compra de vaso</span><span>'+fmt(c.gVaso)+'</span></div>';
           if (c.gOutros>0) linhas += '<div class="dr-linha"><span>· 📦 Outros da puxada</span><span>'+fmt(c.gOutros)+'</span></div>';
           linhas += '<div class="dr-linha"><span><b>Total da compra</b></span><b>'+fmt(c.qtd*c.preco+pux)+'</b> </div>';
         });
@@ -1591,7 +1602,8 @@
     var preco = Number(document.getElementById("cpPreco").value)||0;
     var puxada = (Number(document.getElementById("cpMotorista").value)||0)
       + (Number(document.getElementById("cpCombustivel").value)||0)
-      + (Number(document.getElementById("cpOutros").value)||0);
+      + (Number(document.getElementById("cpFrete").value)||0)
+      + (Number(document.getElementById("cpVaso").value)||0);
     var el = document.getElementById("cpPreview");
     if (qtd>0 && preco>0){
       var custoReal = (qtd*preco + puxada)/qtd;
@@ -1601,7 +1613,7 @@
       el.textContent = "";
     }
   }
-  ["cpQtd","cpPreco","cpMotorista","cpCombustivel","cpOutros"].forEach(function(id){
+  ["cpQtd","cpPreco","cpMotorista","cpCombustivel","cpFrete","cpVaso"].forEach(function(id){
     document.getElementById(id).addEventListener("input", atualizarPreviewCompra);
   });
 
@@ -1619,7 +1631,9 @@
       gMotorista:Number(document.getElementById("cpMotorista").value)||0,
       gMotoristaNome:document.getElementById("cpMotoristaNome").value.trim(),
       gCombustivel:Number(document.getElementById("cpCombustivel").value)||0,
-      gOutros:Number(document.getElementById("cpOutros").value)||0
+      gFrete:Number(document.getElementById("cpFrete").value)||0,
+      gVaso:Number(document.getElementById("cpVaso").value)||0,
+      gOutros:0
     });
     cadastrarMotorista(document.getElementById("cpMotoristaNome").value.trim());
     cadastrarNaLista("fornecedores", document.getElementById("cpFornecedor").value.trim());
@@ -1629,7 +1643,8 @@
     document.getElementById("cpPreco").value="";
     document.getElementById("cpMotorista").value="";
     document.getElementById("cpCombustivel").value="";
-    document.getElementById("cpOutros").value="";
+    document.getElementById("cpFrete").value="";
+    document.getElementById("cpVaso").value="";
     document.getElementById("cpPreview").textContent="";
     await persistir(); renderTudo();
   });
@@ -2614,13 +2629,15 @@
     }
     blocoProd("gas"); blocoProd("agua");
     L.push("=== COMPRAS ===");
-    L.push("Data;Produto;Fornecedor;Qtd;Preco unit;Motorista nome;Motorista R$;Combustivel;Outros puxada;Total");
+    L.push("Data;Produto;Fornecedor;Qtd;Preco unit;Motorista nome;Motorista R$;Combustivel;Frete;Compra de vaso;Outros puxada;Total");
     (sem.compras||[]).forEach(function(x){
-      var pux = (x.gMotorista||0)+(x.gCombustivel||0)+(x.gOutros||0);
+      var pux = (x.gMotorista||0)+(x.gCombustivel||0)+(x.gFrete||0)+(x.gVaso||0)+(x.gOutros||0);
       L.push([fmtDataFull(x.data), PROD[x.produto].nome, x.fornecedor||"", x.qtd, String(x.preco).replace(".",","),
         x.gMotoristaNome||"",
         String((x.gMotorista||0).toFixed(2)).replace(".",","),
         String((x.gCombustivel||0).toFixed(2)).replace(".",","),
+        String((x.gFrete||0).toFixed(2)).replace(".",","),
+        String((x.gVaso||0).toFixed(2)).replace(".",","),
         String((x.gOutros||0).toFixed(2)).replace(".",","),
         String((x.qtd*x.preco+pux).toFixed(2)).replace(".",",")].join(";"));
     });
