@@ -1136,10 +1136,11 @@
       var doProd = (sem.compras||[]).filter(function(c){return c.produto===p;});
       var q = doProd.reduce(function(x,c){return x+c.qtd;},0);
       if (q<=0) return;
-      var v = doProd.reduce(function(x,c){return x+c.qtd*c.preco+(c.gMotorista||0)+(c.gCombustivel||0)+(c.gFrete||0)+(c.gVaso||0)+(c.gOutros||0);},0);
-      medias.push(PROD[p].emoji+" média das cargas: "+fmt(v/q)+"/"+PROD[p].un);
+      var vCompra = doProd.reduce(function(x,c){return x+c.qtd*c.preco;},0);
+      var vPuxada = doProd.reduce(function(x,c){return x+(c.gMotorista||0)+(c.gCombustivel||0)+(c.gFrete||0)+(c.gVaso||0)+(c.gOutros||0);},0);
+      medias.push('<div>'+PROD[p].emoji+' Média da semana por '+PROD[p].un+': compra '+fmt(vCompra/q)+' + <b style="color:var(--gas-escuro)">puxada '+fmt(vPuxada/q)+'</b> = '+fmt((vCompra+vPuxada)/q)+' no depósito</div>');
     });
-    document.getElementById("mediaCompras").textContent = medias.join("  ·  ");
+    document.getElementById("mediaCompras").innerHTML = medias.join("");
     if (!sem.compras || sem.compras.length===0){ el.innerHTML='<div class="vazio">Nenhuma compra lançada.</div>'; return; }
     el.innerHTML="";
     sem.compras.slice().reverse().forEach(function(c){
@@ -1162,7 +1163,7 @@
       d.innerHTML='<div class="il-desc">'+P.emoji+' '+c.qtd+' '+(c.qtd>1?P.unPl:P.un)+' × '+fmt(c.preco)+
         '<div class="il-sub">'+diaSemana(c.data)+', '+fmtData(c.data)+(c.fornecedor?' · 🏪 '+esc(c.fornecedor):'')+'</div>'+
         detPuxada+
-        (puxada>0?'<div class="il-sub" style="color:var(--verde); font-weight:700;">= '+fmt(custoReal)+' por '+P.un+' (com a puxada)</div>':'')+
+        (puxada>0?'<div class="il-sub" style="font-weight:700;"><span style="color:var(--gas-escuro)">Puxada: '+fmt(puxada/c.qtd)+' por '+P.un+'</span> · <span style="color:var(--verde)">no depósito: '+fmt(custoReal)+' por '+P.un+'</span></div>':'')+
         '</div>'+
         '<div class="il-valor">'+fmt(totalCompra)+'</div>'+
         '<button class="b-apagar" data-cid="'+c.id+'" style="border:none;background:none;color:var(--cinza);font-size:1.2rem;cursor:pointer">✕</button>';
@@ -1616,9 +1617,11 @@
     if (qtd>0 && preco>0){
       var custoReal = (qtd*preco + puxada)/qtd;
       var un = prodCompra.valor ? PROD[prodCompra.valor].un : "unidade";
-      el.textContent = "Custo real: "+fmt(custoReal)+" por "+un+(puxada>0?" (com a puxada)":"")+" · total "+fmt(qtd*preco+puxada);
+      el.innerHTML = '<div style="color:var(--azul); font-weight:400;">Compra: '+fmt(preco)+' por '+un+'</div>'+
+        '<div style="color:var(--gas-escuro);">Puxada: '+fmt(puxada/qtd)+' por '+un+' (total '+fmt(puxada)+')</div>'+
+        '<div>No depósito: '+fmt(custoReal)+' por '+un+' · total '+fmt(qtd*preco+puxada)+'</div>';
     } else {
-      el.textContent = "";
+      el.innerHTML = "";
     }
   }
   ["cpQtd","cpPreco","cpMotorista","cpCombustivel","cpFrete","cpVaso"].forEach(function(id){
