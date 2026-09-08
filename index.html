@@ -3004,7 +3004,18 @@
   async function nuvemBaixar(){
     if (!/^(github_pat_|ghp_)[A-Za-z0-9_]{20,}$/.test(nuvem.token)) throw new Error("a chave parece incompleta ou com caracteres errados — copie de novo");
     var r = await fetch(nuvemUrl()+"?ref="+encodeURIComponent(nuvem.branch)+"&_="+Date.now(), { headers: nuvemHeaders(), cache:"no-store" });
-    if (r.status===404) return { existe:false };
+    if (r.status===404){
+      // arquivo não existe OU a chave não enxerga o repositório: confere o repositório
+      var rr = await fetch("https://api.github.com/repos/"+nuvem.repo+"?_="+Date.now(), { headers: nuvemHeaders(), cache:"no-store" });
+      if (rr.status===404) throw new Error("a chave não tem acesso ao repositório "+nuvem.repo+" — na página da chave, em Repository access, marque esse repositório");
+      if (rr.status===401 || rr.status===403) throw new Error("chave inválida ou sem permissão no repositório");
+      if (rr.ok){
+        var info = await rr.json();
+        if (info.permissions && info.permissions.push===false) throw new Error("a chave só tem leitura — na página da chave, em Contents, escolha Read and write");
+        if (info.default_branch && info.default_branch!==nuvem.branch){ nuvem.branch = info.default_branch; nuvemGravarConfig(); }
+      }
+      return { existe:false };
+    }
     if (r.status===401 || r.status===403) throw new Error("chave inválida ou sem permissão no repositório");
     if (!r.ok) throw new Error("GitHub respondeu "+r.status);
     var j = await r.json();
@@ -3017,6 +3028,7 @@
     if (sha) corpo.sha = sha;
     var r = await fetch(nuvemUrl(), { method:"PUT", headers: Object.assign({ "Content-Type":"application/json" }, nuvemHeaders()), body: JSON.stringify(corpo) });
     if (r.status===401 || r.status===403) throw new Error("chave inválida ou sem permissão de escrita");
+    if (r.status===404) throw new Error("sem permissão de escrita no repositório "+nuvem.repo+" — na página da chave, em Contents, escolha Read and write");
     if (r.status===409 || r.status===422) return { conflito:true };
     if (!r.ok) throw new Error("GitHub respondeu "+r.status);
     var j = await r.json();
