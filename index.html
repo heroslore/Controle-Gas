@@ -306,7 +306,7 @@
         <div class="campo">
           <label>Onde comprou? (fornecedor)</label>
           <div class="lista-clientes" id="chipsFornecedor" style="max-height:60px; margin-bottom:6px;"></div>
-          <input type="text" id="cpFornecedor" placeholder="Ex.: Distribuidora X, Fonte Y...">
+          <input type="text" id="cpFornecedor" style="display:none" readonly>
         </div>
         <div class="campo">
           <label>Preço de compra por unidade (R$)</label>
@@ -316,7 +316,7 @@
         <div class="campo">
           <label>Quem foi o motorista?</label>
           <div class="lista-clientes" id="chipsMotoristaCompra" style="max-height:60px; margin-bottom:6px;"></div>
-          <input type="text" id="cpMotoristaNome" placeholder="Nome do motorista">
+          <input type="text" id="cpMotoristaNome" style="display:none" readonly>
         </div>
         <div class="linha2">
           <div class="campo">
@@ -401,7 +401,7 @@
         <div class="campo">
           <label>Quem foi o motorista?</label>
           <div class="lista-clientes" id="chipsMotoristaSaida" style="max-height:60px; margin-bottom:6px;"></div>
-          <input type="text" id="sdMotoristaNome" placeholder="Nome do motorista">
+          <input type="text" id="sdMotoristaNome" style="display:none" readonly>
         </div>
         <div class="linha2">
           <div class="campo">
@@ -428,7 +428,7 @@
         <div class="campo">
           <label>Quem foi o motorista?</label>
           <div class="lista-clientes" id="chipsMotoristaAcerto" style="max-height:60px; margin-bottom:6px;"></div>
-          <input type="text" id="reMotoristaNome" placeholder="Nome do motorista">
+          <input type="text" id="reMotoristaNome" style="display:none" readonly>
         </div>
         <div class="linha2">
           <div class="campo">
@@ -564,9 +564,9 @@
       <input type="text" id="vCliente" placeholder="Toque num nome acima ou digite um novo">
     </div>
     <div class="campo">
-      <label>Rota / cidade</label>
+      <label>Rota de entrega</label>
       <div class="lista-clientes" id="listaRotas" style="max-height:90px; margin-bottom:8px;"></div>
-      <input type="text" id="vRota" placeholder="Ex.: Rota Guaratinga, Cidade Itabela...">
+      <input type="text" id="vRota" style="display:none" readonly>
     </div>
     <div class="linha2">
       <div class="campo">
@@ -705,17 +705,15 @@
       <button data-p="gas">🔥 Botijão</button>
       <button data-p="agua">💧 Água</button>
     </div>
-    <div class="linha2">
-      <div class="campo">
-        <label>Rota / cidade</label>
-        <input type="text" id="loteRota" placeholder="Ex.: Saquaira">
-      </div>
-      <div class="campo">
-        <label>Data</label>
-        <input type="date" id="loteData">
-      </div>
+    <div class="campo">
+      <label>Data</label>
+      <input type="date" id="loteData">
     </div>
-    <div class="lista-clientes" id="chipsRotaLote" style="max-height:76px; grid-template-columns:repeat(3,1fr);"></div>
+    <div class="campo">
+      <label>Rota de entrega</label>
+      <input type="text" id="loteRota" style="display:none" readonly>
+      <div class="lista-clientes" id="chipsRotaLote" style="max-height:76px; grid-template-columns:repeat(3,1fr);"></div>
+    </div>
     <div class="dica-clientes">Preencha a quantidade só de quem vai levar. Quem ficar em 0 não entra na lista.</div>
     <div id="listaLote" style="margin-bottom:8px;"></div>
     <div class="botoes">
@@ -758,6 +756,43 @@
     gas:  { nome:"Gás",  emoji:"🔥", un:"botijão", unPl:"botijões" },
     agua: { nome:"Água", emoji:"💧", un:"galão",   unPl:"galões" }
   };
+  // Opções fixas do depósito (para mudar, edite aqui)
+  var FIXOS = {
+    fornecedores: { gas:["Thiago","Barreto"], agua:["Jordão"] },
+    rotas:        { gas:["Barra Grande"],     agua:["Itacaré","Saquaíra","Ubaitaba"] },
+    motoristas:   ["Luiz","Binho"]
+  };
+  function rotasDe(p){ return p ? (FIXOS.rotas[p]||[]) : FIXOS.rotas.gas.concat(FIXOS.rotas.agua); }
+  function fornecedoresDe(p){ return p ? (FIXOS.fornecedores[p]||[]) : []; }
+  // Chips fixos: preenchem o input escondido. Com uma opção só, já escolhe sozinho.
+  function renderChipsFixos(containerId, inputId, lista, icone, dicaVazia){
+    var el = document.getElementById(containerId);
+    var inp = document.getElementById(inputId);
+    if (!el || !inp) return;
+    var atual = inp.value.trim();
+    if (lista.length===1) atual = lista[0];
+    else if (lista.indexOf(atual)<0) atual = "";
+    inp.value = atual;
+    el.innerHTML = "";
+    if (lista.length===0){
+      el.innerHTML = '<div style="font-size:0.9rem; color:var(--cinza); padding:4px 2px;">'+(dicaVazia||"Escolha o produto acima.")+'</div>';
+      return;
+    }
+    lista.forEach(function(nome){
+      var chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "chip"+(atual===nome?" escolhido":"");
+      chip.innerHTML = '<span class="nome-chip">'+icone+' '+esc(nome)+'</span>';
+      chip.addEventListener("click", function(){
+        inp.value = nome;
+        renderChipsFixos(containerId, inputId, lista, icone, dicaVazia);
+      });
+      el.appendChild(chip);
+    });
+  }
+  function renderChipsFornecedor(){
+    renderChipsFixos("chipsFornecedor", "cpFornecedor", fornecedoresDe(prodCompra ? prodCompra.valor : null), "🏪", "Escolha 🔥 Botijão ou 💧 Água acima para ver de quem compra.");
+  }
 
   // ================= STORAGE =================
   // Dentro do Claude usa window.storage; no navegador do tablet usa a memória local (funciona sem internet).
@@ -950,9 +985,10 @@
     };
     return estado;
   }
-  var prodCompra = ligarEscolhaProd("prodCompra");
+  var prodCompra = ligarEscolhaProd("prodCompra", function(){ renderChipsFornecedor(); });
   var prodVenda = ligarEscolhaProd("prodVenda", function(p){
     renderListaClientes(p);
+    renderListaRotas();
     document.getElementById("campoTipoGas").style.display = p==="gas" ? "block" : "none";
   });
 
@@ -1053,7 +1089,7 @@
     renderChipsMotorista("chipsMotoristaCompra","cpMotoristaNome");
     renderChipsMotorista("chipsMotoristaAcerto","reMotoristaNome");
     renderChipsMotorista("chipsMotoristaSaida","sdMotoristaNome");
-    renderChipsLista("chipsFornecedor","cpFornecedor","fornecedores","🏪");
+    renderChipsFornecedor();
   }
   function box(rot,num,classe,extra){
     return '<div class="box '+(extra||"")+'"><div class="rot">'+rot+'</div><div class="num '+(classe||"")+'">'+num+'</div></div>';
@@ -1541,7 +1577,7 @@
     });
   }
   function renderChipsMotorista(containerId, inputId){
-    renderChipsLista(containerId, inputId, "motoristas", "🚚");
+    renderChipsFixos(containerId, inputId, FIXOS.motoristas, "🚚");
   }
   function cadastrarNaLista(chave, nome){
     if (!nome) return;
@@ -1576,6 +1612,7 @@
     var qtd = Number(document.getElementById("cpQtd").value);
     var preco = Number(document.getElementById("cpPreco").value);
     if (!qtd || !preco){ alert("Preencha a quantidade e o preço de compra."); return; }
+    if (!document.getElementById("cpFornecedor").value.trim()){ alert("Escolha de quem comprou: "+fornecedoresDe(prodCompra.valor).join(" ou ")+"."); return; }
     sem.compras.push({
       id:Date.now(), data:data, produto:prodCompra.valor, qtd:qtd, preco:preco,
       fornecedor:document.getElementById("cpFornecedor").value.trim(),
@@ -1651,6 +1688,7 @@
     var status = document.getElementById("vStatus").value;
     if (status==="pago" && !formaSel){ alert("Escolha como pagou: Pix, Dinheiro ou Cartão."); return; }
     var nomeRota = document.getElementById("vRota").value.trim();
+    if (!nomeRota){ alert("Escolha a rota de entrega: "+rotasDe(prodVenda.valor).join(", ")+"."); return; }
     sem.vendas.push({
       id:Date.now(),
       produto:prodVenda.valor,
@@ -1869,27 +1907,7 @@
 
   // ===== Rotas conhecidas (nomes) =====
   function renderListaRotas(){
-    if (!dados.rotasNomes) dados.rotasNomes = [];
-    var el = document.getElementById("listaRotas");
-    el.innerHTML = "";
-    dados.rotasNomes.forEach(function(nome){
-      var chip = document.createElement("button");
-      chip.type = "button";
-      chip.className = "chip"+(document.getElementById("vRota").value.trim()===nome?" escolhido":"");
-      chip.innerHTML = '<span class="nome-chip">📍 '+esc(nome)+'</span><span class="x-chip" data-x="1">✕</span>';
-      chip.addEventListener("click", async function(ev){
-        if (ev.target && ev.target.dataset && ev.target.dataset.x){
-          if (confirm('Tirar a rota "'+nome+'" da lista? (As vendas já lançadas continuam.)')){
-            dados.rotasNomes = dados.rotasNomes.filter(function(r){return r!==nome;});
-            await persistir(); renderListaRotas();
-          }
-          return;
-        }
-        document.getElementById("vRota").value = nome;
-        renderListaRotas();
-      });
-      el.appendChild(chip);
-    });
+    renderChipsFixos("listaRotas", "vRota", (prodVenda && prodVenda.valor) ? rotasDe(prodVenda.valor) : [], "📍", "Escolha 🔥 Botijão ou 💧 Água acima para ver as rotas.");
   }
 
   // ===== Gastos da entrega agora são por ROTA (ver "Entrega da rota" na aba Vendas) =====
@@ -1906,8 +1924,8 @@
     // rotas com pendências + nomes conhecidos
     var nomes = {};
     (sem.vendas||[]).forEach(function(v){ if(!v.entregue) nomes[v.rota||"Sem rota"]=true; });
-    (dados.rotasNomes||[]).forEach(function(r){ nomes[r]=true; });
-    var lista = Object.keys(nomes).sort(function(a,b){return a.localeCompare(b,"pt-BR");});
+    rotasDe(null).forEach(function(r){ nomes[r]=true; });
+    var lista = rotasDe(null).concat(Object.keys(nomes).filter(function(r){ return rotasDe(null).indexOf(r)<0; }).sort(function(a,b){return a.localeCompare(b,"pt-BR");}));
     el.innerHTML = "";
     lista.forEach(function(r){
       var chip = document.createElement("button");
@@ -2038,21 +2056,9 @@
   });
 
   // ===== Pré-venda em lote =====
-  var prodLote = ligarEscolhaProd("prodLote", function(p){ renderListaLote(p); });
+  var prodLote = ligarEscolhaProd("prodLote", function(p){ renderListaLote(p); renderChipsRotaLote(); });
   function renderChipsRotaLote(){
-    var el = document.getElementById("chipsRotaLote");
-    el.innerHTML = "";
-    (dados.rotasNomes||[]).forEach(function(nome){
-      var chip = document.createElement("button");
-      chip.type="button";
-      chip.className = "chip"+(document.getElementById("loteRota").value.trim()===nome?" escolhido":"");
-      chip.innerHTML = '<span class="nome-chip">📍 '+esc(nome)+'</span>';
-      chip.addEventListener("click", function(){
-        document.getElementById("loteRota").value = nome;
-        renderChipsRotaLote();
-      });
-      el.appendChild(chip);
-    });
+    renderChipsFixos("chipsRotaLote", "loteRota", (prodLote && prodLote.valor) ? rotasDe(prodLote.valor) : [], "📍", "Escolha o produto acima para ver as rotas.");
   }
   function renderListaLote(p){
     var el = document.getElementById("listaLote");
@@ -2090,6 +2096,7 @@
     var p = prodLote.valor;
     if (!p){ alert("Escolha: 🔥 Botijão ou 💧 Água."); return; }
     var rota = document.getElementById("loteRota").value.trim();
+    if (!rota){ alert("Escolha a rota de entrega: "+rotasDe(p).join(", ")+"."); return; }
     var data = document.getElementById("loteData").value || hojeISO();
     var linhas = document.querySelectorAll("#listaLote input[data-lqtd]");
     var novos = [];
