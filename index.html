@@ -235,7 +235,7 @@
 
 <header>
   <h1>🔥💧 Controle Semanal</h1>
-  <div class="semana-info" id="semanaInfo">—</div>
+  <div class="semana-info"><div id="semanaInfo">—</div><div id="nuvemStatus" style="font-size:0.78rem; opacity:0.9; margin-top:2px;"></div></div>
 </header>
 
 <main>
@@ -525,6 +525,29 @@
       <div class="lista-clientes" id="selMes" style="max-height:60px;"></div>
       <div class="painel" id="painelMes"></div>
     </div>
+    <!-- Nuvem -->
+    <div class="cartao" id="cartaoNuvem">
+      <h2>☁️ Sincronização na nuvem</h2>
+      <p style="font-size:0.9rem; color:var(--cinza); margin-bottom:10px; line-height:1.45;">Com a nuvem ligada, tudo que for lançado neste aparelho vai para o GitHub e aparece nos outros celulares conectados. Funciona sem sinal e sincroniza quando voltar.</p>
+      <div id="nuvemInfo" style="margin-bottom:10px;"></div>
+      <div id="nuvemForm">
+        <div class="campo">
+          <label>Chave de acesso (github_pat_...)</label>
+          <input type="password" id="nvChave" placeholder="Cole aqui a chave" autocomplete="off">
+        </div>
+        <div class="campo">
+          <label>Repositório dos dados (usuário/nome)</label>
+          <input type="text" id="nvRepo" placeholder="heroslore/controle-gas-dados" autocomplete="off">
+        </div>
+        <button class="btn btn-verde" id="btnNuvemConectar">☁️ Conectar e sincronizar</button>
+      </div>
+      <div id="nuvemAcoes" style="display:none;">
+        <button class="btn btn-verde" id="btnNuvemAgora">🔄 Sincronizar agora</button>
+        <button class="btn btn-azul" id="btnNuvemLink" style="margin-top:8px; padding:13px; font-size:0.98rem;">📱 Mandar link de acesso para outro celular</button>
+        <button class="btn btn-cinza" id="btnNuvemSair" style="margin-top:8px; padding:13px; font-size:0.98rem;">Desconectar este aparelho</button>
+      </div>
+    </div>
+
     <!-- Backup -->
     <div class="cartao" id="cartaoBackup">
       <h2>💾 Backup dos dados</h2>
@@ -839,11 +862,13 @@
     garantirClientes();
     prepararAbertura();
     renderTudo();
+    nuvemIniciar();
   }
   async function persistir(){
     if (!persistir.marcandoBackup) dados.ultimaAlteracao = new Date().toISOString();
     var ok = await gravarDados(JSON.stringify(dados));
     if (!ok) alert("Não consegui salvar neste navegador. Não use aba anônima/privada e tente de novo.");
+    nuvemAgendarEnvio();
   }
 
   // ================= HELPERS =================
@@ -2952,6 +2977,224 @@
   try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch(e){}
 
   // Se der algum erro, mostra a mensagem para mandar print pro suporte
+  // ================= NUVEM (GitHub) =================
+  var NUVEM_CHAVE = "gas-agua-nuvem";
+  var NUVEM_ARQUIVO = "dados.json";
+  var nuvem = { token:"", repo:"", branch:"main", sha:null, ultimaSync:null, pendente:false, ocupado:false, erro:"" };
+  var nuvemTimer = null, nuvemPoll = null;
+  function nuvemLerConfig(){
+    try { var c = JSON.parse(localStorage.getItem(NUVEM_CHAVE)||"null"); if (c && c.token && c.repo){ nuvem.token=c.token; nuvem.repo=c.repo; nuvem.branch=c.branch||"main"; nuvem.sha=c.sha||null; nuvem.ultimaSync=c.ultimaSync||null; nuvem.pendente=!!c.pendente; } } catch(e){}
+  }
+  function nuvemGravarConfig(){
+    try { localStorage.setItem(NUVEM_CHAVE, JSON.stringify({ token:nuvem.token, repo:nuvem.repo, branch:nuvem.branch, sha:nuvem.sha, ultimaSync:nuvem.ultimaSync, pendente:nuvem.pendente })); } catch(e){}
+  }
+  function nuvemLigada(){ return !!(nuvem.token && nuvem.repo); }
+  function b64utf8(txt){ return btoa(unescape(encodeURIComponent(txt))); }
+  function utf8b64(b64){ return decodeURIComponent(escape(atob(String(b64||"").replace(/\n/g,"")))); }
+  function nuvemUrl(){ return "https://api.github.com/repos/"+nuvem.repo+"/contents/"+NUVEM_ARQUIVO; }
+  function nuvemHeaders(){ return { "Authorization":"Bearer "+nuvem.token, "Accept":"application/vnd.github+json", "X-GitHub-Api-Version":"2022-11-28" }; }
+  async function nuvemBaixar(){
+    var r = await fetch(nuvemUrl()+"?ref="+encodeURIComponent(nuvem.branch)+"&_="+Date.now(), { headers: nuvemHeaders(), cache:"no-store" });
+    if (r.status===404) return { existe:false };
+    if (r.status===401 || r.status===403) throw new Error("chave inválida ou sem permissão no repositório");
+    if (!r.ok) throw new Error("GitHub respondeu "+r.status);
+    var j = await r.json();
+    var obj = null;
+    try { obj = JSON.parse(utf8b64(j.content)); } catch(e){ throw new Error("arquivo na nuvem está corrompido"); }
+    return { existe:true, sha:j.sha, dados:obj };
+  }
+  async function nuvemSubir(obj, sha){
+    var corpo = { message:"Controle Gás e Água — "+new Date().toLocaleString("pt-BR"), content:b64utf8(JSON.stringify(obj)), branch:nuvem.branch };
+    if (sha) corpo.sha = sha;
+    var r = await fetch(nuvemUrl(), { method:"PUT", headers: Object.assign({ "Content-Type":"application/json" }, nuvemHeaders()), body: JSON.stringify(corpo) });
+    if (r.status===401 || r.status===403) throw new Error("chave inválida ou sem permissão de escrita");
+    if (r.status===409 || r.status===422) return { conflito:true };
+    if (!r.ok) throw new Error("GitHub respondeu "+r.status);
+    var j = await r.json();
+    return { sha: j.content && j.content.sha };
+  }
+  function nuvemStatus(txt, cor){
+    var el = document.getElementById("nuvemStatus"); if (el){ el.textContent = txt; el.style.color = cor||""; }
+    renderNuvemCard();
+  }
+  function horaCurta(iso){ if(!iso) return ""; var d=new Date(iso); return d.toLocaleDateString("pt-BR").slice(0,5)+" "+d.toTimeString().slice(0,5); }
+  function renderNuvemCard(){
+    var info = document.getElementById("nuvemInfo"); if (!info) return;
+    var form = document.getElementById("nuvemForm"), acoes = document.getElementById("nuvemAcoes");
+    if (!nuvemLigada()){
+      info.innerHTML = '<div class="aviso-backup">Nuvem desligada — os dados ficam só neste aparelho.</div>';
+      form.style.display = "block"; acoes.style.display = "none";
+      return;
+    }
+    var txt;
+    if (nuvem.erro) txt = '<div class="aviso-backup">⚠️ '+esc(nuvem.erro)+'</div>';
+    else if (nuvem.pendente) txt = '<div class="aviso-backup">⏳ Tem lançamento esperando para subir (sem sinal?). Vai sozinho quando voltar a internet.</div>';
+    else txt = '<div class="ok-backup">✓ Conectado a <b>'+esc(nuvem.repo)+'</b>'+(nuvem.ultimaSync?' · última sincronização '+horaCurta(nuvem.ultimaSync):'')+'</div>';
+    info.innerHTML = txt;
+    form.style.display = "none"; acoes.style.display = "block";
+  }
+  function guardarCopiaConflito(obj){
+    try { localStorage.setItem("gas-agua-conflito-"+Date.now(), JSON.stringify(obj)); } catch(e){}
+  }
+  function adotarDaNuvem(obj){
+    dados = obj;
+    garantirClientes();
+    semanaVisaoId = "atual";
+    try { localStorage.setItem(CHAVE, JSON.stringify(dados)); } catch(e){}
+    prepararAbertura();
+    renderTudo();
+  }
+  // Sincroniza: quem tem a alteração mais recente vence
+  async function nuvemSincronizar(motivo){
+    if (!nuvemLigada() || nuvem.ocupado) return;
+    if (!navigator.onLine){ nuvem.pendente = true; nuvemGravarConfig(); nuvemStatus("☁️ sem internet — vai sincronizar depois", "#ffd27a"); return; }
+    nuvem.ocupado = true;
+    try {
+      var remoto = await nuvemBaixar();
+      var localTs = dados.ultimaAlteracao || "";
+      if (!remoto.existe){
+        var r1 = await nuvemSubir(dados, null);
+        nuvem.sha = r1.sha;
+      } else {
+        var remotoTs = (remoto.dados && remoto.dados.ultimaAlteracao) || "";
+        var mudouRemoto = remoto.sha !== nuvem.sha;
+        if (remotoTs > localTs){
+          // nuvem mais nova: adota (guarda cópia do local se ele também tinha mudanças não enviadas)
+          if (nuvem.pendente) guardarCopiaConflito(dados);
+          adotarDaNuvem(remoto.dados);
+          nuvem.sha = remoto.sha;
+        } else if (localTs > remotoTs || (motivo==="forcar" && !mudouRemoto)){
+          var remSemanas = ((remoto.dados && remoto.dados.historico)||[]).length + (remoto.dados && remoto.dados.semanaAtiva ? 1 : 0);
+          var locSemanas = dados.historico.length + (s()?1:0);
+          if (locSemanas===0 && remSemanas>0 && !confirm("Este aparelho está sem semanas e a nuvem tem "+remSemanas+" semana(s).\n\nOK = APAGAR as semanas da nuvem (deixar igual a este aparelho).\nCancelar = trazer as semanas da nuvem para este aparelho.")){
+            adotarDaNuvem(remoto.dados); nuvem.sha = remoto.sha;
+            nuvem.pendente = false; nuvem.erro = ""; nuvem.ultimaSync = new Date().toISOString(); nuvemGravarConfig();
+            nuvemStatus("☁️ sincronizado "+horaCurta(nuvem.ultimaSync)); nuvem.ocupado = false; return;
+          }
+          var r2 = await nuvemSubir(dados, remoto.sha);
+          if (r2.conflito){ nuvem.ocupado = false; return nuvemSincronizar("retry"); }
+          nuvem.sha = r2.sha;
+        } else {
+          nuvem.sha = remoto.sha;
+        }
+      }
+      nuvem.pendente = false; nuvem.erro = ""; nuvem.ultimaSync = new Date().toISOString();
+      nuvemGravarConfig();
+      nuvemStatus("☁️ sincronizado "+horaCurta(nuvem.ultimaSync));
+    } catch(e){
+      nuvem.pendente = true; nuvem.erro = String(e.message||e);
+      nuvemGravarConfig();
+      nuvemStatus("☁️ falhou: "+nuvem.erro, "#ffb3ab");
+    }
+    nuvem.ocupado = false;
+  }
+  function nuvemAgendarEnvio(){
+    if (!nuvemLigada()) return;
+    nuvem.pendente = true; nuvemGravarConfig();
+    nuvemStatus("☁️ salvando na nuvem...");
+    clearTimeout(nuvemTimer);
+    nuvemTimer = setTimeout(function(){ nuvemSincronizar("envio"); }, 1500);
+  }
+  function contarSemanas(obj){ return ((obj && obj.historico)||[]).length + (obj && obj.semanaAtiva ? 1 : 0); }
+  // Primeira conexão deste aparelho: decide quem manda, nuvem ou aparelho
+  async function nuvemConectar(){
+    var remoto = await nuvemBaixar();
+    var localSem = contarSemanas(dados);
+    if (!remoto.existe){
+      var r0 = await nuvemSubir(dados, null); nuvem.sha = r0.sha;
+    } else {
+      var remSem = contarSemanas(remoto.dados);
+      var usarNuvem;
+      if (remSem===0 && localSem>0) usarNuvem = false;
+      else if (localSem===0) usarNuvem = true;
+      else if (JSON.stringify(remoto.dados)===JSON.stringify(dados)) usarNuvem = true;
+      else usarNuvem = confirm("Já existem dados na nuvem ("+remSem+" semana(s)) e neste aparelho ("+localSem+" semana(s)).\n\nOK = usar os dados da NUVEM aqui (os deste aparelho serão substituídos).\nCancelar = mandar os dados DESTE aparelho para a nuvem (os da nuvem serão substituídos).");
+      if (usarNuvem){ adotarDaNuvem(remoto.dados); nuvem.sha = remoto.sha; }
+      else { var r1 = await nuvemSubir(dados, remoto.sha); nuvem.sha = r1.sha; }
+    }
+    nuvem.pendente = false; nuvem.erro = ""; nuvem.ultimaSync = new Date().toISOString();
+    nuvemGravarConfig();
+    nuvemStatus("☁️ sincronizado "+horaCurta(nuvem.ultimaSync));
+  }
+  var nuvemTimersLigados = false;
+  function nuvemLigarTimers(){
+    clearInterval(nuvemPoll);
+    nuvemPoll = setInterval(function(){ if (document.visibilityState==="visible" && !nuvem.pendente) nuvemSincronizar("poll"); }, 30000);
+    if (nuvemTimersLigados) return;
+    nuvemTimersLigados = true;
+    window.addEventListener("online", function(){ nuvemSincronizar("online"); });
+    document.addEventListener("visibilitychange", function(){ if (document.visibilityState==="visible") nuvemSincronizar("visivel"); });
+  }
+  function nuvemIniciar(){
+    nuvemLerConfig();
+    var veioPorLink = false;
+    // chave vinda por link: ?chave=...&repo=...
+    try {
+      var u = new URL(location.href);
+      var ch = u.searchParams.get("chave"), rp = u.searchParams.get("repo");
+      if (ch && rp){
+        nuvem.token = ch.trim(); nuvem.repo = rp.trim(); nuvem.branch = u.searchParams.get("branch") || "main"; nuvem.sha = null; nuvem.pendente = false;
+        nuvemGravarConfig();
+        veioPorLink = true;
+        u.searchParams.delete("chave"); u.searchParams.delete("repo"); u.searchParams.delete("branch");
+        history.replaceState(null, "", u.pathname + (u.searchParams.toString() ? "?"+u.searchParams.toString() : ""));
+      }
+    } catch(e){}
+    renderNuvemCard();
+    if (!nuvemLigada()){ nuvemStatus(""); return; }
+    nuvemStatus("☁️ conectando...");
+    if (veioPorLink){
+      nuvemConectar().then(function(){ alert("✓ Este aparelho está conectado à nuvem do depósito."); nuvemLigarTimers(); })
+        .catch(function(e){ nuvem.erro = String(e.message||e); nuvemGravarConfig(); nuvemStatus("☁️ falhou: "+nuvem.erro, "#ffb3ab"); });
+    } else {
+      nuvemSincronizar("inicio");
+      nuvemLigarTimers();
+    }
+  }
+  document.getElementById("btnNuvemConectar").addEventListener("click", async function(){
+    var tk = document.getElementById("nvChave").value.trim();
+    var rp = document.getElementById("nvRepo").value.trim().replace(/^https?:\/\/github\.com\//,"").replace(/\/+$/,"");
+    if (!tk || !rp){ alert("Preencha a chave e o repositório."); return; }
+    var btn = this; btn.disabled = true; btn.textContent = "Conectando...";
+    var antes = { token:nuvem.token, repo:nuvem.repo };
+    nuvem.token = tk; nuvem.repo = rp; nuvem.branch = "main"; nuvem.sha = null; nuvem.erro = ""; nuvem.pendente = false;
+    try {
+      await nuvemConectar();
+      document.getElementById("nvChave").value = "";
+      alert("✓ Nuvem conectada! A partir de agora tudo que lançar aqui vai para a nuvem.");
+      nuvemLigarTimers();
+    } catch(e){
+      nuvem.token = antes.token; nuvem.repo = antes.repo;
+      alert("Não consegui conectar: "+(e.message||e)+"\n\nConfira a chave e o nome do repositório (usuário/nome).");
+      renderNuvemCard();
+    }
+    btn.disabled = false; btn.textContent = "☁️ Conectar e sincronizar";
+  });
+  document.getElementById("btnNuvemAgora").addEventListener("click", async function(){
+    var btn = this; btn.disabled = true; btn.textContent = "Sincronizando...";
+    await nuvemSincronizar("forcar");
+    btn.disabled = false; btn.textContent = "🔄 Sincronizar agora";
+    if (!nuvem.erro) alert("✓ Sincronizado com a nuvem.");
+  });
+  document.getElementById("btnNuvemLink").addEventListener("click", async function(){
+    var base = location.origin + location.pathname;
+    if (location.protocol==="file:") base = "https://heroslore.github.io/Controle-Gas/";
+    var link = base + "?chave=" + encodeURIComponent(nuvem.token) + "&repo=" + encodeURIComponent(nuvem.repo) + (nuvem.branch!=="main" ? "&branch="+encodeURIComponent(nuvem.branch) : "");
+    var texto = "Link de acesso ao Controle Gás e Água (abra no Chrome do celular, uma vez só):\n"+link;
+    try {
+      if (navigator.share){ await navigator.share({ title:"Acesso ao Controle Gás e Água", text:texto }); return; }
+    } catch(e){ if (e && e.name==="AbortError") return; }
+    try { await navigator.clipboard.writeText(texto); alert("Link copiado. Cole no WhatsApp do outro celular. Quem abrir o link fica conectado à mesma nuvem."); }
+    catch(e){ prompt("Copie o link abaixo e mande para o outro celular:", link); }
+  });
+  document.getElementById("btnNuvemSair").addEventListener("click", function(){
+    if (!confirm("Desconectar este aparelho da nuvem?\n\nOs dados continuam aqui e na nuvem; só param de sincronizar.")) return;
+    nuvem = { token:"", repo:"", branch:"main", sha:null, ultimaSync:null, pendente:false, ocupado:false, erro:"" };
+    try { localStorage.removeItem(NUVEM_CHAVE); } catch(e){}
+    clearInterval(nuvemPoll);
+    nuvemStatus("");
+  });
+
   window.addEventListener("error", function(ev){
     var m = (ev && ev.message) ? ev.message : "erro desconhecido";
     if (/ResizeObserver|Script error/.test(m)) return;
