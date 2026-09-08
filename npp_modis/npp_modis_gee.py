@@ -498,11 +498,34 @@ def _mascarar_escalar(ee, img, banda: str, valido: Tuple[int, int],
     return b.updateMask(mascara).multiply(FATOR_ESCALA_KG * KG_PARA_G)
 
 
+# Regra de agregação da série histórica (Benfica et al. 2022 / planilha
+# "dados_graficos_Benfica"), descoberta por comparação com os dados 2001-2020:
+# cada mês = soma de 4 composições 8-dias consecutivas em janelas FIXAS de DOY
+# (sem ajuste de ano bissexto). Janeiro usa a última composição do ano anterior
+# (DOY 361) + DOY 1, 9 e 17; a composição DOY 337 entra em novembro E em
+# dezembro. Reproduz a planilha com erro mediano < 0,3 % em todos os meses.
+JANELAS_BENFICA: Dict[int, List[int]] = {
+    1: [-361, 1, 9, 17],          # negativo = DOY do ano anterior
+    **{m: [8 * k + 1 for k in range(4 * (m - 1) - 1, 4 * (m - 1) + 3)]
+       for m in range(2, 12)},    # fev 25-49, mar 57-81, ..., nov 313-337
+    12: [337, 345, 353, 361],
+}
+
+
+def _data_doy(ano: int, doy: int) -> dt.date:
+    if doy < 0:
+        return dt.date(ano - 1, 1, 1) + dt.timedelta(days=-doy - 1)
+    return dt.date(ano, 1, 1) + dt.timedelta(days=doy - 1)
+
+
 def periodos_do_ano(ee, produto: str, cfg: dict, ano: int,
-                    datas_ano: Sequence[dt.date], qc_max: Optional[int],
+                    por_ano: Dict[int, List[dt.date]], qc_max: Optional[int],
+                    agregacao: str = "calendario",
                     ) -> List[Tuple[dict, "ee.Image"]]:
     """Devolve [(rótulo, imagem em g C/m²)] para o ano: 1 item (anual) ou até
-    12 itens (mensal = soma das composições 8-dias iniciadas no mês)."""
+    12 itens (mensal). Agregação mensal:
+      'calendario' = soma das composições 8-dias iniciadas dentro do mês;
+      'benfica'    = janelas fixas de DOY da série histórica (JANELAS_BENFICA)."""
     col = ee.ImageCollection(cfg["colecao"])
     if produto == "anual":
         img = ee.Image(col.filter(ee.Filter.calendarRange(ano, ano, "year")).first())
@@ -510,23 +533,36 @@ def periodos_do_ano(ee, produto: str, cfg: dict, ano: int,
                  _mascarar_escalar(ee, img, cfg["banda"], cfg["valido"],
                                    cfg["banda_qc"], qc_max))]
 
+    datas_ano = por_ano.get(ano, [])
+    existentes = set(datas_ano) | set(por_ano.get(ano - 1, []))
     saida = []
     for mes in range(1, 13):
-        datas_mes = [d for d in datas_ano if d.month == mes]
+        if agregacao == "benfica":
+            datas_mes = [_data_doy(ano, d) for d in JANELAS_BENFICA[mes]]
+            faltam = [d for d in datas_mes if d not in existentes]
+            if faltam:
+                log(f"  AVISO: {ano}-{mes:02d} sem composição(ões) "
+                    f"{[d.isoformat() for d in faltam]} na coleção; mês ignorado.")
+                continue
+            filtro = ee.Filter.Or(*[
+                ee.Filter.date(d.isoformat(), (d + dt.timedelta(days=1)).isoformat())
+                for d in datas_mes])
+            sub = col.filter(filtro)
+        else:
+            datas_mes = [d for d in datas_ano if d.month == mes]
+            if not datas_mes:
+                log(f"  AVISO: {ano}-{mes:02d} sem composições na coleção; mês ignorado.")
+                continue
+            if len(datas_mes) < 3:
+                log(f"  AVISO: {ano}-{mes:02d} tem só {len(datas_mes)} "
+                    "composição(ões) (esperado 3-4); ano provavelmente incompleto.")
+            ini = dt.date(ano, mes, 1).isoformat()
+            fim = (dt.date(ano + 1, 1, 1) if mes == 12
+                   else dt.date(ano, mes + 1, 1)).isoformat()
+            sub = col.filterDate(ini, fim)
         n = len(datas_mes)
-        if n == 0:
-            log(f"  AVISO: {ano}-{mes:02d} sem composições na coleção; mês ignorado.")
-            continue
-        esperado = 4 if mes != 12 else 3  # 46 composições/ano, ~3.8 por mês
-        if n < 3:
-            log(f"  AVISO: {ano}-{mes:02d} tem só {n} composição(ões) "
-                f"(esperado ≈{esperado}); ano provavelmente incompleto.")
-        ini = dt.date(ano, mes, 1).isoformat()
-        fim = (dt.date(ano + 1, 1, 1) if mes == 12
-               else dt.date(ano, mes + 1, 1)).isoformat()
-        sub = col.filterDate(ini, fim).map(
-            lambda im: _mascarar_escalar(ee, im, cfg["banda"], cfg["valido"],
-                                         None, None))
+        sub = sub.map(lambda im: _mascarar_escalar(ee, im, cfg["banda"],
+                                                   cfg["valido"], None, None))
         # Soma apenas onde todas as composições do mês são válidas.
         soma = sub.sum().updateMask(sub.count().eq(n))
         saida.append(({"ano": ano, "mes": mes, "n_composicoes": n}, soma))
@@ -539,7 +575,8 @@ def periodos_do_ano(ee, produto: str, cfg: dict, ano: int,
 
 def calcular(ee, produto: str, cfg: dict, anos: Sequence[int],
              por_ano: Dict[int, List[dt.date]], geoms: Dict[str, "ee.Geometry"],
-             qc_max: Optional[int], extras: bool, tile_scale: int) -> List[dict]:
+             qc_max: Optional[int], extras: bool, tile_scale: int,
+             agregacao: str = "calendario") -> List[dict]:
     primeira = ee.Image(ee.ImageCollection(cfg["colecao"]).first()).select(cfg["banda"])
     proj = primeira.projection()
     try:
@@ -561,7 +598,7 @@ def calcular(ee, produto: str, cfg: dict, anos: Sequence[int],
 
     for ano in anos:
         log(f"Processando {ano} ...")
-        periodos = periodos_do_ano(ee, produto, cfg, ano, por_ano[ano], qc_max)
+        periodos = periodos_do_ano(ee, produto, cfg, ano, por_ano, qc_max, agregacao)
         if not periodos:
             linhas.append({"ano": ano, "erro": "sem períodos com dado"})
             continue
@@ -714,6 +751,13 @@ def montar_parser() -> argparse.ArgumentParser:
                    help="(só --produto anual) descarta pixels com Npp_QC (%% de "
                         "entradas preenchidas) acima deste valor. Padrão: não "
                         "filtra, como na metodologia original.")
+    g.add_argument("--agregacao", choices=["calendario", "benfica"],
+                   default="calendario",
+                   help="(só --produto mensal) 'calendario' = soma das composições "
+                        "8-dias iniciadas no mês; 'benfica' = janelas fixas de DOY "
+                        "usadas na série histórica 2001-2020 (jan = DOY 361 do ano "
+                        "anterior + 1, 9, 17; fev = 25-49; ...; dez = 337-361). "
+                        "Use 'benfica' para continuar a planilha.")
     g.add_argument("--stats-extras", action="store_true",
                    help="Inclui n_pixels, desvio-padrão, mínimo e máximo no CSV.")
     g.add_argument("--formato", choices=["longo", "largo"], default="longo",
@@ -777,10 +821,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
         log("")
         linhas = calcular(ee, args.produto, cfg, anos, por_ano, geoms,
-                          args.qc_max, args.stats_extras, args.tile_scale)
+                          args.qc_max, args.stats_extras, args.tile_scale,
+                          args.agregacao)
 
+        sufixo = "_benfica" if (args.produto == "mensal" and args.agregacao == "benfica") else ""
         saida = Path(args.saida) if args.saida else Path(
-            f"{args.produto}_biomas_bahia_{anos[0]}_{anos[-1]}.csv")
+            f"{args.produto}{sufixo}_biomas_bahia_{anos[0]}_{anos[-1]}.csv")
         n_ok, n_err = gravar_csv(linhas, saida, args.produto, cfg["coluna"],
                                  args.biomas_nomes, args.stats_extras,
                                  args.formato == "largo", args.decimal)
