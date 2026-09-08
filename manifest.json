@@ -1,0 +1,16 @@
+{
+  "name": "Controle Semanal — Gás e Água",
+  "short_name": "Controle Gás",
+  "description": "Controle semanal de vendas, compras, saídas, gastos e fiado do depósito de gás e água.",
+  "start_url": "/Controle-Gas/",
+  "scope": "/Controle-Gas/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f7f3ec",
+  "theme_color": "#16324a",
+  "lang": "pt-BR",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
