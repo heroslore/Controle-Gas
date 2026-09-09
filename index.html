@@ -1414,17 +1414,22 @@
   // Rateia os gastos de rota entre gás e água: rota só de um produto leva 100%;
   // rota mista divide proporcional à receita de cada produto naquela rota/dia.
   function gastosPorProduto(sem){
+    // Divide pela ROTA (sem olhar a data): rota só de gás -> tudo no gás; só de água -> tudo na água;
+    // rota com os dois -> proporcional à receita da rota; sem rota -> rateio pela receita da semana.
     var mapa = {};
     (sem.vendas||[]).forEach(function(v){
-      var k = v.data+"§"+(v.rota||"");
+      var k = (v.rota||"");
       if (!mapa[k]) mapa[k] = { rg:0, ra:0 };
       if (v.produto==="gas") mapa[k].rg += v.qtd*v.preco;
       else mapa[k].ra += v.qtd*v.preco;
     });
+    // rota sem venda na semana mas que é rota fixa de um produto só
+    rotasDe("gas").forEach(function(r){ if (!mapa[r] && rotasDe("agua").indexOf(r)<0) mapa[r] = { rg:1, ra:0 }; });
+    rotasDe("agua").forEach(function(r){ if (!mapa[r] && rotasDe("gas").indexOf(r)<0) mapa[r] = { rg:0, ra:1 }; });
     var g=0, a=0, geral=0;
     (sem.gastos||[]).forEach(function(x){
       var val = Number(x.valor||0);
-      var m = mapa[x.data+"§"+(x.rota||"")];
+      var m = mapa[(x.rota||"")];
       if (m && (m.rg+m.ra)>0){
         g += val*m.rg/(m.rg+m.ra);
         a += val*m.ra/(m.rg+m.ra);
