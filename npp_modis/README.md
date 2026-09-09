@@ -69,6 +69,22 @@ LST (erro mediano < 0,3 % na PSN; o resíduo é Coleção 6 × 6.1). `--agregaca
 calendario` soma as composições iniciadas dentro do mês civil, mais defensável
 para uma série nova, mas **não** comparável à planilha em jan, abr, mai, out e nov.
 
+## Código que gera a base (para reprodução e apresentação)
+
+| Arquivo | Papel |
+|---|---|
+| `npp_modis_gee.py` | pipeline no Earth Engine: autentica, recorta os biomas, calcula cada variável por mês/ano e grava CSV |
+| `validar_planilha.py` | lê a planilha histórica (12 blocos mensais), compara com a saída do GEE (r, erro mediano, p90), lista e corrige células atípicas |
+| `montar_base.py` | monta a base final no layout Plan1 (`ano, mes, ONI, FMA_PSN, …`) em CSV e Excel, nas versões recomendada, corrigida e original |
+| `reproduzir_base.py` | roda tudo em sequência (≈ 1 h de GEE) |
+| `RELATORIO_METODOLOGIA.md` | o que foi feito, métodos, métricas e texto para a dissertação |
+
+Reprodução completa em um comando (depois de instalar e autenticar, abaixo):
+
+```bash
+python reproduzir_base.py --project SEU-PROJETO --planilha dados_graficos_Benfica_3.xlsx
+```
+
 ## Instalação
 
 Requer Python 3.9+.
