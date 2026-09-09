@@ -868,12 +868,36 @@
     var v = await lerDados();
     if (v){ try { dados = JSON.parse(v); } catch(e){} }
     garantirClientes();
+    idsAnteriores = idsDe(dados);
     prepararAbertura();
     renderTudo();
     nuvemIniciar();
   }
+  var LISTAS = ["compras","vendas","gastos","saidas"];
+  function idsDe(d){
+    var s = {};
+    function add(x){ if (x && x.id!=null) s[String(x.id)] = 1; }
+    function sem(h){ if (!h) return; add(h); LISTAS.forEach(function(k){ (h[k]||[]).forEach(add); }); }
+    (d.historico||[]).forEach(sem); sem(d.semanaAtiva);
+    return s;
+  }
+  var idsAnteriores = null;
+  function marcarApagados(){
+    var atuais = idsDe(dados);
+    if (idsAnteriores){
+      if (!dados.apagados) dados.apagados = {};
+      var agora = new Date().toISOString();
+      Object.keys(idsAnteriores).forEach(function(id){ if (!atuais[id]) dados.apagados[id] = agora; });
+    }
+    idsAnteriores = atuais;
+  }
+  function limparLapidesDe(d){
+    if (!d || !d.apagados) return;
+    var vivos = idsDe(d);
+    Object.keys(d.apagados).forEach(function(id){ if (vivos[id]) delete d.apagados[id]; });
+  }
   async function persistir(){
-    if (!persistir.marcandoBackup) dados.ultimaAlteracao = new Date().toISOString();
+    if (!persistir.marcandoBackup){ dados.ultimaAlteracao = new Date().toISOString(); marcarApagados(); }
     var ok = await gravarDados(JSON.stringify(dados));
     if (!ok) alert("Não consegui salvar neste navegador. Não use aba anônima/privada e tente de novo.");
     nuvemAgendarEnvio();
@@ -2510,6 +2534,8 @@
     dados = d;
     semanaVisaoId = "atual"; mesVisao = null;
     garantirClientes();
+    limparLapidesDe(dados);
+    idsAnteriores = idsDe(dados);
     await persistir();
     prepararAbertura();
     renderTudo();
@@ -3079,9 +3105,55 @@
     try { localStorage.setItem("gas-agua-conflito-"+Date.now(), JSON.stringify(obj)); } catch(e){}
   }
   var COPIA_CHAVE = "gas-agua-copia-antes-nuvem";
-  function adotarDaNuvem(obj){
-    try { if (contarSemanas(dados)>0 && JSON.stringify(obj)!==JSON.stringify(dados)) localStorage.setItem(COPIA_CHAVE, JSON.stringify({ quando:new Date().toISOString(), dados:dados })); } catch(e){}
+  // Junta os dados de dois aparelhos: união dos lançamentos por id; nos repetidos vale o lado mais recente;
+  // o que foi apagado em qualquer lado (lápides) some dos dois.
+  function mergeDados(loc, rem){
+    var novo = (loc.ultimaAlteracao||"") >= (rem.ultimaAlteracao||"") ? loc : rem;
+    var velho = novo===loc ? rem : loc;
+    var apagados = Object.assign({}, velho.apagados||{}, novo.apagados||{});
+    function mergeLista(a, b){
+      var mapa = {}, ordem = [];
+      (b||[]).forEach(function(x){ if (x && x.id!=null && !apagados[String(x.id)]){ mapa[x.id]=x; ordem.push(x.id); } });
+      (a||[]).forEach(function(x){ if (x && x.id!=null && !apagados[String(x.id)]){ if (!(x.id in mapa)) ordem.push(x.id); mapa[x.id]=x; } });
+      return ordem.map(function(id){ return mapa[id]; });
+    }
+    function mergeSemana(a, b){
+      var r = Object.assign({}, b, a);
+      LISTAS.forEach(function(k){ r[k] = mergeLista(a[k], b[k]); });
+      return r;
+    }
+    function semanasDe(d){
+      var m = {};
+      (d.historico||[]).forEach(function(h){ if (h && h.id!=null) m[String(h.id)] = { s:h, fechada:true }; });
+      if (d.semanaAtiva && d.semanaAtiva.id!=null) m[String(d.semanaAtiva.id)] = { s:d.semanaAtiva, fechada:false };
+      return m;
+    }
+    var sn = semanasDe(novo), sv = semanasDe(velho), ids = {};
+    Object.keys(sn).concat(Object.keys(sv)).forEach(function(i){ ids[i]=1; });
+    var historico = [], ativa = null;
+    Object.keys(ids).forEach(function(id){
+      if (apagados[id]) return;
+      var n = sn[id], v = sv[id];
+      var sem = (n && v) ? mergeSemana(n.s, v.s) : (n||v).s;
+      var fechada = (n ? n.fechada : false) || (v ? v.fechada : false);
+      if (!fechada && !ativa && (!n || !v || true)) { if (sn[id] && !sn[id].fechada) { ativa = sem; return; } }
+      if (fechada) historico.push(sem); else if (!ativa) ativa = sem; else historico.push(sem);
+    });
+    historico.sort(function(a,b){ return (a.inicio||"") < (b.inicio||"") ? -1 : 1; });
+    var out = Object.assign({}, velho, novo);
+    out.historico = historico; out.semanaAtiva = ativa;
+    out.clientes = { gas: Object.assign({}, (velho.clientes||{}).gas||{}, (novo.clientes||{}).gas||{}), agua: Object.assign({}, (velho.clientes||{}).agua||{}, (novo.clientes||{}).agua||{}) };
+    ["motoristas","fornecedores","rotasNomes"].forEach(function(k){
+      var u = {}; [].concat(velho[k]||[], novo[k]||[]).forEach(function(x){ u[x]=1; }); out[k] = Object.keys(u);
+    });
+    out.apagados = apagados;
+    out.ultimaAlteracao = new Date().toISOString();
+    return out;
+  }
+  function adotarDaNuvem(obj, guardarCopia){
+    try { if (guardarCopia && contarSemanas(dados)>0 && JSON.stringify(obj)!==JSON.stringify(dados)) localStorage.setItem(COPIA_CHAVE, JSON.stringify({ quando:new Date().toISOString(), dados:dados })); } catch(e){}
     dados = obj;
+    idsAnteriores = idsDe(dados);
     garantirClientes();
     semanaVisaoId = "atual";
     try { localStorage.setItem(CHAVE, JSON.stringify(dados)); } catch(e){}
@@ -3102,12 +3174,20 @@
       } else {
         var remotoTs = (remoto.dados && remoto.dados.ultimaAlteracao) || "";
         var mudouRemoto = remoto.sha !== nuvem.sha;
-        if (remotoTs > localTs){
-          // nuvem mais nova: adota (guarda cópia do local se ele também tinha mudanças não enviadas)
-          if (nuvem.pendente) guardarCopiaConflito(dados);
-          adotarDaNuvem(remoto.dados);
+        var mudouLocal = nuvem.pendente;
+        if (mudouRemoto && mudouLocal && JSON.stringify(remoto.dados)!==JSON.stringify(dados)){
+          // os dois lados mudaram: junta tudo e envia o resultado
+          var junto = mergeDados(dados, remoto.dados);
+          adotarDaNuvem(junto, false);
+          var r3 = await nuvemSubir(dados, remoto.sha);
+          if (r3.conflito){ nuvem.ocupado = false; return nuvemSincronizar("retry"); }
+          nuvem.sha = r3.sha;
+        } else if (mudouRemoto && !mudouLocal){
+          adotarDaNuvem(remoto.dados, false);
           nuvem.sha = remoto.sha;
-        } else if (localTs > remotoTs || (motivo==="forcar" && !mudouRemoto)){
+        } else if (!mudouRemoto && !mudouLocal){
+          nuvem.sha = remoto.sha;
+        } else if (localTs > remotoTs || (motivo==="forcar" && !mudouRemoto) || (mudouLocal && !mudouRemoto)){
           var remSemanas = ((remoto.dados && remoto.dados.historico)||[]).length + (remoto.dados && remoto.dados.semanaAtiva ? 1 : 0);
           var locSemanas = dados.historico.length + (s()?1:0);
           if (locSemanas===0 && remSemanas>0 && !confirm("Este aparelho está sem semanas e a nuvem tem "+remSemanas+" semana(s).\n\nOK = APAGAR as semanas da nuvem (deixar igual a este aparelho).\nCancelar = trazer as semanas da nuvem para este aparelho.")){
@@ -3153,7 +3233,7 @@
       else if (localSem===0) usarNuvem = true;
       else if (JSON.stringify(remoto.dados)===JSON.stringify(dados)) usarNuvem = true;
       else usarNuvem = confirm("Já existem dados na nuvem ("+remSem+" semana(s)) e neste aparelho ("+localSem+" semana(s)).\n\nOK = usar os dados da NUVEM aqui (os deste aparelho serão substituídos).\nCancelar = mandar os dados DESTE aparelho para a nuvem (os da nuvem serão substituídos).");
-      if (usarNuvem){ adotarDaNuvem(remoto.dados); nuvem.sha = remoto.sha; }
+      if (usarNuvem){ adotarDaNuvem(remoto.dados, true); nuvem.sha = remoto.sha; }
       else { var r1 = await nuvemSubir(dados, remoto.sha); nuvem.sha = r1.sha; }
     }
     nuvem.pendente = false; nuvem.erro = ""; nuvem.ultimaSync = new Date().toISOString();
@@ -3235,6 +3315,7 @@
     var c = copiaAnterior(); if (!c || !c.dados) return;
     if (!confirm("Recuperar os dados anteriores ("+contarSemanas(c.dados)+" semana(s))?\n\nEles voltam para este aparelho e sobem para a nuvem, substituindo o que está lá.")) return;
     dados = c.dados; garantirClientes(); semanaVisaoId = "atual";
+    limparLapidesDe(dados); idsAnteriores = idsDe(dados);
     dados.ultimaAlteracao = new Date().toISOString();
     try { localStorage.removeItem(COPIA_CHAVE); } catch(e){}
     await persistir(); prepararAbertura(); renderTudo();
