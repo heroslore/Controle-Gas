@@ -1,31 +1,28 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Produtividade MODIS (MOD17, Coleção 6.1) por bioma na Bahia via Google Earth Engine.
+Variáveis MODIS/GPM por bioma na Bahia via Google Earth Engine, no formato da
+série histórica de Benfica et al. (2022, 2023).
 
-Substitui o fluxo manual (Earthdata + MRT + ArcGIS) da metodologia de
-Benfica et al. (2022) por um pipeline reprodutível em Python. Dois modos:
+Variáveis (--variavel, pode repetir; 'todas' = todas as mensais):
 
-  --produto anual   MODIS/061/MOD17A3HGF, banda Npp (NPP anual, kg C/m² x 0,0001)
-                    -> CSV: ano, bioma, npp_g_c_m2
-  --produto mensal  MODIS/061/MOD17A2HGF, banda PsnNet (fotossíntese líquida
-                    8-dias, kg C/m² x 0,0001) somada por mês
-                    -> CSV: ano, mes, bioma, psn_g_c_m2
-                    (é o formato da série histórica 2001-2020 "dados_graficos_Benfica")
+  npp       MODIS/061/MOD17A3HGF  Npp          NPP anual (g C/m²/ano)
+  psn       MODIS/061/MOD17A2HGF  PsnNet       fotossíntese líquida mensal (g C/m²)
+  et        MODIS/061/MOD16A2GF   ET           evapotranspiração mensal (mm)
+  pet       MODIS/061/MOD16A2GF   PET          ET potencial mensal (mm)
+  ida       = et / pet                         índice de disponibilidade de água (WAI)
+  lst       MODIS/061/MOD11A2     LST_Day_1km  temperatura de superfície diurna (°C)
+  precip    NASA/GPM_L3/IMERG_MONTHLY_V07      precipitação mensal (mm)
+  queimada  MODIS/061/MCD64A1     BurnDate     área queimada mensal (ha = pixels x 25)
+  oni       NOAA CPC (download)                Oceanic Niño Index (mês central)
 
-Etapas: autentica no Earth Engine; lista os anos/datas disponíveis; recorta os
-biomas Mata Atlântica, Cerrado e Caatinga pelo limite da Bahia (shapefiles
-oficiais do IBGE, baixados automaticamente se pedido); calcula a média
-espacial por bioma; grava CSV; reporta erros de forma explícita.
+Produtos 8-dias (psn, et, pet, lst) são agregados por mês com --agregacao:
+'benfica' (janelas fixas de DOY da planilha histórica, padrão) ou 'calendario'.
 
-Uso típico (primeira vez):
+Uso típico:
 
-    python npp_modis_gee.py --project MEU-PROJETO-GEE --baixar-ibge dados_ibge
-
-Depois, apenas:
-
-    python npp_modis_gee.py --project MEU-PROJETO-GEE --produto mensal \
-        --biomas dados_ibge/lm_bioma_250.shp --bahia dados_ibge/BA_UF_2022.shp
+    python npp_modis_gee.py --project MEU-PROJETO --variavel todas \
+        --baixar-ibge dados_ibge --inicio 2021 --formato largo
 
 Veja README.md para instalação, autenticação e opções.
 """
@@ -49,27 +46,43 @@ from typing import Dict, List, Optional, Sequence, Tuple
 # Produtos MOD17 v6.1 no catálogo do GEE
 # ----------------------------------------------------------------------------
 
-PRODUTOS = {
-    "anual": {
-        "colecao": "MODIS/061/MOD17A3HGF",
-        "banda": "Npp",
-        "banda_qc": "Npp_QC",          # % de entradas 8-dias preenchidas (0-100)
-        "valido": (-30000, 32700),     # int16; 32761-32767 são códigos de fill
-        "coluna": "npp_g_c_m2",
-    },
-    "mensal": {
-        "colecao": "MODIS/061/MOD17A2HGF",
-        "banda": "PsnNet",
-        "banda_qc": None,              # Psn_QC é bitmask; não filtrado aqui
-        "valido": (-30000, 30000),
-        "coluna": "psn_g_c_m2",
-    },
+# tipo: 'anual' (1 imagem/ano), '8dias' (46 composições/ano, agregadas por mês),
+#       'mensal' (1 imagem/mês).  agreg: como juntar as composições do mês.
+#       reducer: 'mean' (média espacial) ou 'count' (n. de pixels).
+VARIAVEIS = {
+    "npp": dict(colecao="MODIS/061/MOD17A3HGF", banda="Npp", escala=0.1,
+                valido=(-30000, 32700), banda_qc="Npp_QC", tipo="anual",
+                agreg="valor", reducer="mean", coluna="npp_g_c_m2"),
+    "psn": dict(colecao="MODIS/061/MOD17A2HGF", banda="PsnNet", escala=0.1,
+                valido=(-30000, 30000), tipo="8dias", agreg="soma",
+                reducer="mean", coluna="psn_g_c_m2"),
+    "et": dict(colecao="MODIS/061/MOD16A2GF", banda="ET", escala=0.1,
+               valido=(-32767, 32700), tipo="8dias", agreg="soma",
+               reducer="mean", coluna="et_mm"),
+    "pet": dict(colecao="MODIS/061/MOD16A2GF", banda="PET", escala=0.1,
+                valido=(-32767, 32700), tipo="8dias", agreg="soma",
+                reducer="mean", coluna="pet_mm"),
+    "lst": dict(colecao="MODIS/061/MOD11A2", banda="LST_Day_1km", escala=0.02,
+                offset=-273.15, valido=(7500, 65535), tipo="8dias",
+                agreg="media", reducer="mean", coluna="lst_dia_c"),
+    "precip": dict(colecao="NASA/GPM_L3/IMERG_MONTHLY_V07", banda="precipitation",
+                   escala=1.0, valido=(0, 1e9), tipo="mensal", agreg="mmh_x_horas",
+                   reducer="mean", coluna="precip_mm"),
+    "queimada": dict(colecao="MODIS/061/MCD64A1", banda="BurnDate", escala=1.0,
+                     valido=(1, 366), tipo="mensal", agreg="contagem",
+                     reducer="count", coluna="area_queimada_ha", ha_por_pixel=25.0),
 }
+DERIVADAS = {"ida": ("et", "pet")}          # ida = et / pet (razão das médias mensais)
+MENSAIS = ["psn", "et", "pet", "ida", "lst", "precip", "queimada"]
+ALIAS_PRODUTO = {"anual": ["npp"], "mensal": ["psn"]}
 
-# Fator de escala 0,0001 kg C/m². 1 kg C/m² = 1000 g C/m²
-#  ->  g C/m² = DN * 0,0001 * 1000 = DN * 0,1  (o mesmo 0,1 do fluxo MRT/ArcGIS).
-FATOR_ESCALA_KG = 0.0001
-KG_PARA_G = 1000.0
+LOTE = 12   # reduções por requisição ao GEE
+URL_ONI = "https://www.cpc.ncep.noaa.gov/data/indices/oni.ascii.txt"
+ESTACOES_ONI = ["DJF", "JFM", "FMA", "MAM", "AMJ", "MJJ", "JJA", "JAS",
+                "ASO", "SON", "OND", "NDJ"]
+
+# MOD17: DN x 0,0001 kg C/m² x 1000 = DN x 0,1 g C/m² (o mesmo 0,1 do MRT/ArcGIS).
+# MOD16: DN x 0,1 kg/m²/8 dias = mm. MOD11: DN x 0,02 K - 273,15 = °C.
 
 BIOMAS_PADRAO = ("Mata Atlântica", "Cerrado", "Caatinga")
 
@@ -239,22 +252,25 @@ def datas_disponiveis(ee, colecao: str) -> List[dt.date]:
                    for t in tempos})
 
 
-def relatar_disponibilidade(datas: Sequence[dt.date], produto: str,
+def relatar_disponibilidade(datas: Sequence[dt.date], tipo: str,
                             colecao: str) -> Dict[int, List[dt.date]]:
     por_ano: Dict[int, List[dt.date]] = {}
     for d in datas:
         por_ano.setdefault(d.year, []).append(d)
     anos = sorted(por_ano)
     log(f"\n{colecao}: {len(datas)} imagens, {anos[0]} a {anos[-1]}.")
-    if produto == "anual":
-        log(f"ÚLTIMO ANO DISPONÍVEL (NPP anual): {anos[-1]}")
-    else:
-        ultimo = anos[-1]
-        n = len(por_ano[ultimo])
-        log(f"Última composição 8-dias: {datas[-1].isoformat()}  "
-            f"({n} de 46 composições em {ultimo})")
+    ultimo = anos[-1]
+    n = len(por_ano[ultimo])
+    if tipo == "anual":
+        log(f"ÚLTIMO ANO DISPONÍVEL: {ultimo}")
+    elif tipo == "8dias":
+        log(f"Última composição 8-dias: {datas[-1].isoformat()}  ({n} de 46 em {ultimo})")
         completo = ultimo if n >= 46 else (ultimo - 1 if ultimo - 1 in por_ano else None)
         log(f"ÚLTIMO ANO COMPLETO (46 composições): {completo}")
+    else:
+        log(f"Última imagem mensal: {datas[-1].isoformat()}  ({n} de 12 meses em {ultimo})")
+        completo = ultimo if n >= 12 else (ultimo - 1 if ultimo - 1 in por_ano else None)
+        log(f"ÚLTIMO ANO COMPLETO (12 meses): {completo}")
     return por_ano
 
 
@@ -489,13 +505,16 @@ def biomas_asset(ee, asset_id: str, caminho_bahia: Optional[str], campo: str,
 # 4. Imagens por período (ano ou mês), em g C/m²
 # ----------------------------------------------------------------------------
 
-def _mascarar_escalar(ee, img, banda: str, valido: Tuple[int, int],
-                      banda_qc: Optional[str], qc_max: Optional[int]):
-    b = img.select(banda)
-    mascara = b.gte(valido[0]).And(b.lte(valido[1]))
-    if banda_qc and qc_max is not None:
-        mascara = mascara.And(img.select(banda_qc).lte(qc_max))
-    return b.updateMask(mascara).multiply(FATOR_ESCALA_KG * KG_PARA_G)
+def _mascarar_escalar(ee, img, cfg: dict, qc_max: Optional[int]):
+    b = img.select(cfg["banda"])
+    vmin, vmax = cfg["valido"]
+    mascara = b.gte(vmin).And(b.lte(vmax))
+    if cfg.get("banda_qc") and qc_max is not None:
+        mascara = mascara.And(img.select(cfg["banda_qc"]).lte(qc_max))
+    out = b.updateMask(mascara).multiply(cfg["escala"])
+    if cfg.get("offset"):
+        out = out.add(cfg["offset"])
+    return out
 
 
 # Regra de agregação da série histórica (Benfica et al. 2022 / planilha
@@ -518,31 +537,43 @@ def _data_doy(ano: int, doy: int) -> dt.date:
     return dt.date(ano, 1, 1) + dt.timedelta(days=doy - 1)
 
 
-def periodos_do_ano(ee, produto: str, cfg: dict, ano: int,
-                    por_ano: Dict[int, List[dt.date]], qc_max: Optional[int],
-                    agregacao: str = "calendario",
+def periodos_do_ano(ee, cfg: dict, ano: int, por_ano: Dict[int, List[dt.date]],
+                    qc_max: Optional[int], agregacao: str = "benfica",
                     ) -> List[Tuple[dict, "ee.Image"]]:
-    """Devolve [(rótulo, imagem em g C/m²)] para o ano: 1 item (anual) ou até
-    12 itens (mensal). Agregação mensal:
-      'calendario' = soma das composições 8-dias iniciadas dentro do mês;
-      'benfica'    = janelas fixas de DOY da série histórica (JANELAS_BENFICA)."""
+    """Devolve [(rótulo, imagem já escalada)] para o ano: 1 item (anual) ou até
+    12 itens (8dias/mensal). Agregação dos produtos 8-dias:
+      'benfica'    = janelas fixas de DOY da série histórica (JANELAS_BENFICA);
+      'calendario' = composições iniciadas dentro do mês civil."""
     col = ee.ImageCollection(cfg["colecao"])
-    if produto == "anual":
+    tipo = cfg["tipo"]
+    if tipo == "anual":
         img = ee.Image(col.filter(ee.Filter.calendarRange(ano, ano, "year")).first())
-        return [({"ano": ano},
-                 _mascarar_escalar(ee, img, cfg["banda"], cfg["valido"],
-                                   cfg["banda_qc"], qc_max))]
+        return [({"ano": ano}, _mascarar_escalar(ee, img, cfg, qc_max))]
 
     datas_ano = por_ano.get(ano, [])
     existentes = set(datas_ano) | set(por_ano.get(ano - 1, []))
     saida = []
     for mes in range(1, 13):
+        ini = dt.date(ano, mes, 1)
+        fim = dt.date(ano + 1, 1, 1) if mes == 12 else dt.date(ano, mes + 1, 1)
+        if tipo == "mensal":
+            datas_mes = [d for d in datas_ano if d.month == mes]
+            if not datas_mes:
+                log(f"  AVISO: {ano}-{mes:02d} sem imagem em {cfg['colecao']}; mês ignorado.")
+                continue
+            img = ee.Image(col.filterDate(ini.isoformat(), fim.isoformat()).first())
+            img = _mascarar_escalar(ee, img, cfg, None)
+            if cfg["agreg"] == "mmh_x_horas":          # IMERG mensal: mm/h -> mm/mês
+                img = img.multiply(24 * (fim - ini).days)
+            saida.append(({"ano": ano, "mes": mes, "n_composicoes": 1}, img))
+            continue
+
         if agregacao == "benfica":
             datas_mes = [_data_doy(ano, d) for d in JANELAS_BENFICA[mes]]
             faltam = [d for d in datas_mes if d not in existentes]
             if faltam:
                 log(f"  AVISO: {ano}-{mes:02d} sem composição(ões) "
-                    f"{[d.isoformat() for d in faltam]} na coleção; mês ignorado.")
+                    f"{[d.isoformat() for d in faltam]} em {cfg['colecao']}; mês ignorado.")
                 continue
             filtro = ee.Filter.Or(*[
                 ee.Filter.date(d.isoformat(), (d + dt.timedelta(days=1)).isoformat())
@@ -551,21 +582,25 @@ def periodos_do_ano(ee, produto: str, cfg: dict, ano: int,
         else:
             datas_mes = [d for d in datas_ano if d.month == mes]
             if not datas_mes:
-                log(f"  AVISO: {ano}-{mes:02d} sem composições na coleção; mês ignorado.")
+                log(f"  AVISO: {ano}-{mes:02d} sem composições; mês ignorado.")
                 continue
             if len(datas_mes) < 3:
                 log(f"  AVISO: {ano}-{mes:02d} tem só {len(datas_mes)} "
                     "composição(ões) (esperado 3-4); ano provavelmente incompleto.")
-            ini = dt.date(ano, mes, 1).isoformat()
-            fim = (dt.date(ano + 1, 1, 1) if mes == 12
-                   else dt.date(ano, mes + 1, 1)).isoformat()
-            sub = col.filterDate(ini, fim)
+            sub = col.filterDate(ini.isoformat(), fim.isoformat())
         n = len(datas_mes)
-        sub = sub.map(lambda im: _mascarar_escalar(ee, im, cfg["banda"],
-                                                   cfg["valido"], None, None))
-        # Soma apenas onde todas as composições do mês são válidas.
-        soma = sub.sum().updateMask(sub.count().eq(n))
-        saida.append(({"ano": ano, "mes": mes, "n_composicoes": n}, soma))
+        sub = sub.map(lambda im: _mascarar_escalar(ee, im, cfg, None))
+        if cfg["agreg"] == "media":
+            # Média das médias espaciais de cada composição (como na planilha):
+            # cada composição é reduzida separadamente e combinada em calcular().
+            lista = sub.toList(n)
+            for i in range(n):
+                saida.append(({"ano": ano, "mes": mes, "n_composicoes": n,
+                               "comp": i}, ee.Image(lista.get(i))))
+            continue
+        # Soma: pixel só entra se todas as composições do mês forem válidas.
+        agg = sub.sum().updateMask(sub.count().eq(n))
+        saida.append(({"ano": ano, "mes": mes, "n_composicoes": n}, agg))
     return saida
 
 
@@ -573,77 +608,134 @@ def periodos_do_ano(ee, produto: str, cfg: dict, ano: int,
 # 5. Redução: média espacial por bioma
 # ----------------------------------------------------------------------------
 
-def calcular(ee, produto: str, cfg: dict, anos: Sequence[int],
+def calcular(ee, nome: str, cfg: dict, anos: Sequence[int],
              por_ano: Dict[int, List[dt.date]], geoms: Dict[str, "ee.Geometry"],
              qc_max: Optional[int], extras: bool, tile_scale: int,
-             agregacao: str = "calendario") -> List[dict]:
+             agregacao: str = "benfica") -> List[dict]:
     primeira = ee.Image(ee.ImageCollection(cfg["colecao"]).first()).select(cfg["banda"])
     proj = primeira.projection()
     try:
         escala_m = proj.nominalScale().getInfo()
     except Exception as exc:  # noqa: BLE001
-        raise ErroPipeline(f"Falha ao obter a projeção da coleção: {exc}") from exc
-    log(f"Reduzindo na projeção nativa do MODIS (sinusoidal), pixel ≈ {escala_m:.1f} m.")
+        raise ErroPipeline(f"Falha ao obter a projeção de {cfg['colecao']}: {exc}") from exc
+    log(f"[{nome}] {cfg['colecao']} banda {cfg['banda']}, pixel ≈ {escala_m:.0f} m, "
+        f"reduzindo na projeção nativa.")
 
-    reducer = ee.Reducer.mean().combine(ee.Reducer.count(), sharedInputs=True)
-    if extras:
-        reducer = (reducer
-                   .combine(ee.Reducer.stdDev(), sharedInputs=True)
-                   .combine(ee.Reducer.minMax(), sharedInputs=True))
+    if cfg["reducer"] == "count":
+        reducer = ee.Reducer.count()
+    else:
+        reducer = ee.Reducer.mean().combine(ee.Reducer.count(), sharedInputs=True)
+        if extras:
+            reducer = (reducer
+                       .combine(ee.Reducer.stdDev(), sharedInputs=True)
+                       .combine(ee.Reducer.minMax(), sharedInputs=True))
 
     fc = ee.FeatureCollection([
-        ee.Feature(g, {"bioma": nome}) for nome, g in geoms.items()])
+        ee.Feature(g, {"bioma": b}) for b, g in geoms.items()])
     coluna = cfg["coluna"]
     linhas: List[dict] = []
 
     for ano in anos:
-        log(f"Processando {ano} ...")
-        periodos = periodos_do_ano(ee, produto, cfg, ano, por_ano, qc_max, agregacao)
+        log(f"[{nome}] {ano} ...")
+        periodos = periodos_do_ano(ee, cfg, ano, por_ano, qc_max, agregacao)
         if not periodos:
-            linhas.append({"ano": ano, "erro": "sem períodos com dado"})
+            linhas.append({"ano": ano, "variavel": nome, "erro": "sem períodos com dado"})
             continue
-        # Uma única requisição por ano: reduz todos os períodos e junta.
-        fcs = []
-        for rotulo, img in periodos:
-            red = img.reduceRegions(collection=fc, reducer=reducer, crs=proj,
-                                    scale=escala_m, tileScale=tile_scale)
-            fcs.append(red.map(lambda f, r=rotulo: f.set(r)))
-        try:
-            feats = ee.FeatureCollection(fcs).flatten().getInfo().get("features", [])
-        except Exception as exc:  # noqa: BLE001
-            texto = str(exc)
-            if "memory" in texto.lower() or "too many" in texto.lower():
-                texto += ("\nDica: aumente --tile-scale (ex.: 8 ou 16) para "
-                          "reduzir o uso de memória por tile.")
-            log(f"  ERRO no ano {ano}: {texto}")
-            linhas.append({"ano": ano, "erro": texto})
+        # Lotes de até LOTE reduções por requisição (limite de agregações
+        # simultâneas do GEE).
+        feats: List[dict] = []
+        falhou = False
+        for i in range(0, len(periodos), LOTE):
+            fcs = []
+            for rotulo, img in periodos[i:i + LOTE]:
+                red = img.reduceRegions(collection=fc, reducer=reducer, crs=proj,
+                                        scale=escala_m, tileScale=tile_scale)
+                fcs.append(red.map(lambda f, r=rotulo: f.set(r)))
+            try:
+                feats += ee.FeatureCollection(fcs).flatten().getInfo().get("features", [])
+            except Exception as exc:  # noqa: BLE001
+                texto = str(exc)
+                if "memory" in texto.lower() or "too many" in texto.lower():
+                    texto += ("\nDica: aumente --tile-scale (ex.: 8 ou 16), ou rode "
+                              "uma variável por vez.")
+                log(f"  ERRO em {nome} {ano}: {texto}")
+                linhas.append({"ano": ano, "variavel": nome, "erro": texto})
+                falhou = True
+                break
+        if falhou:
             continue
 
+        if cfg["agreg"] == "media":
+            feats = _combinar_composicoes(feats)
         for f in feats:
             p = f.get("properties", {})
-            media, n = p.get("mean"), p.get("count")
             rotulo = {"ano": p.get("ano")}
-            if produto == "mensal":
+            if cfg["tipo"] != "anual":
                 rotulo["mes"] = p.get("mes")
-            if media is None or not n:
-                log(f"  AVISO: {rotulo} / {p.get('bioma')}: nenhum pixel válido.")
-                linhas.append({**rotulo, "bioma": p.get("bioma"),
-                               "erro": "sem pixels válidos"})
-                continue
-            linha = {**rotulo, "bioma": p["bioma"], coluna: media}
-            if extras:
-                linha.update({
-                    "n_pixels": int(n),
-                    "desvio_g_c_m2": p.get("stdDev"),
-                    "min_g_c_m2": p.get("min"),
-                    "max_g_c_m2": p.get("max"),
-                })
-                if produto == "mensal":
-                    linha["n_composicoes"] = p.get("n_composicoes")
+            if cfg["reducer"] == "count":
+                valor = float(p.get("count") or 0) * cfg.get("ha_por_pixel", 1.0)
+                n = p.get("count") or 0
+            else:
+                valor, n = p.get("mean"), p.get("count")
+                if valor is None or not n:
+                    log(f"  AVISO: {nome} {rotulo} / {p.get('bioma')}: nenhum pixel válido.")
+                    linhas.append({**rotulo, "bioma": p.get("bioma"), "variavel": nome,
+                                   "erro": "sem pixels válidos"})
+                    continue
+            linha = {**rotulo, "bioma": p["bioma"], "variavel": nome, coluna: valor}
+            if extras and cfg["reducer"] != "count":
+                linha.update({"n_pixels": int(n), "desvio": p.get("stdDev"),
+                              "min": p.get("min"), "max": p.get("max"),
+                              "n_composicoes": p.get("n_composicoes")})
             linhas.append(linha)
             quando = f"{rotulo['ano']}" + (f"-{rotulo['mes']:02d}" if "mes" in rotulo else "")
-            log(f"  {quando}  {p['bioma']:<15s} média = {media:8.2f} g C/m²  (n = {int(n):,})")
+            log(f"  {quando}  {p['bioma']:<15s} {coluna} = {valor:10.3f}")
     return linhas
+
+
+def _combinar_composicoes(feats: List[dict]) -> List[dict]:
+    """Agrupa reduções por composição em uma por (ano, mes, bioma): média das
+    médias espaciais das composições com pixels válidos; count = mínimo."""
+    grupos: Dict[tuple, List[dict]] = {}
+    for f in feats:
+        p = f.get("properties", {})
+        grupos.setdefault((p.get("ano"), p.get("mes"), p.get("bioma")), []).append(p)
+    saida = []
+    for (ano, mes, bioma), ps in sorted(grupos.items(), key=lambda kv: str(kv[0])):
+        validos = [p for p in ps if p.get("mean") is not None and p.get("count")]
+        base = dict(ps[0]); base.pop("comp", None)
+        if validos:
+            base["mean"] = sum(p["mean"] for p in validos) / len(validos)
+            base["count"] = min(p["count"] for p in validos)
+            base["n_composicoes"] = len(validos)
+            if len(validos) < len(ps):
+                log(f"  AVISO: {ano}-{mes:02d} {bioma}: só {len(validos)} de {len(ps)} "
+                    "composições com pixels válidos; média das disponíveis.")
+        else:
+            base["mean"], base["count"] = None, 0
+        saida.append({"properties": base})
+    return saida
+
+
+def baixar_oni(anos: Sequence[int]) -> Dict[Tuple[int, int], float]:
+    """ONI (NOAA CPC): valor de cada estação de 3 meses atribuído ao mês central."""
+    try:
+        with urllib.request.urlopen(URL_ONI, timeout=60) as r:  # noqa: S310
+            texto = r.read().decode()
+    except Exception as exc:  # noqa: BLE001
+        raise ErroPipeline(f"Falha ao baixar o ONI de {URL_ONI}: {exc}") from exc
+    out = {}
+    for lin in texto.splitlines()[1:]:
+        partes = lin.split()
+        if len(partes) < 4 or partes[0] not in ESTACOES_ONI:
+            continue
+        ano, mes = int(partes[1]), ESTACOES_ONI.index(partes[0]) + 1
+        if ano in anos:
+            out[(ano, mes)] = float(partes[3])
+    if not out:
+        raise ErroPipeline("ONI baixado mas sem linhas para os anos pedidos.")
+    log(f"ONI: {len(out)} meses obtidos de {URL_ONI}")
+    return out
 
 
 # ----------------------------------------------------------------------------
@@ -656,36 +748,60 @@ def _fmt(v, decimal: str) -> str:
     return "" if v is None else str(v)
 
 
-def gravar_csv(linhas: List[dict], caminho: Path, produto: str, coluna: str,
-               nomes_biomas: Sequence[str], extras: bool, largo: bool,
-               decimal: str) -> Tuple[int, int]:
-    chave = ["ano", "mes"] if produto == "mensal" else ["ano"]
+def montar_tabela(linhas: List[dict], nomes: Sequence[str],
+                  oni: Optional[Dict[Tuple[int, int], float]]) -> Tuple[List[dict], List[str]]:
+    """Junta as variáveis numa tabela tidy: ano[, mes], bioma, <col de cada var>."""
     ok = [l for l in linhas if "erro" not in l]
-    ok.sort(key=lambda l: tuple(l[k] for k in chave) + (l["bioma"],))
+    mensal = any("mes" in l for l in ok)
+    chave = ["ano", "mes"] if mensal else ["ano"]
+    colunas = [VARIAVEIS[n]["coluna"] if n in VARIAVEIS else n
+               for n in nomes if n in VARIAVEIS or n in DERIVADAS]
+    tab: Dict[tuple, dict] = {}
+    for l in ok:
+        k = tuple(l.get(c) for c in chave) + (l["bioma"],)
+        d = tab.setdefault(k, {c: l.get(c) for c in chave} | {"bioma": l["bioma"]})
+        d[VARIAVEIS[l["variavel"]]["coluna"]] = l[VARIAVEIS[l["variavel"]]["coluna"]]
+    for nome, (a, b) in DERIVADAS.items():
+        if nome in nomes:
+            ca, cb, cn = VARIAVEIS[a]["coluna"], VARIAVEIS[b]["coluna"], nome
+            for d in tab.values():
+                if d.get(ca) is not None and d.get(cb):
+                    d[cn] = d[ca] / d[cb]
+    if oni is not None and mensal:
+        colunas.append("oni")
+        for d in tab.values():
+            d["oni"] = oni.get((d["ano"], d["mes"]))
+    registros = [tab[k] for k in sorted(tab)]
+    return registros, chave + ["bioma"] + colunas
+
+
+def gravar_csv(registros: List[dict], colunas: List[str], caminho: Path,
+               nomes_biomas: Sequence[str], largo: bool, decimal: str) -> int:
     caminho.parent.mkdir(parents=True, exist_ok=True)
     sep = ";" if decimal == "," else ","
-
+    chave = [c for c in colunas if c in ("ano", "mes")]
+    vars_ = [c for c in colunas if c not in ("ano", "mes", "bioma")]
     with caminho.open("w", newline="", encoding="utf-8-sig") as fh:
         w = csv.writer(fh, delimiter=sep)
         if largo:
-            # Uma coluna por bioma (layout da planilha histórica).
-            w.writerow(chave + list(nomes_biomas))
+            # Layout da planilha: ano, mes, [oni], <bioma>_<variável> ...
+            v_bioma = [v for v in vars_ if v != "oni"]
+            cab = chave + (["oni"] if "oni" in vars_ else []) + \
+                  [f"{b}_{v}" for v in v_bioma for b in nomes_biomas]
+            w.writerow(cab)
             grupos: Dict[tuple, dict] = {}
-            for l in ok:
-                grupos.setdefault(tuple(l[k] for k in chave), {})[l["bioma"]] = l[coluna]
+            for r in registros:
+                grupos.setdefault(tuple(r[c] for c in chave), {})[r["bioma"]] = r
             for k in sorted(grupos):
-                w.writerow(list(k) + [_fmt(grupos[k].get(b), decimal)
-                                      for b in nomes_biomas])
-        else:
-            colunas = chave + ["bioma", coluna]
-            if extras:
-                colunas += ["n_pixels", "desvio_g_c_m2", "min_g_c_m2", "max_g_c_m2"]
-                if produto == "mensal":
-                    colunas.append("n_composicoes")
-            w.writerow(colunas)
-            for l in ok:
-                w.writerow([_fmt(l.get(c), decimal) for c in colunas])
-    return len(ok), len(linhas) - len(ok)
+                g = grupos[k]; qualquer = next(iter(g.values()))
+                lin = list(k) + ([_fmt(qualquer.get("oni"), decimal)] if "oni" in vars_ else [])
+                lin += [_fmt(g.get(b, {}).get(v), decimal) for v in v_bioma for b in nomes_biomas]
+                w.writerow(lin)
+            return len(grupos)
+        w.writerow(colunas)
+        for r in registros:
+            w.writerow([_fmt(r.get(c), decimal) for c in colunas])
+    return len(registros)
 
 
 # ----------------------------------------------------------------------------
@@ -711,21 +827,24 @@ def montar_parser() -> argparse.ArgumentParser:
     g.add_argument("--service-account", help="E-mail de conta de serviço (opcional).")
     g.add_argument("--chave-json", help="Chave JSON da conta de serviço (opcional).")
 
-    g = p.add_argument_group("Produto e período")
-    g.add_argument("--produto", choices=sorted(PRODUTOS), default="anual",
-                   help="'anual' = NPP do MOD17A3HGF (padrão); 'mensal' = PsnNet "
-                        "do MOD17A2HGF somado por mês (formato da série 2001-2020).")
+    g = p.add_argument_group("Variáveis e período")
+    g.add_argument("--variavel", nargs="+", default=None,
+                   choices=sorted(VARIAVEIS) + sorted(DERIVADAS) + ["oni", "todas"],
+                   help="Uma ou mais variáveis (padrão: psn). 'todas' = "
+                        + ", ".join(MENSAIS) + " + oni. 'npp' (anual) sai em CSV separado.")
+    g.add_argument("--produto", choices=sorted(ALIAS_PRODUTO), default=None,
+                   help="Atalho antigo: 'anual' = --variavel npp; 'mensal' = --variavel psn.")
     g.add_argument("--colecao", default=None,
-                   help="Sobrescreve o id da coleção (ex.: MODIS/061/MOD17A2H para "
-                        "o ano corrente, ainda sem versão gap-filled).")
+                   help="Sobrescreve a coleção da (única) variável pedida "
+                        "(ex.: MODIS/061/MOD17A2H para o ano corrente, sem gap-fill).")
     g.add_argument("--banda", default=None,
-                   help="Sobrescreve a banda (ex.: Gpp). Padrão: Npp ou PsnNet.")
+                   help="Sobrescreve a banda da (única) variável pedida (ex.: Gpp).")
     g.add_argument("--apenas-verificar", action="store_true",
                    help="Só autentica e informa a disponibilidade; não calcula nada.")
     g.add_argument("--inicio", type=int, default=2021,
                    help="Primeiro ano a calcular (padrão: 2021).")
     g.add_argument("--fim", type=int, default=None,
-                   help="Último ano (padrão: último disponível na coleção).")
+                   help="Último ano (padrão: último disponível em cada coleção).")
 
     g = p.add_argument_group("Limites dos biomas")
     g.add_argument("--biomas",
@@ -751,51 +870,76 @@ def montar_parser() -> argparse.ArgumentParser:
                    help="(só --produto anual) descarta pixels com Npp_QC (%% de "
                         "entradas preenchidas) acima deste valor. Padrão: não "
                         "filtra, como na metodologia original.")
-    g.add_argument("--agregacao", choices=["calendario", "benfica"],
-                   default="calendario",
-                   help="(só --produto mensal) 'calendario' = soma das composições "
-                        "8-dias iniciadas no mês; 'benfica' = janelas fixas de DOY "
-                        "usadas na série histórica 2001-2020 (jan = DOY 361 do ano "
-                        "anterior + 1, 9, 17; fev = 25-49; ...; dez = 337-361). "
-                        "Use 'benfica' para continuar a planilha.")
+    g.add_argument("--agregacao", choices=["benfica", "calendario"],
+                   default="benfica",
+                   help="(produtos 8-dias) 'benfica' = janelas fixas de DOY da série "
+                        "histórica 2001-2020 (jan = DOY 361 do ano anterior + 1, 9, 17; "
+                        "fev = 25-49; ...; dez = 337-361), padrão; 'calendario' = "
+                        "composições iniciadas dentro do mês civil.")
     g.add_argument("--stats-extras", action="store_true",
                    help="Inclui n_pixels, desvio-padrão, mínimo e máximo no CSV.")
     g.add_argument("--formato", choices=["longo", "largo"], default="longo",
-                   help="'longo' = ano[,mes],bioma,valor (padrão); 'largo' = uma "
-                        "coluna por bioma, como na planilha histórica.")
+                   help="'longo' = ano[,mes],bioma,<uma coluna por variável> (padrão); "
+                        "'largo' = ano,mes,[oni],<bioma>_<variável>..., como a aba "
+                        "Plan1 da planilha histórica.")
     g.add_argument("--tile-scale", type=int, default=4,
                    help="tileScale do reduceRegions (padrão 4; aumente se faltar memória).")
-    g.add_argument("--saida", help="Caminho do CSV de saída "
-                                   "(padrão: <produto>_biomas_bahia_<inicio>_<fim>.csv).")
+    g.add_argument("--saida", help="Caminho do CSV de saída (padrão: "
+                                   "variaveis_biomas_bahia_<inicio>_<fim>.csv; o NPP "
+                                   "anual vai para npp_anual_biomas_bahia_<...>.csv).")
     g.add_argument("--decimal", choices=[".", ","], default=".",
                    help="Separador decimal do CSV. ',' também usa ';' como "
                         "separador de campos (Excel pt-BR). Padrão '.'.")
     return p
 
 
+def _resolver_variaveis(args) -> Tuple[List[str], bool]:
+    nomes = list(args.variavel or [])
+    if args.produto:
+        nomes += ALIAS_PRODUTO[args.produto]
+    if not nomes:
+        nomes = ["psn"]
+    if "todas" in nomes:
+        nomes = [n for n in nomes if n != "todas"] + MENSAIS + ["oni"]
+    # dependências das derivadas
+    for d, deps in DERIVADAS.items():
+        if d in nomes:
+            for x in deps:
+                if x not in nomes:
+                    nomes.append(x)
+    quer_oni = "oni" in nomes
+    ordenado = [n for n in ["npp"] + MENSAIS if n in nomes]   # ida fica após pet
+    return ordenado, quer_oni
+
+
 def main(argv: Optional[Sequence[str]] = None) -> int:
     args = montar_parser().parse_args(argv)
-    cfg = dict(PRODUTOS[args.produto])
-    if args.colecao:
-        cfg["colecao"] = args.colecao
-    if args.banda:
-        cfg["banda"] = args.banda
-        cfg["coluna"] = f"{args.banda.lower()}_g_c_m2"
-    if args.qc_max is not None and not cfg["banda_qc"]:
-        log("AVISO: --qc-max só se aplica ao produto anual (Npp_QC); ignorado.")
+    nomes, quer_oni = _resolver_variaveis(args)
+    cfgs = {n: dict(VARIAVEIS[n]) for n in nomes if n in VARIAVEIS}
+    if args.colecao or args.banda:
+        if len(cfgs) != 1:
+            falhar("--colecao/--banda só valem com uma única variável.")
+        (unica,) = cfgs
+        if args.colecao:
+            cfgs[unica]["colecao"] = args.colecao
+        if args.banda:
+            cfgs[unica]["banda"] = args.banda
+            cfgs[unica]["coluna"] = f"{args.banda.lower()}_{cfgs[unica]['coluna'].split('_', 1)[-1]}"
+    if args.qc_max is not None and not any(c.get("banda_qc") for c in cfgs.values()):
+        log("AVISO: --qc-max só se aplica ao NPP anual (Npp_QC); ignorado.")
 
     try:
         ee = inicializar_ee(args.project, args.autenticar,
                             args.service_account, args.chave_json, args.auth_mode)
 
-        datas = datas_disponiveis(ee, cfg["colecao"])
-        por_ano = relatar_disponibilidade(datas, args.produto, cfg["colecao"])
+        disponibilidade = {}
+        for n, cfg in cfgs.items():
+            datas = datas_disponiveis(ee, cfg["colecao"])
+            disponibilidade[n] = relatar_disponibilidade(datas, cfg["tipo"], cfg["colecao"])
         if args.apenas_verificar:
-            print(max(por_ano))
+            for n, por_ano in disponibilidade.items():
+                print(f"{n}\t{max(por_ano)}")
             return 0
-
-        anos = resolver_intervalo(por_ano, args.inicio, args.fim)
-        log(f"Anos a processar: {anos}")
 
         caminho_biomas, caminho_bahia = args.biomas, args.bahia
         if args.baixar_ibge:
@@ -810,7 +954,6 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                 "  --biomas ARQ.shp         shapefile local (IBGE ou o da dissertação)\n"
                 "  --biomas projects/.../x  asset (FeatureCollection) já no GEE"
             )
-
         log("\nPreparando limites dos biomas na Bahia:")
         if caminho_biomas.startswith(("projects/", "users/")):
             geoms = biomas_asset(ee, caminho_biomas, caminho_bahia,
@@ -819,18 +962,37 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             geoms = biomas_locais(ee, caminho_biomas, caminho_bahia,
                                   args.campo_bioma, args.biomas_nomes, args.tolerancia)
 
-        log("")
-        linhas = calcular(ee, args.produto, cfg, anos, por_ano, geoms,
-                          args.qc_max, args.stats_extras, args.tile_scale,
-                          args.agregacao)
+        linhas: List[dict] = []
+        anos_todos: set = set()
+        for n, cfg in cfgs.items():
+            log("")
+            anos = resolver_intervalo(disponibilidade[n], args.inicio, args.fim)
+            anos_todos.update(anos)
+            log(f"[{n}] anos a processar: {anos}")
+            linhas += calcular(ee, n, cfg, anos, disponibilidade[n], geoms,
+                               args.qc_max, args.stats_extras, args.tile_scale,
+                               args.agregacao)
 
-        sufixo = "_benfica" if (args.produto == "mensal" and args.agregacao == "benfica") else ""
-        saida = Path(args.saida) if args.saida else Path(
-            f"{args.produto}{sufixo}_biomas_bahia_{anos[0]}_{anos[-1]}.csv")
-        n_ok, n_err = gravar_csv(linhas, saida, args.produto, cfg["coluna"],
-                                 args.biomas_nomes, args.stats_extras,
-                                 args.formato == "largo", args.decimal)
-        log(f"\nCSV gravado: {saida}  ({n_ok} registros)")
+        oni = baixar_oni(sorted(anos_todos)) if quer_oni else None
+        n_err = sum("erro" in l for l in linhas)
+        anos_ord = sorted(anos_todos)
+        sufixo = f"_{anos_ord[0]}_{anos_ord[-1]}"
+        base = Path(args.saida) if args.saida else Path(f"variaveis_biomas_bahia{sufixo}.csv")
+
+        mensais = [l for l in linhas if l.get("variavel") != "npp"]
+        anuais = [l for l in linhas if l.get("variavel") == "npp"]
+        if mensais:
+            reg, cols = montar_tabela(mensais, [n for n in nomes if n != "npp"], oni)
+            k = gravar_csv(reg, cols, base, args.biomas_nomes,
+                           args.formato == "largo", args.decimal)
+            log(f"\nCSV gravado: {base}  ({k} linhas; colunas: {', '.join(cols)})")
+        if anuais:
+            reg, cols = montar_tabela(anuais, ["npp"], None)
+            destino = base.with_name(f"npp_anual_biomas_bahia{sufixo}.csv") if mensais \
+                else base
+            k = gravar_csv(reg, cols, destino, args.biomas_nomes,
+                           args.formato == "largo", args.decimal)
+            log(f"CSV gravado: {destino}  ({k} linhas)")
         if n_err:
             log(f"AVISO: {n_err} registro(s) falharam e ficaram fora do CSV "
                 "(veja mensagens acima).")
