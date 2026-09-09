@@ -1,7 +1,7 @@
 # Relatório: atualização da base de dados 2001–2025 por bioma na Bahia via Google Earth Engine
 
-Autor dos dados: Ygor (PPGCTA/UFSB-IFBA). Processamento: script `npp_modis_gee.py`,
-08–09/09/2026, projeto GEE `decoded-agency-465400-g8`. Série de referência:
+Autor dos dados: Ygor (PPGCTA/UFSB-IFBA). Processamento: `npp_modis_gee.py`,
+`validar_planilha.py` e `montar_base.py` (orquestrados por `reproduzir_base.py`), 08–09/09/2026, projeto GEE `decoded-agency-465400-g8`. Série de referência:
 planilha `dados_graficos_Benfica_3.xlsx` (Benfica et al. 2022, *Geogr. Environ.
 Sustain.* 15(4); Benfica et al. 2023, *J. South Am. Earth Sci.*).
 
@@ -86,16 +86,20 @@ Mata Atlântica 1.139–1.289; Cerrado 768–980; Caatinga 734–907.
 
 ## 5. Arquivos entregues (`npp_modis/resultados/`)
 
+Gerados de ponta a ponta por `reproduzir_base.py` (= `npp_modis_gee.py` →
+`validar_planilha.py` → `montar_base.py`) em 09/09/2026.
+
 | Arquivo | Uso |
 |---|---|
-| `variaveis_mensais_2001_2025_toda_gee_plan1.csv` | **série recomendada**: 2001–2025 inteira no GEE (v6.1, IMERG V07), layout Plan1 |
-| `variaveis_mensais_2001_2025_concatenada_corrigida_plan1.csv` | planilha 2001–2020 com as 7 correções + GEE 2021–2025 |
-| `variaveis_mensais_2001_2025_concatenada_plan1.csv` | planilha original + GEE 2021–2025 |
-| `variaveis_mensais_2021_2025_plan1.csv` / `_longo.csv` | só os anos novos |
-| `npp_anual_2021_2025.csv` | NPP anual |
-| `correcoes_planilha_2001_2020.csv` | as 7 células alteradas, valor antigo/novo e motivo |
-| `validacao_2001_2020_todas_variaveis.csv` | os 720 pares por variável |
-| `variaveis_bahia_biomas_2001_2025.xlsx` | tudo em abas |
+| `base_2001_2025_recomendada_plan1.csv` | **série recomendada**: 2001–2025 inteira no GEE (v6.1, IMERG V07), layout Plan1 |
+| `base_2001_2025_corrigida_plan1.csv` | planilha 2001–2020 com as 7 correções + GEE 2021–2025 |
+| `base_2001_2025_original_plan1.csv` | planilha original + GEE 2021–2025 |
+| `base_2001_2025_recomendada_longo.csv` / `variaveis_2001_2025_longo.csv` | formato longo (ano, mes, bioma, uma coluna por variável) |
+| `npp_anual_2001_2025.csv` | NPP anual MOD17A3HGF 2001–2025 |
+| `correcoes_planilha.csv` | as 7 células alteradas, valor antigo/novo e motivo |
+| `validacao_resumo.csv` / `validacao_pares.csv` | métricas por variável e os 720 pares |
+| `precip_v06_2001_2020.csv` | chuva IMERG V06 (fonte da planilha), só para validação |
+| `base_bahia_biomas_2001_2025.xlsx` | tudo em abas |
 
 Layout Plan1: `ano, mes, ONI, FMA_PSN, Cerrado_PSN, Caatinga_PSN, FMA_Evap, …,
 FMA_PET, …, FMA_IDA, …, FMA_Temp, …, FMA_Precip, …, FMA_AreaQueimada, …`

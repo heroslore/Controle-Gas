@@ -241,20 +241,20 @@ desvio, mínimo, máximo e n.º de composições.
 
 ## Resultados já gerados (pasta `resultados/`) e relatório
 
-O relatório completo (o que foi feito, metodologia, métricas de validação,
-problemas e soluções, texto sugerido para a dissertação) está em
-[`RELATORIO_METODOLOGIA.md`](RELATORIO_METODOLOGIA.md).
+Gerados por `reproduzir_base.py` em 09/09/2026. O relatório completo (o que foi
+feito, metodologia, métricas, problemas e soluções, texto sugerido para a
+dissertação) está em [`RELATORIO_METODOLOGIA.md`](RELATORIO_METODOLOGIA.md).
 
 | Arquivo | Conteúdo |
 |---|---|
-| `variaveis_mensais_2001_2025_toda_gee_plan1.csv` | **série recomendada**: 2001–2025 inteira reprocessada no GEE (v6.1, IMERG V07), layout Plan1 |
-| `variaveis_mensais_2001_2025_concatenada_corrigida_plan1.csv` | planilha 2001–2020 com 7 células corrigidas + GEE 2021–2025 |
-| `variaveis_mensais_2001_2025_concatenada_plan1.csv` | planilha original + GEE 2021–2025 |
-| `variaveis_mensais_2021_2025_plan1.csv` / `_longo.csv` | as 7 variáveis mensais + ONI, só 2021–2025 |
-| `npp_anual_2021_2025[_largo].csv` | NPP anual MOD17A3HGF |
-| `correcoes_planilha_2001_2020.csv` | células da planilha substituídas (valor antigo, novo, motivo) |
-| `validacao_2001_2020_todas_variaveis.csv` | planilha × GEE, 720 linhas, todas as variáveis |
-| `variaveis_bahia_biomas_2001_2025.xlsx` | tudo acima em abas, com resumo da validação |
+| `base_2001_2025_recomendada_plan1.csv` | **série recomendada**: 2001–2025 inteira no GEE (v6.1, IMERG V07), layout Plan1 |
+| `base_2001_2025_corrigida_plan1.csv` | planilha 2001–2020 com 7 células corrigidas + GEE 2021–2025 |
+| `base_2001_2025_original_plan1.csv` | planilha original + GEE 2021–2025 |
+| `variaveis_2001_2025_longo.csv` | saída bruta do pipeline, formato longo |
+| `npp_anual_2001_2025.csv` | NPP anual MOD17A3HGF |
+| `correcoes_planilha.csv` | células da planilha substituídas (valor antigo, novo, motivo) |
+| `validacao_resumo.csv` / `validacao_pares.csv` | planilha × GEE por variável |
+| `base_bahia_biomas_2001_2025.xlsx` | tudo acima em abas |
 
 Os `*_excel_ptbr.csv` usam `;` e vírgula decimal. Chuva de out–dez/2025 fica em
 branco até a NASA publicar o IMERG mensal Final (reexecute

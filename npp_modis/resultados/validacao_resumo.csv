@@ -1,0 +1,8 @@
+﻿variavel,fonte,n,r_pearson,erro_pct_mediano,p90_abs_erro_pct
+psn_g_c_m2,GEE (coleção do script),720,0.9949,-0.0005,0.8079
+ida,GEE (coleção do script),720,0.9984,1.6894,4.1947
+et_mm,GEE (coleção do script),720,0.9926,-3.3581,6.1667
+precip_mm,GEE (coleção do script),720,0.9847,0.1587,37.625
+lst_dia_c,GEE (coleção do script),717,0.9776,-1.1995,5.5763
+area_queimada_ha,GEE (coleção do script),668,0.9953,0.1555,28.315
+precip_mm,IMERG V06,720,0.9964,1.1174,2.6249
