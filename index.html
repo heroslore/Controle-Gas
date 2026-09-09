@@ -553,6 +553,7 @@
         <button class="btn btn-azul" id="btnNuvemLink" style="margin-top:8px; padding:13px; font-size:0.98rem;">📱 Mandar link de acesso para outro celular</button>
         <button class="btn btn-cinza" id="btnNuvemSair" style="margin-top:8px; padding:13px; font-size:0.98rem;">Desconectar este aparelho</button>
       </div>
+      <button class="btn" id="btnNuvemRecuperar" style="display:none; margin-top:8px; background:none; border:2px dashed var(--amarelo); color:var(--amarelo); padding:12px; font-size:0.92rem;"></button>
     </div>
 
     <!-- Backup -->
@@ -3051,7 +3052,15 @@
     renderNuvemCard();
   }
   function horaCurta(iso){ if(!iso) return ""; var d=new Date(iso); return d.toLocaleDateString("pt-BR").slice(0,5)+" "+d.toTimeString().slice(0,5); }
+  function copiaAnterior(){ try { return JSON.parse(localStorage.getItem(COPIA_CHAVE)||"null"); } catch(e){ return null; } }
+  function renderBotaoRecuperar(){
+    var b = document.getElementById("btnNuvemRecuperar"); if (!b) return;
+    var c = copiaAnterior();
+    if (c && c.dados){ b.style.display = "block"; b.textContent = "↩️ Recuperar os dados que estavam neste aparelho antes da nuvem ("+contarSemanas(c.dados)+" semana(s), "+horaCurta(c.quando)+")"; }
+    else b.style.display = "none";
+  }
   function renderNuvemCard(){
+    renderBotaoRecuperar();
     var info = document.getElementById("nuvemInfo"); if (!info) return;
     var form = document.getElementById("nuvemForm"), acoes = document.getElementById("nuvemAcoes");
     if (!nuvemLigada()){
@@ -3069,7 +3078,9 @@
   function guardarCopiaConflito(obj){
     try { localStorage.setItem("gas-agua-conflito-"+Date.now(), JSON.stringify(obj)); } catch(e){}
   }
+  var COPIA_CHAVE = "gas-agua-copia-antes-nuvem";
   function adotarDaNuvem(obj){
+    try { if (contarSemanas(dados)>0 && JSON.stringify(obj)!==JSON.stringify(dados)) localStorage.setItem(COPIA_CHAVE, JSON.stringify({ quando:new Date().toISOString(), dados:dados })); } catch(e){}
     dados = obj;
     garantirClientes();
     semanaVisaoId = "atual";
@@ -3219,6 +3230,15 @@
     } catch(e){ if (e && e.name==="AbortError") return; }
     try { await navigator.clipboard.writeText(texto); alert("Link copiado. Cole no WhatsApp do outro celular. Quem abrir o link fica conectado à mesma nuvem."); }
     catch(e){ prompt("Copie o link abaixo e mande para o outro celular:", link); }
+  });
+  document.getElementById("btnNuvemRecuperar").addEventListener("click", async function(){
+    var c = copiaAnterior(); if (!c || !c.dados) return;
+    if (!confirm("Recuperar os dados anteriores ("+contarSemanas(c.dados)+" semana(s))?\n\nEles voltam para este aparelho e sobem para a nuvem, substituindo o que está lá.")) return;
+    dados = c.dados; garantirClientes(); semanaVisaoId = "atual";
+    dados.ultimaAlteracao = new Date().toISOString();
+    try { localStorage.removeItem(COPIA_CHAVE); } catch(e){}
+    await persistir(); prepararAbertura(); renderTudo();
+    alert("✓ Dados recuperados. Eles vão para a nuvem em instantes.");
   });
   document.getElementById("btnNuvemSair").addEventListener("click", function(){
     if (!confirm("Desconectar este aparelho da nuvem?\n\nOs dados continuam aqui e na nuvem; só param de sincronizar.")) return;
