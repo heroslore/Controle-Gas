@@ -67,7 +67,10 @@ VARIAVEIS = {
                 agreg="media", reducer="mean", coluna="lst_dia_c"),
     "precip": dict(colecao="NASA/GPM_L3/IMERG_MONTHLY_V07", banda="precipitation",
                    escala=1.0, valido=(0, 1e9), tipo="mensal", agreg="mmh_x_horas",
-                   reducer="mean", coluna="precip_mm"),
+                   reducer="mean", coluna="precip_mm",
+                   # meses ainda sem o produto mensal (Final, ~6 meses de atraso):
+                   # média das meias-horas do IMERG V07 (inclui Late run) x horas.
+                   reserva="NASA/GPM_L3/IMERG_V07"),
     "queimada": dict(colecao="MODIS/061/MCD64A1", banda="BurnDate", escala=1.0,
                      valido=(1, 366), tipo="mensal", agreg="contagem",
                      reducer="count", coluna="area_queimada_ha", ha_por_pixel=25.0),
@@ -77,6 +80,10 @@ MENSAIS = ["psn", "et", "pet", "ida", "lst", "precip", "queimada"]
 ALIAS_PRODUTO = {"anual": ["npp"], "mensal": ["psn"]}
 
 LOTE = 12   # reduções por requisição ao GEE
+# Meses sem o IMERG mensal Final: estimar pela média das meias-horas (Late run)?
+# Desligado por padrão: em 2025 o Late run ficou 35-85 % abaixo do Final nos
+# meses secos da Bahia. Ligue com --precip-provisoria só para uma prévia.
+PRECIP_PROVISORIA = False
 URL_ONI = "https://www.cpc.ncep.noaa.gov/data/indices/oni.ascii.txt"
 ESTACOES_ONI = ["DJF", "JFM", "FMA", "MAM", "AMJ", "MJJ", "JJA", "JAS",
                 "ASO", "SON", "OND", "NDJ"]
@@ -558,14 +565,26 @@ def periodos_do_ano(ee, cfg: dict, ano: int, por_ano: Dict[int, List[dt.date]],
         fim = dt.date(ano + 1, 1, 1) if mes == 12 else dt.date(ano, mes + 1, 1)
         if tipo == "mensal":
             datas_mes = [d for d in datas_ano if d.month == mes]
-            if not datas_mes:
+            provisorio = 0
+            if datas_mes:
+                img = ee.Image(col.filterDate(ini.isoformat(), fim.isoformat()).first())
+                img = _mascarar_escalar(ee, img, cfg, None)
+            elif cfg.get("reserva") and PRECIP_PROVISORIA and dt.date.today() > fim:
+                # Produto mensal ainda não publicado: usa a coleção de reserva
+                # (meias-horas), média do mês. Marcado como provisório.
+                log(f"  AVISO: {ano}-{mes:02d} ainda sem {cfg['colecao']}; usando "
+                    f"média de {cfg['reserva']} (provisório).")
+                sub = (ee.ImageCollection(cfg["reserva"])
+                       .filterDate(ini.isoformat(), fim.isoformat()).select(cfg["banda"]))
+                img = sub.mean().multiply(cfg["escala"])
+                provisorio = 1
+            else:
                 log(f"  AVISO: {ano}-{mes:02d} sem imagem em {cfg['colecao']}; mês ignorado.")
                 continue
-            img = ee.Image(col.filterDate(ini.isoformat(), fim.isoformat()).first())
-            img = _mascarar_escalar(ee, img, cfg, None)
-            if cfg["agreg"] == "mmh_x_horas":          # IMERG mensal: mm/h -> mm/mês
+            if cfg["agreg"] == "mmh_x_horas":          # IMERG: mm/h -> mm/mês
                 img = img.multiply(24 * (fim - ini).days)
-            saida.append(({"ano": ano, "mes": mes, "n_composicoes": 1}, img))
+            saida.append(({"ano": ano, "mes": mes, "n_composicoes": 1,
+                           "provisorio": provisorio}, img))
             continue
 
         if agregacao == "benfica":
@@ -683,6 +702,8 @@ def calcular(ee, nome: str, cfg: dict, anos: Sequence[int],
                                    "erro": "sem pixels válidos"})
                     continue
             linha = {**rotulo, "bioma": p["bioma"], "variavel": nome, coluna: valor}
+            if p.get("provisorio"):
+                linha["provisorio"] = nome
             if extras and cfg["reducer"] != "count":
                 linha.update({"n_pixels": int(n), "desvio": p.get("stdDev"),
                               "min": p.get("min"), "max": p.get("max"),
@@ -761,6 +782,8 @@ def montar_tabela(linhas: List[dict], nomes: Sequence[str],
         k = tuple(l.get(c) for c in chave) + (l["bioma"],)
         d = tab.setdefault(k, {c: l.get(c) for c in chave} | {"bioma": l["bioma"]})
         d[VARIAVEIS[l["variavel"]]["coluna"]] = l[VARIAVEIS[l["variavel"]]["coluna"]]
+        if l.get("provisorio"):
+            d["provisorio"] = ";".join(filter(None, [d.get("provisorio"), l["provisorio"]]))
     for nome, (a, b) in DERIVADAS.items():
         if nome in nomes:
             ca, cb, cn = VARIAVEIS[a]["coluna"], VARIAVEIS[b]["coluna"], nome
@@ -772,6 +795,8 @@ def montar_tabela(linhas: List[dict], nomes: Sequence[str],
         for d in tab.values():
             d["oni"] = oni.get((d["ano"], d["mes"]))
     registros = [tab[k] for k in sorted(tab)]
+    if any(r.get("provisorio") for r in registros):
+        colunas.append("provisorio")
     return registros, chave + ["bioma"] + colunas
 
 
@@ -876,6 +901,10 @@ def montar_parser() -> argparse.ArgumentParser:
                         "histórica 2001-2020 (jan = DOY 361 do ano anterior + 1, 9, 17; "
                         "fev = 25-49; ...; dez = 337-361), padrão; 'calendario' = "
                         "composições iniciadas dentro do mês civil.")
+    g.add_argument("--precip-provisoria", action="store_true",
+                   help="Preenche meses ainda sem IMERG mensal Final com a média das "
+                        "meias-horas (Late run), marcados como 'provisorio'. Padrão: "
+                        "deixa em branco (o Late run subestima muito os meses secos).")
     g.add_argument("--stats-extras", action="store_true",
                    help="Inclui n_pixels, desvio-padrão, mínimo e máximo no CSV.")
     g.add_argument("--formato", choices=["longo", "largo"], default="longo",
@@ -914,6 +943,8 @@ def _resolver_variaveis(args) -> Tuple[List[str], bool]:
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
     args = montar_parser().parse_args(argv)
+    global PRECIP_PROVISORIA
+    PRECIP_PROVISORIA = bool(args.precip_provisoria)
     nomes, quer_oni = _resolver_variaveis(args)
     cfgs = {n: dict(VARIAVEIS[n]) for n in nomes if n in VARIAVEIS}
     if args.colecao or args.banda:

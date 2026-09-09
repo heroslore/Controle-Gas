@@ -1,0 +1,8 @@
+﻿variavel,ano,mes,bioma,valor_planilha,valor_corrigido,fonte_correcao,motivo
+lst_dia_c,2011,10,Mata Atlântica,33.035000000000004,28.9367,"GEE v6.1, mesma regra de agregação",desvio -12% vs reprodução independente
+precip_mm,2001,9,Caatinga,81.6,21.5033,IMERG V06 (GEE),desvio -74% vs reprodução independente
+precip_mm,2003,1,Cerrado,79.3121,198.1609,IMERG V06 (GEE),desvio +150% vs reprodução independente
+precip_mm,2003,1,Caatinga,45.395,102.4454,IMERG V06 (GEE),desvio +126% vs reprodução independente
+precip_mm,2016,10,Cerrado,22.27,66.4489,IMERG V06 (GEE),desvio +198% vs reprodução independente
+precip_mm,2020,4,Mata Atlântica,117.81,179.5834,IMERG V06 (GEE),desvio +52% vs reprodução independente
+psn_g_c_m2,2004,10,Mata Atlântica,51.30455932713214,142.589,"GEE v6.1, mesma regra de agregação",desvio +178% vs reprodução independente

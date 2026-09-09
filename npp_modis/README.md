@@ -29,7 +29,10 @@ o layout da aba *Plan1* da planilha: `ano, mes, oni, <bioma>_<variável>...`
 alguns meses aqui (r = 0,976 contra a planilha). Por isso o script usa V07 e
 o recomendado é **reprocessar a chuva de 2001–2025 inteira em V07**
 (`--variavel precip --inicio 2001`) em vez de emendar V06 + V07. Os resultados
-em `resultados/` trazem as duas versões.
+em `resultados/` trazem as duas versões. Meses ainda sem o produto mensal
+Final ficam em branco; `--precip-provisoria` estima-os pelas meias-horas
+(Late run), mas em 2025 essa estimativa ficou 35–85 % abaixo do Final nos
+meses secos, então use só como prévia.
 
 ## Sobre a PSN: a série histórica é MENSAL (PsnNet), não NPP anual
 
@@ -220,38 +223,23 @@ desvio, mínimo, máximo e n.º de composições.
   bioma sem pixel válido (fica fora do CSV e o script termina com código 2);
 - falta de memória no GEE (sugere `--tile-scale`).
 
-## Resultados já gerados (pasta `resultados/`)
+## Resultados já gerados (pasta `resultados/`) e relatório
 
-Processados em 08–09/09/2026 com o projeto do autor, limites IBGE e as coleções
-da tabela do topo. Último ano disponível: **2025** para todas as variáveis
-(a chuva IMERG V07 vai até set/2025; out–dez/2025 ficam vazios até a NASA
-publicar). ONI vai até JJA/2026.
+O relatório completo (o que foi feito, metodologia, métricas de validação,
+problemas e soluções, texto sugerido para a dissertação) está em
+[`RELATORIO_METODOLOGIA.md`](RELATORIO_METODOLOGIA.md).
 
 | Arquivo | Conteúdo |
 |---|---|
-| `variaveis_mensais_2021_2025_plan1.csv` | **as 7 variáveis mensais + ONI, 2021–2025, no layout da aba Plan1** (`ano, mes, ONI, FMA_PSN, Cerrado_PSN, Caatinga_PSN, FMA_Evap, ..., Caatinga_AreaQueimada`) |
-| `variaveis_mensais_2021_2025_longo.csv` | o mesmo em formato longo (ano, mes, bioma, uma coluna por variável) |
-| `variaveis_mensais_2001_2025_concatenada_plan1.csv` | planilha 2001–2020 + GEE 2021–2025 (chuva 2021+ em V07) |
-| `variaveis_mensais_2001_2025_toda_gee_plan1.csv` / `_longo.csv` | toda a série 2001–2025 reprocessada no GEE (v6.1, IMERG V07), homogênea |
+| `variaveis_mensais_2001_2025_toda_gee_plan1.csv` | **série recomendada**: 2001–2025 inteira reprocessada no GEE (v6.1, IMERG V07), layout Plan1 |
+| `variaveis_mensais_2001_2025_concatenada_corrigida_plan1.csv` | planilha 2001–2020 com 7 células corrigidas + GEE 2021–2025 |
+| `variaveis_mensais_2001_2025_concatenada_plan1.csv` | planilha original + GEE 2021–2025 |
+| `variaveis_mensais_2021_2025_plan1.csv` / `_longo.csv` | as 7 variáveis mensais + ONI, só 2021–2025 |
 | `npp_anual_2021_2025[_largo].csv` | NPP anual MOD17A3HGF |
-| `validacao_2001_2020_todas_variaveis.csv` | planilha × GEE, 720 linhas, todas as variáveis (inclui chuva V06 e V07) |
+| `correcoes_planilha_2001_2020.csv` | células da planilha substituídas (valor antigo, novo, motivo) |
+| `validacao_2001_2020_todas_variaveis.csv` | planilha × GEE, 720 linhas, todas as variáveis |
 | `variaveis_bahia_biomas_2001_2025.xlsx` | tudo acima em abas, com resumo da validação |
-| `psn_*.csv`, `psn_npp_bahia_biomas_2001_2025.xlsx` | entregas anteriores só de PSN/NPP |
 
-Os `*_excel_ptbr.csv` usam `;` e vírgula decimal.
-
-### Validação 2001–2020 (planilha × GEE, mesma regra de agregação)
-
-| Variável | r | erro mediano | p90 do erro | Observação |
-|---|---|---|---|---|
-| PSN | 1,000 / 0,936 (MA) | 0,2 % | < 1 % | out/2004 MA = 51,30 na planilha vs 142,59 (provável digitação); nov/2001 +5 a +18 % |
-| ET | 0,993 | −3 % | 6 % | MOD16 v6.1 gap-filled vs v6 |
-| IDA (ET/PET) | 0,998 | +1,7 % | 4 % | |
-| Temperatura (LST dia) | 0,978 | −0,5 °C | ~1,7 °C | viés −1,1 °C na Mata Atlântica; mascaramento de nuvem diferente |
-| Chuva IMERG V06 | 0,996 | +1 % | 2,6 % | é a fonte da planilha; alguns pontos atípicos na planilha (out/2016 Cerrado, jan/2003, set/2001 Caatinga, abr/2020 MA) |
-| Chuva IMERG V07 | 0,985 | 0 % | 38 % | versão atual; única disponível após set/2021 |
-| Área queimada | 0,995 | +1 % | 28 % (valores pequenos) | pixels MCD64A1 × 25 ha |
-
-A coluna ONI da aba Plan1 da planilha parece deslocada (os valores em 2001
-são os de 2000). Os arquivos aqui usam o ONI atual da NOAA (ERSSTv5), no mês
-central de cada estação.
+Os `*_excel_ptbr.csv` usam `;` e vírgula decimal. Chuva de out–dez/2025 fica em
+branco até a NASA publicar o IMERG mensal Final (reexecute
+`--variavel precip --inicio 2025`).
