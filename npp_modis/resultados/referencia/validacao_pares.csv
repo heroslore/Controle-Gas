@@ -3179,6 +3179,9 @@
 2020,5,Mata Atlântica,lst_dia_c,GEE,25.2283,25.4718,0.9653
 2020,5,Cerrado,lst_dia_c,GEE,28.3633,28.3165,-0.165
 2020,5,Caatinga,lst_dia_c,GEE,26.8852,27.0989,0.7949
+2001,6,Mata Atlântica,lst_dia_c,GEE,24.2104,24.1966,-0.0572
+2001,6,Cerrado,lst_dia_c,GEE,29.4131,29.4078,-0.018
+2001,6,Caatinga,lst_dia_c,GEE,29.456,29.457,0.0034
 2002,6,Mata Atlântica,lst_dia_c,GEE,23.7208,23.7082,-0.0531
 2002,6,Cerrado,lst_dia_c,GEE,29.6406,29.6377,-0.0098
 2002,6,Caatinga,lst_dia_c,GEE,28.6059,28.5868,-0.0666

@@ -590,7 +590,13 @@ def periodos_do_ano(ee, cfg: dict, ano: int, por_ano: Dict[int, List[dt.date]],
         if agregacao == "benfica":
             datas_mes = [_data_doy(ano, d) for d in JANELAS_BENFICA[mes]]
             faltam = [d for d in datas_mes if d not in existentes]
-            if faltam:
+            if faltam and cfg["agreg"] == "media" and len(datas_mes) - len(faltam) >= 2:
+                # Média tolera composição ausente (ex.: MOD11A2 2001-06-18).
+                log(f"  AVISO: {ano}-{mes:02d} sem composição(ões) "
+                    f"{[d.isoformat() for d in faltam]} em {cfg['colecao']}; "
+                    "média das disponíveis.")
+                datas_mes = [d for d in datas_mes if d not in faltam]
+            elif faltam:
                 log(f"  AVISO: {ano}-{mes:02d} sem composição(ões) "
                     f"{[d.isoformat() for d in faltam]} em {cfg['colecao']}; mês ignorado.")
                 continue

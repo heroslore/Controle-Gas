@@ -71,39 +71,45 @@ erro = (GEE − planilha)/planilha.
 Séries por ano/bioma do NPP anual (MOD17A3HGF) 2021–2025, em g C/m²/ano:
 Mata Atlântica 1.139–1.289; Cerrado 768–980; Caatinga 734–907.
 
-## 4. Problemas encontrados e como foram resolvidos
+## 4. Decisão: base final homogênea, sem resíduos
 
-| Problema | Resolução |
+Os desvios da seção 3 são explicados por versão de produto (Coleção 6 → 6.1,
+IMERG V06 → V07, máscara de nuvem) e por erros de digitação na planilha, não
+por método. Para eliminá-los, **a base final adotada é a série 2001–2025
+calculada inteira no GEE**, com a mesma coleção, a mesma versão, os mesmos
+limites e a mesma regra de agregação em todos os 25 anos. Nenhum valor da
+planilha entra na base final; a planilha serviu apenas para provar que o
+pipeline reproduz a metodologia original (r ≥ 0,978 em todas as variáveis).
+
+Consequências:
+
+| Resíduo | Situação na base final |
 |---|---|
-| A série "NPP" da planilha é, na verdade, PSN mensal | Script calcula PSN (MOD17A2HGF) com a regra da planilha; NPP anual (MOD17A3HGF) sai em arquivo separado |
-| Meses da planilha não são meses civis (janelas de DOY) | Regra reproduzida (`--agregacao benfica`, padrão) |
-| 7 células atípicas na planilha (desvio > 30 % e materialmente relevante frente à reprodução independente): PSN out/2004 MA; chuva set/2001 Caat., jan/2003 Cerr. e Caat., out/2016 Cerr., abr/2020 MA; temperatura out/2011 MA | Substituídas pelo valor reproduzido na versão "concatenada corrigida"; lista completa em `resultados/correcoes_planilha_2001_2020.csv`. A versão original também é entregue |
-| Coluna ONI da aba Plan1 deslocada (valores de 2000 nas linhas de 2001) | ONI refeito a partir da NOAA para 2001–2026 |
-| IMERG V06 (fonte da planilha) descontinuado; no GEE só até set/2021 | 2021–2025 em V07 (única opção). **Recomendação: usar a série toda 2001–2025 em V07** (aba "RECOMENDADA"), evitando a emenda V06→V07, cujas diferenças chegam a 40 % em meses isolados |
-| IMERG mensal Final ainda não publicado para out–dez/2025 | Deixado em branco. A estimativa pelas meias-horas (Late run) foi testada e ficou 35–85 % abaixo do Final nos meses secos de 2025, por isso não é usada por padrão (`--precip-provisoria` liga só para prévia). Reexecutar `--variavel precip --inicio 2025` quando a NASA publicar (~6 meses de latência) |
-| Concorrência no GEE ("Too many concurrent aggregations") | Reduções em lotes de 12 por requisição; rodar uma execução por vez |
-| Coleção 6 (planilha) × Coleção 6.1 (GEE) | Diferença medida ≤ 3 % em ET e < 1 % em PSN; para a dissertação, a série homogênea reprocessada é a mais defensável |
+| Coleção 6 × 6.1 (PSN, ET, LST) | inexistente: tudo em 6.1 |
+| IMERG V06 × V07 | inexistente: tudo em V07 |
+| 7 células atípicas da planilha | inexistentes: valores recalculados |
+| ONI deslocado | inexistente: NOAA CPC, mês central da estação |
+| MOD11A2 sem a composição 18/06/2001 | temperatura de jun/2001 = média das composições disponíveis (marcado no log) |
+| IMERG mensal Final ainda não publicado para out–dez/2025 | as 9 células (3 meses × 3 biomas) ficam vazias; preenchem-se com `--variavel precip --inicio 2025` quando a NASA publicar (latência ≈ 6 meses). Todas as outras variáveis estão completas até dez/2025 |
+
+Recomendação para o modelo: usar `base_final_2001_2025_plan1.csv` (300 linhas,
+ano × mês, 21 colunas de variável × bioma + ONI) e, para a chuva, tratar
+out–dez/2025 como ausentes até a atualização.
 
 ## 5. Arquivos entregues (`npp_modis/resultados/`)
 
-Gerados de ponta a ponta por `reproduzir_base.py` (= `npp_modis_gee.py` →
-`validar_planilha.py` → `montar_base.py`) em 09/09/2026.
-
 | Arquivo | Uso |
 |---|---|
-| `base_2001_2025_recomendada_plan1.csv` | **série recomendada**: 2001–2025 inteira no GEE (v6.1, IMERG V07), layout Plan1 |
-| `base_2001_2025_corrigida_plan1.csv` | planilha 2001–2020 com as 7 correções + GEE 2021–2025 |
-| `base_2001_2025_original_plan1.csv` | planilha original + GEE 2021–2025 |
-| `base_2001_2025_recomendada_longo.csv` / `variaveis_2001_2025_longo.csv` | formato longo (ano, mes, bioma, uma coluna por variável) |
-| `npp_anual_2001_2025.csv` | NPP anual MOD17A3HGF 2001–2025 |
-| `correcoes_planilha.csv` | as 7 células alteradas, valor antigo/novo e motivo |
-| `validacao_resumo.csv` / `validacao_pares.csv` | métricas por variável e os 720 pares |
-| `precip_v06_2001_2020.csv` | chuva IMERG V06 (fonte da planilha), só para validação |
-| `base_bahia_biomas_2001_2025.xlsx` | tudo em abas |
+| `base_final_2001_2025_plan1.csv` | **a base**: layout Plan1 (`ano, mes, ONI, FMA_PSN, Cerrado_PSN, Caatinga_PSN, FMA_Evap, …, Caatinga_AreaQueimada`) |
+| `base_final_2001_2025_longo.csv` | a mesma base em formato longo (ano, mes, bioma, uma coluna por variável) |
+| `npp_anual_2001_2025.csv` | NPP anual MOD17A3HGF |
+| `base_bahia_biomas_2001_2025.xlsx` | base final + NPP + abas de referência |
+| `referencia/validacao_resumo.csv`, `validacao_pares.csv` | evidência de que o método reproduz a planilha |
+| `referencia/correcoes_planilha.csv` | as 7 células atípicas encontradas na planilha |
+| `referencia/planilha_*_2001_2020_mais_gee_*.csv` | planilha original/corrigida emendada aos anos novos, só para comparação |
+| `referencia/precip_v06_2001_2020.csv` | chuva IMERG V06, só para validação |
 
-Layout Plan1: `ano, mes, ONI, FMA_PSN, Cerrado_PSN, Caatinga_PSN, FMA_Evap, …,
-FMA_PET, …, FMA_IDA, …, FMA_Temp, …, FMA_Precip, …, FMA_AreaQueimada, …`
-(FMA = Mata Atlântica). Versões `*_excel_ptbr.csv` com `;` e vírgula decimal.
+Versões `*_excel_ptbr.csv` com `;` e vírgula decimal. FMA = Mata Atlântica.
 
 ## 6. Texto sugerido para a metodologia da dissertação
 
@@ -111,7 +117,7 @@ FMA_PET, …, FMA_IDA, …, FMA_Temp, …, FMA_Precip, …, FMA_AreaQueimada, �
 > real e potencial (MOD16A2GF, ET e PET), temperatura da superfície diurna
 > (MOD11A2, LST_Day_1km), área queimada (MCD64A1) — todos MODIS Coleção 6.1,
 > 500 m/1 km — e precipitação (GPM IMERG Final mensal V07, 0,1°) foram
-> obtidos e processados na plataforma Google Earth Engine (Gorelick et al.,
+> obtidos e processados, para todo o período 2001–2025, na plataforma Google Earth Engine (Gorelick et al.,
 > 2017) por meio da API Python. Para cada bioma (limites IBGE 1:250.000, 2019,
 > recortados pelo limite estadual da Bahia) calculou-se a média espacial de
 > cada composição na projeção nativa do produto, aplicando-se os fatores de

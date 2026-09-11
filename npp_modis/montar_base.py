@@ -6,10 +6,10 @@ validar_planilha.py, no layout da aba "Plan1" da planilha histórica:
 
     ano, mes, ONI, FMA_PSN, Cerrado_PSN, Caatinga_PSN, FMA_Evap, ..., Caatinga_AreaQueimada
 
-Produz três versões da série mensal 2001-2025:
-  RECOMENDADA   toda calculada no GEE (Coleção 6.1, IMERG V07): homogênea
-  CORRIGIDA     planilha 2001-2020 com as células atípicas substituídas + GEE 2021-2025
-  ORIGINAL      planilha 2001-2020 como está + GEE 2021-2025
+Base final = série mensal 2001-2025 calculada inteira no GEE (mesma coleção e
+versão em todos os anos, sem valores herdados da planilha). Na subpasta
+referencia/ ficam, só para comparação, a planilha original/corrigida 2001-2020
+emendada aos anos novos, e as métricas de validação.
 
 Uso:
   python montar_base.py --gee saida/variaveis_2001_2025_longo.csv \\
@@ -65,23 +65,30 @@ def main():
     ano_ini, ano_fim = int(gee.ano.min()), int(gee.ano.max())
 
     abas = {}
-    salvar(gee.round(4), out, f"base_{ano_ini}_{ano_fim}_recomendada_longo")
-    rec = layout_plan1(gee); salvar(rec, out, f"base_{ano_ini}_{ano_fim}_recomendada_plan1")
-    abas[f"RECOMENDADA_{ano_ini}_{ano_fim}"] = rec
+    # ---- BASE FINAL: série homogênea calculada inteira no GEE -------------
+    salvar(gee.round(4), out, f"base_final_{ano_ini}_{ano_fim}_longo")
+    final = layout_plan1(gee); salvar(final, out, f"base_final_{ano_ini}_{ano_fim}_plan1")
+    abas[f"BASE_FINAL_{ano_ini}_{ano_fim}"] = final
+    faltas = gee[list(VARS)].isna().sum(); faltas = faltas[faltas > 0]
+    if len(faltas):
+        print("Células vazias na base final (aguardando publicação do produto):",
+              faltas.to_dict())
 
+    # ---- Referência: comparação com a planilha histórica ------------------
     if a.validacao:
-        val = Path(a.validacao)
+        val = Path(a.validacao); ref = out / "referencia"; ref.mkdir(exist_ok=True)
         oni = gee[["ano", "mes", "oni"]].drop_duplicates()
         novos = gee[gee.ano > 2020]
-        for nome, arq in (("CORRIGIDA", "planilha_corrigida.csv"), ("ORIGINAL", "planilha_tidy.csv")):
+        for nome, arq in (("planilha_corrigida", "planilha_corrigida.csv"),
+                          ("planilha_original", "planilha_tidy.csv")):
             pl = pd.read_csv(val / arq).merge(oni, on=["ano", "mes"], how="left")
             pl["pet_mm"] = np.nan
             serie = pd.concat([pl[CHAVE + list(VARS) + ["oni"]], novos]).sort_values(CHAVE)
-            w = layout_plan1(serie); salvar(w, out, f"base_{ano_ini}_{ano_fim}_{nome.lower()}_plan1")
-            abas[f"{nome}_{ano_ini}_{ano_fim}"] = w
-        for nome, arq in (("Correcoes_planilha", "correcoes_planilha.csv"),
-                          ("Validacao_resumo", "validacao_resumo.csv"),
-                          ("Validacao_pares", "validacao_pares.csv")):
+            w = layout_plan1(serie); salvar(w, ref, f"{nome}_2001_2020_mais_gee_2021_{ano_fim}_plan1")
+            abas[f"ref_{nome}"[:31]] = w
+        for nome, arq in (("ref_correcoes_planilha", "correcoes_planilha.csv"),
+                          ("ref_validacao_resumo", "validacao_resumo.csv"),
+                          ("ref_validacao_pares", "validacao_pares.csv")):
             if (val / arq).exists():
                 abas[nome] = pd.read_csv(val / arq)
 
@@ -106,6 +113,7 @@ def main():
                   "janelas fixas de DOY da planilha (jan = DOY 361 do ano anterior + 1, 9, 17; ...; dez = 337-361)",
                   "IBGE Biomas 1:250.000 (2019) ∩ IBGE malha estadual 2022 (BA)",
                   "npp_modis_gee.py + validar_planilha.py + montar_base.py (Google Earth Engine)"]})
+    abas["Leia-me"].loc[len(abas["Leia-me"])] = ["base final", "série 2001-2025 inteira calculada no GEE; a planilha só serviu para validar o método"]
 
     xlsx = out / f"base_bahia_biomas_{ano_ini}_{ano_fim}.xlsx"
     with pd.ExcelWriter(xlsx, engine="openpyxl") as xw:
