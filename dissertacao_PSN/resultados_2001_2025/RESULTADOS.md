@@ -117,4 +117,19 @@ essa nuance.
 - Corrigido: os dois scripts agora gravam o mesmo
   `Dados_base_nova_2001_2025.xlsx`, com a coluna `Enso` oficial (módulo
   `enso_noaa.py`).
-- Comparação de graus (1 a 5) não foi rodada nesta execução.
+
+## 8. Seleção do grau polinomial (1 a 5) — NOVO
+
+Rodada separada com `TESTAR_GRAUS=True` (150 partições por grau). R² de
+teste médio e diferença treino–teste em pp:
+
+| Grau | Termos | MA | CE | CA |
+|---|---|---|---|---|
+| 1 | 5 | 65,8 (0,8) | 92,9 (0,6) | 90,1 (1,2) |
+| **2** | 20 | **71,0 (5,1)** | **96,7 (0,6)** | **94,2 (1,0)** |
+| 3 | 55 | 68,4 (9,0) | 96,4 (1,0) | 93,4 (2,4) |
+| 4 | 125 | 29,3 (49,0) | 96,1 (1,6) | 63,8 (31,4) |
+| 5 | 251 | −349,9 (432,8) | 93,7 (3,9) | 52,3 (42,8) |
+
+Grau 2 é o ótimo nos três biomas (critério R² teste − 0,5 × gap). Figuras:
+`MA/selecao_grau_polinomial_MA.png`, `CE/…`, `CA/…`.
