@@ -1,3 +1,4 @@
+Fase ENSO: classificação oficial NOAA (ONI >= |0,5| por >= 5 trimestres consecutivos), tabela até JJA 2026.
 
 ===== PREPARAÇÃO DA BASE (a partir do CSV) =====
 Arquivo lido: base_final_2001_2025_plan1_excel_ptbr.csv
@@ -8,11 +9,11 @@ Linhas removidas (precipitação ausente — dado ainda não publicado pela NASA
 2025   11
 2025   12
 Linhas finais usadas: 297
-Distribuição de fases ENSO (calculada a partir do ONI):
+Distribuição de fases ENSO (classificação oficial NOAA):
 Enso
-Neutro     148
+Neutro     149
 El Niño     76
-La Niña     73
+La Niña     72
 Base atualizada salva em Dados_base_nova_2001_2025.xlsx
 
 
@@ -42,24 +43,24 @@ Figura salva: serie_temporal_biomas.png
 ===== KRUSKAL-WALLIS POR FASE ENSO =====
 
 [ PSN ]
-  Mata Atlântica: La Niña=135.4 | Neutro=135.9 | El Niño=128.6 | H=5.43 | p=0.0662 ns
-  Cerrado: La Niña=103.5 | Neutro=94.1 | El Niño=92.9 | H=4.00 | p=0.1352 ns
-  Caatinga: La Niña=93.7 | Neutro=87.2 | El Niño=79.7 | H=8.41 | p=0.0150 *
+  Mata Atlântica: La Niña=135.3 | Neutro=136.0 | El Niño=128.6 | H=5.46 | p=0.0654 ns
+  Cerrado: La Niña=104.2 | Neutro=93.8 | El Niño=92.9 | H=4.74 | p=0.0935 ns
+  Caatinga: La Niña=94.2 | Neutro=87.0 | El Niño=79.7 | H=9.14 | p=0.0104 *
 
 [ EV ]
-  Mata Atlântica: La Niña=104.8 | Neutro=99.4 | El Niño=100.3 | H=10.64 | p=0.0049 **
-  Cerrado: La Niña=82.6 | Neutro=64.8 | El Niño=74.7 | H=15.32 | p=0.0005 ***
-  Caatinga: La Niña=68.9 | Neutro=56.0 | El Niño=59.0 | H=12.00 | p=0.0025 **
+  Mata Atlântica: La Niña=104.8 | Neutro=99.4 | El Niño=100.3 | H=10.36 | p=0.0056 **
+  Cerrado: La Niña=83.2 | Neutro=64.6 | El Niño=74.7 | H=16.30 | p=0.0003 ***
+  Caatinga: La Niña=69.4 | Neutro=55.8 | El Niño=59.0 | H=13.03 | p=0.0015 **
 
 [ PRE ]
-  Mata Atlântica: La Niña=97.2 | Neutro=85.9 | El Niño=86.6 | H=2.23 | p=0.3278 ns
-  Cerrado: La Niña=122.5 | Neutro=58.9 | El Niño=106.6 | H=30.17 | p=0.0000 ***
-  Caatinga: La Niña=73.0 | Neutro=45.9 | El Niño=65.7 | H=16.40 | p=0.0003 ***
+  Mata Atlântica: La Niña=97.2 | Neutro=86.0 | El Niño=86.6 | H=2.11 | p=0.3490 ns
+  Cerrado: La Niña=123.3 | Neutro=59.0 | El Niño=106.6 | H=29.96 | p=0.0000 ***
+  Caatinga: La Niña=73.4 | Neutro=45.9 | El Niño=65.7 | H=16.25 | p=0.0003 ***
 
 [ TST ]
-  Mata Atlântica: La Niña=28.8 | Neutro=27.1 | El Niño=29.7 | H=49.43 | p=0.0000 ***
-  Cerrado: La Niña=32.5 | Neutro=31.8 | El Niño=33.5 | H=11.93 | p=0.0026 **
-  Caatinga: La Niña=32.4 | Neutro=31.5 | El Niño=33.7 | H=22.69 | p=0.0000 ***
+  Mata Atlântica: La Niña=28.8 | Neutro=27.1 | El Niño=29.7 | H=48.50 | p=0.0000 ***
+  Cerrado: La Niña=32.4 | Neutro=31.9 | El Niño=33.5 | H=11.46 | p=0.0032 **
+  Caatinga: La Niña=32.4 | Neutro=31.5 | El Niño=33.7 | H=21.82 | p=0.0000 ***
 
 ===== CORRELAÇÃO DE PEARSON: ONI x VARIÁVEIS =====
 

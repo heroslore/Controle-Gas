@@ -71,21 +71,28 @@ Maiores interações: CE `WAI_CE×saz_sin` +16,50 e `EV_CE×WAI_CE` −13,04
 (reflexo da colinearidade EV×WAI); MA `saz_sin×saz_cos` +5,64; CA
 `EV_CA×saz_cos` +5,52.
 
-## 6. Análise ENSO (fase por limiar simples do ONI) — NOVO
+## 6. Análise ENSO (classificação OFICIAL NOAA/CPC) — NOVO
 
-Distribuição das fases: Neutro 148, El Niño 76, La Niña 73 meses.
+Fase por mês definida pela regra operacional da NOAA: ONI >= +0,5 (El Niño)
+ou <= −0,5 (La Niña) por pelo menos 5 trimestres móveis consecutivos, usando
+a tabela completa oni.ascii.txt (cópia em `oni_noaa_cpc.txt`) para as bordas.
+O ONI do CSV é idêntico ao da NOAA nos 300 meses. Em relação ao limiar
+simples, só **um mês mudou**: outubro/2016 (ONI −0,51, sequência de 1 mês)
+passou de La Niña para Neutro. Distribuição: Neutro 149, El Niño 76,
+La Niña 72 meses.
 
 Kruskal-Wallis por fase (médias La Niña | Neutro | El Niño):
 
 | Var | MA | CE | CA |
 |---|---|---|---|
-| PSN | 135,4 \| 135,9 \| 128,6 — p=0,066 ns | 103,5 \| 94,1 \| 92,9 — p=0,135 ns | 93,7 \| 87,2 \| 79,7 — **p=0,015 \*** |
-| EV | p=0,005 ** | p=0,0005 *** | p=0,003 ** |
-| PRE | p=0,328 ns | p<0,0001 *** | p=0,0003 *** |
+| PSN | 135,3 \| 136,0 \| 128,6 — p=0,065 ns | 104,2 \| 93,8 \| 92,9 — p=0,094 ns | 94,2 \| 87,0 \| 79,7 — **p=0,010 \*** |
+| EV | p=0,006 ** | p=0,0003 *** | p=0,0015 ** |
+| PRE | p=0,349 ns | p<0,0001 *** | p=0,0003 *** |
 | TST | p<0,0001 *** | p=0,003 ** | p<0,0001 *** |
 
-Pearson ONI × PSN: MA r=−0,240 (p<0,0001), CE r=−0,071 (ns), CA r=−0,155
-(p=0,007). ONI × TST positivo em MA (0,175 **) e CA (0,134 *).
+Pearson ONI × PSN (não depende da fase): MA r=−0,240 (p<0,0001), CE
+r=−0,071 (ns), CA r=−0,155 (p=0,007). ONI × TST positivo em MA (0,175 **)
+e CA (0,134 *).
 
 OLS ONI → variáveis: R² máximo 3,05 % (TST_MA); EV_MA 2,00 %; todos os
 demais abaixo de 2 %. Sustenta a afirmação de que o ONI explica menos de
@@ -95,9 +102,11 @@ Regressão simples PSN × variáveis (R² ajustado): EV explica 74,8 % (CE) e
 76,2 % (CA) mas só 12,5 % em MA; WAI 81,5 % em CA; TST 59,2 % (CE) e 54,2 %
 (CA), 11,2 % em MA. Área queimada (log) negativa nos três biomas.
 
-⚠️ A fase ENSO foi derivada do ONI por limiar simples (±0,5), não pela
-definição operacional da NOAA (5 trimestres consecutivos). Confirmar antes
-de reportar.
+Observação: na tabela ONI atual da NOAA (período-base atualizado), o evento
+frio de 2016-17 não alcança 5 trimestres com ONI <= −0,5 (set −0,42,
+out −0,51, nov −0,49), por isso não conta como La Niña aqui. Se a
+dissertação citar a lista histórica de episódios da NOAA, vale registrar
+essa nuance.
 
 ## 7. Observações sobre os scripts enviados
 
@@ -105,8 +114,7 @@ de reportar.
   `proximo_nome`, e está com `TESTAR_GRAUS=False`. O handoff descreve uma
   versão com nomes fixos e `TESTAR_GRAUS=True`. Os resultados não mudam,
   mas a versão no repositório não é a "final" descrita no handoff.
-- O `Modelo_PSN.py` regrava `Dados_base_nova_2001_2025.xlsx` **sem** a
-  coluna `Enso` (o `Analise_Biomas_PSN.py` grava com ela). Inofensivo, pois
-  a análise recalcula a fase se a coluna faltar, mas os dois scripts não
-  produzem o mesmo arquivo.
+- Corrigido: os dois scripts agora gravam o mesmo
+  `Dados_base_nova_2001_2025.xlsx`, com a coluna `Enso` oficial (módulo
+  `enso_noaa.py`).
 - Comparação de graus (1 a 5) não foi rodada nesta execução.

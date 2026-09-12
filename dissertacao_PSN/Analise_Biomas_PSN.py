@@ -20,9 +20,12 @@ o MESMO arquivo que o Modelo_PSN.py também lê, então rodar qualquer um dos
 dois primeiro já prepara a base para o outro. Se apagar o CSV e deixar só o
 .xlsx pronto, o script usa ele direto.
 
-A fase ENSO é derivada do ONI com o critério: ONI >= 0.5 -> El Niño;
-ONI <= -0.5 -> La Niña; caso contrário -> Neutro (mesmo limiar usado no
-gráfico de série temporal deste script).
+A fase ENSO segue a definição OFICIAL da NOAA/CPC (módulo enso_noaa.py):
+El Niño / La Niña só quando o ONI fica >= +0,5 / <= -0,5 por pelo menos 5
+trimestres móveis consecutivos; caso contrário, Neutro. A tabela completa da
+NOAA (oni_noaa_cpc.txt) é usada para contar corretamente as sequências nas
+bordas do período. O sombreamento do gráfico de série temporal continua
+mostrando o limiar simples de +/-0,5 apenas como referência visual.
 """
 
 import os
@@ -34,6 +37,7 @@ import matplotlib.pyplot as plt
 from scipy.stats import kruskal, pearsonr
 from scipy import stats
 import statsmodels.api as sm
+from enso_noaa import classificar_fase_enso_noaa
 
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
 PASTA_SAIDA = os.path.join(BASE_DIR, 'saidas_figuras')
@@ -82,20 +86,11 @@ RENOME_COLUNAS_CSV = {
 COLUNAS_PRECIP = ['PRE_MA', 'PRE_CE', 'PRE_CA']
 
 
-def classificar_fase_enso(oni):
-    """El Niño se ONI >= 0.5; La Niña se ONI <= -0.5; caso contrário, Neutro."""
-    return np.select(
-        [oni >= 0.5, oni <= -0.5],
-        ['El Niño', 'La Niña'],
-        default='Neutro'
-    )
-
-
 def preparar_base_a_partir_do_csv():
     """
     Lê o CSV bruto, renomeia as colunas para o padrão do modelo, remove as
-    linhas com precipitação ausente, calcula a fase ENSO a partir do ONI, e
-    salva o Excel que o script usa. Retorna True se o CSV foi encontrado e
+    linhas com precipitação ausente, calcula a fase ENSO oficial (NOAA) a
+    partir do ONI, e salva o Excel que o script usa. Retorna True se o CSV foi encontrado e
     processado, False caso contrário.
     """
     caminho_csv = caminho(NOME_CSV_BRUTO)
@@ -110,7 +105,7 @@ def preparar_base_a_partir_do_csv():
     df = df.dropna(subset=COLUNAS_PRECIP).reset_index(drop=True)
     depois = len(df)
 
-    df['Enso'] = classificar_fase_enso(df['ONI'])
+    df['Enso'] = classificar_fase_enso_noaa(df, BASE_DIR)
 
     print(f"\n===== PREPARAÇÃO DA BASE (a partir do CSV) =====")
     print(f"Arquivo lido: {NOME_CSV_BRUTO}")
@@ -119,7 +114,7 @@ def preparar_base_a_partir_do_csv():
         print("Linhas removidas (precipitação ausente — dado ainda não publicado pela NASA):")
         print(linhas_removidas.to_string(index=False))
     print(f"Linhas finais usadas: {depois}")
-    print("Distribuição de fases ENSO (calculada a partir do ONI):")
+    print("Distribuição de fases ENSO (classificação oficial NOAA):")
     print(df['Enso'].value_counts().to_string())
 
     df.to_excel(caminho(NOME_XLSX_MODELO), index=False)
@@ -146,9 +141,9 @@ dados_total = dados_total.rename(columns={'NP_MA': 'PSN_MA',
 
 # Se a base já veio com uma coluna 'Enso' própria (ex.: planilha antiga
 # Dados_Benfica_.xlsx usada manualmente), ela é respeitada; senão, a fase é
-# calculada a partir do ONI (ver classificar_fase_enso, acima).
+# calculada pela regra oficial da NOAA (ver enso_noaa.py).
 if 'Enso' not in dados_total.columns:
-    dados_total['Enso'] = classificar_fase_enso(dados_total['ONI'])
+    dados_total['Enso'] = classificar_fase_enso_noaa(dados_total, BASE_DIR)
 
 dados_total['DATA'] = pd.to_datetime(
     dados_total['ANO'].astype(str) + '-' + dados_total['MÊS'].astype(str) + '-01')

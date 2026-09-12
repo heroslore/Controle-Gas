@@ -185,6 +185,10 @@ RENOME_COLUNAS_CSV = {
     # mantidas com o nome original e simplesmente ignoradas.
 }
 
+# Fase ENSO oficial (NOAA): mesma coluna 'Enso' que o Analise_Biomas_PSN.py
+# grava, para que os dois scripts produzam o MESMO Dados_base_nova_2001_2025.xlsx.
+from enso_noaa import classificar_fase_enso_noaa
+
 COLUNAS_PRECIP = ['PRE_MA', 'PRE_CE', 'PRE_CA']
 
 
@@ -205,6 +209,8 @@ def preparar_base_a_partir_do_csv():
     linhas_removidas = df[df[COLUNAS_PRECIP].isna().any(axis=1)][['ANO', 'MÊS']]
     df = df.dropna(subset=COLUNAS_PRECIP).reset_index(drop=True)
     depois = len(df)
+
+    df['Enso'] = classificar_fase_enso_noaa(df, BASE_DIR)
 
     print(f"\n===== PREPARAÇÃO DA BASE (a partir do CSV) =====")
     print(f"Arquivo lido: {NOME_CSV_BRUTO}")

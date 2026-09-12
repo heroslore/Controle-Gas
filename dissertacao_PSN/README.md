@@ -11,7 +11,10 @@ Leia `handoff_claude_code.md` para o contexto completo e a lista de pendências.
 | `Modelo_PSN.py` | Script principal: Ridge polinomial (grau 2), GroupKFold por ano, TimeSeriesSplit, Ljung-Box, Y-randomization. |
 | `Analise_Biomas_PSN.py` | Análise ENSO: Kruskal-Wallis por fase, Pearson ONI×variáveis, OLS ONI→variáveis, boxplots e dispersões. |
 | `base_final_2001_2025_plan1_excel_ptbr.csv` | Base bruta (2001–2025, separador `;`, decimal `,`). |
-| `Dados_base_nova_2001_2025.xlsx` | Base convertida (gerada automaticamente pelos scripts a partir do CSV). |
+| `Dados_base_nova_2001_2025.xlsx` | Base convertida (gerada automaticamente pelos scripts a partir do CSV), já com a coluna `Enso`. |
+| `enso_noaa.py` | Classificação oficial das fases ENSO (NOAA/CPC: ONI ≥ \|0,5\| por ≥ 5 trimestres consecutivos). Usado pelos dois scripts. |
+| `oni_noaa_cpc.txt` | Tabela ONI completa da NOAA (1950–presente), fonte das fases nas bordas do período. Atualizar com `curl -o oni_noaa_cpc.txt https://www.cpc.ncep.noaa.gov/data/indices/oni.ascii.txt`. |
+| `resultados_2001_2025/` | Resultados da rodada com a base 2001–2025 (ver `RESULTADOS.md`). |
 | `handoff_claude_code.md` | Resumo do estado do projeto, resultados confirmados e o que falta rodar. |
 
 ## Como rodar
