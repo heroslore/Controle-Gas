@@ -112,6 +112,9 @@ def set_text(p, text, bold=None):
         r._r.getparent().remove(r._r)
     for h in p._p.xpath('.//w:hyperlink'):
         h.getparent().remove(h)
+    for m_ in list(p._p):
+        if m_.tag.endswith('}oMath') or m_.tag.endswith('}oMathPara'):
+            p._p.remove(m_)
     for seg, it in _split_italics(text):
         r = p.add_run(seg)
         if rpr is not None: r._r.insert(0, copy.deepcopy(rpr))
@@ -239,6 +242,7 @@ def table_after(anchor, rows, cols, style='TableGrid'):
     try: t.style = d.styles[style]
     except KeyError: t.style = d.styles['Table Grid']
     anchor._p.addnext(t._tbl)
+    trPr = t.rows[0]._tr.get_or_add_trPr(); th = OxmlElement('w:tblHeader'); th.set(qn('w:val'), 'true'); trPr.append(th)
     return t
 
 def regex_replace_para(p, pattern, repl):
@@ -305,67 +309,50 @@ for p in ORIG:
 # 2. RESUMO / ABSTRACT
 # =============================================================================
 resumo = (
-    "Modelos de regressão são amplamente empregados para descrever fenômenos naturais a partir de variáveis "
-    "mensuráveis, mas os modelos lineares convencionais representam mal respostas ecológicas com limiares e "
-    "interações. Este estudo desenvolveu e validou um Modelo de Regressão Múltipla Polinomial de ordem N (MRMP-N), "
-    "estimado por regressão Ridge, para explicar a Fotossíntese Líquida (PSN), isto é, o carbono acumulado "
-    "mensalmente pela vegetação, nos biomas Mata Atlântica, Cerrado e Caatinga da Bahia, em escala mensal, de "
-    f"2001 a 2025 ({N_OBS} meses por bioma). A PSN, a evapotranspiração, a temperatura da superfície e a área "
-    "queimada foram obtidas de produtos do sensor orbital MODIS (NASA), a precipitação do produto CHIRPS e o "
-    "Índice Oceânico Niño (ONI) da NOAA. O grau do polinômio (1 a 5) e o conjunto de três variáveis ambientais, "
-    "somadas a duas componentes de sazonalidade, foram escolhidos empiricamente. O desempenho foi medido pelo "
-    "coeficiente de determinação (R²), pela raiz do erro quadrático médio (RMSE) e pelo erro absoluto médio (MAE), "
-    "reportados como média e desvio-padrão em 150 partições de validação cruzada, e confirmado por validação "
-    "temporal (anos inteiros e blocos cronológicos), diagnóstico de multicolinearidade (VIF), análise de resíduos "
-    "(normalidade e autocorrelação) e teste de Y-randomization com 100 permutações. O modelo de grau 2 explicou "
-    f"{r2('CE')}% da variância da PSN no Cerrado (RMSE {rmse('CE')} gC·m⁻²·mês⁻¹), {r2('CA')}% na Caatinga "
-    f"(RMSE {rmse('CA')}) e {r2('MA')}% na Mata Atlântica (RMSE {rmse('MA')}), com diferença entre treino e teste "
-    f"inferior a {v(max(RG.loc['CE','gap_overfitting_pp'], RG.loc['CA','gap_overfitting_pp']) + 0.1)} ponto "
-    f"percentual nos dois primeiros e de {gap('MA')} na Mata Atlântica. Os resultados definem três regimes de "
-    "controle da produtividade primária: hídrico no Cerrado, em que a evapotranspiração e a disponibilidade "
-    "hídrica dominam; pulsado na Caatinga, com resposta imediata à chuva; e multifatorial na Mata Atlântica, em "
-    "que fatores de paisagem não climáticos reduzem a previsibilidade. O ENSO, analisado pelas fases oficiais "
-    "(El Niño, La Niña e Neutro, sem defasagem) e pela intensidade do ONI, alterou a temperatura nos três biomas "
-    "e a chuva no Cerrado e na Caatinga, mas explicou menos de 3% da variância dessas variáveis e afetou "
-    "diretamente a PSN apenas na Caatinga. A principal contribuição do trabalho é um protocolo reprodutível de "
-    "regressão polinomial regularizada para variáveis ambientais, com validação temporal explícita, que fornece "
-    "critérios objetivos para priorizar a conservação da disponibilidade hídrica no Cerrado, a restauração da "
-    "paisagem na Mata Atlântica e o monitoramento contínuo por satélite na Caatinga."
+    "A Fotossíntese Líquida (PSN) constitui um importante indicador da resposta dos ecossistemas às variações "
+    "climáticas. Este estudo desenvolveu e validou um Modelo de Regressão Múltipla Polinomial de ordem N (MRMP-N) "
+    "para analisar as relações entre variáveis ambientais e a PSN nos biomas Mata Atlântica, Cerrado e Caatinga, na "
+    f"Bahia, entre 2001 e 2025 ({N_OBS} meses por bioma). A metodologia integrou dados mensais de PSN, clima, balanço "
+    "hídrico e área queimada, derivados de produtos MODIS e bases climáticas regionais. O modelo, baseado em expansão "
+    "polinomial com regularização L2, teve o grau polinomial e o conjunto ótimo de variáveis preditoras determinados "
+    "empiricamente, sendo o modelo validado por validação cruzada repetida, esquemas de validação temporal e teste de "
+    f"Y-randomization. Os resultados indicaram elevado desempenho preditivo no Cerrado (R² = {r2('CE')}%) e na "
+    f"Caatinga (R² = {r2('CA')}%), além de desempenho moderado na Mata Atlântica (R² = {r2('MA')}%), com diferença "
+    "entre o R² de treino e o de teste reduzida no Cerrado e na Caatinga (inferior a 2 pontos percentuais) e de "
+    f"cerca de {v(RG.loc['MA','gap_overfitting_pp'], 0)} pontos percentuais na Mata Atlântica, abaixo do patamar de "
+    "referência de 10 pontos e coerente com sua maior complexidade estrutural. A análise revelou regimes ecológicos "
+    "distintos de controle da Fotossíntese Líquida: no Cerrado, predominou o controle pela sazonalidade hídrica, "
+    "decorrente da alternância entre estação seca e chuvosa; na Caatinga, a resposta pulsada aos eventos de "
+    "precipitação; e, na Mata Atlântica, a maior complexidade estrutural da paisagem e maior heterogeneidade "
+    "ambiental da área analisada, fatores que aumentam a variabilidade não capturada pelos preditores climáticos. A "
+    "investigação do ENSO apresentou resultados compatíveis com uma influência predominantemente indireta sobre a "
+    "PSN, mediada principalmente pela temperatura e precipitação, com efeito direto detectado apenas na Caatinga. Os "
+    "resultados demonstram a viabilidade de modelos polinomiais regularizados para a modelagem de processos "
+    "ecológicos complexos e fornecem subsídios para o planejamento ambiental regional."
 )
 abstract = (
-    "Regression models are widely used to describe natural phenomena from measurable variables, but conventional "
-    "linear models poorly represent ecological responses with thresholds and interactions. This study developed "
-    "and validated a Multiple Polynomial Regression Model of order N (MRMP-N), estimated by Ridge regression, to "
-    "explain Net Photosynthesis (PSN), i.e., the carbon accumulated monthly by vegetation, in the Atlantic Forest, "
-    f"Cerrado and Caatinga biomes of Bahia, Brazil, at a monthly scale from 2001 to 2025 ({N_OBS} months per biome). "
-    "PSN, evapotranspiration, land surface temperature and burned area were obtained from MODIS (NASA) products, "
-    "precipitation from CHIRPS and the Oceanic Niño Index (ONI) from NOAA. The polynomial degree (1 to 5) and the "
-    "set of three environmental variables, added to two seasonal harmonic components, were chosen empirically. "
-    "Performance was measured by the coefficient of determination (R²), root mean square error (RMSE) and mean "
-    "absolute error (MAE), reported as mean and standard deviation over 150 cross-validation partitions, and "
-    "confirmed by temporal validation (whole years and chronological blocks), multicollinearity diagnosis (VIF), "
-    "residual analysis (normality and autocorrelation) and a Y-randomization test with 100 permutations. The "
-    f"degree-2 model explained {r2('CE').replace(',', '.')}% of PSN variance in the Cerrado "
-    f"(RMSE {rmse('CE').replace(',', '.')} gC·m⁻²·month⁻¹), {r2('CA').replace(',', '.')}% in the Caatinga "
-    f"(RMSE {rmse('CA').replace(',', '.')}) and {r2('MA').replace(',', '.')}% in the Atlantic Forest "
-    f"(RMSE {rmse('MA').replace(',', '.')}), with a train–test difference below "
-    f"{v(max(RG.loc['CE','gap_overfitting_pp'], RG.loc['CA','gap_overfitting_pp']) + 0.1).replace(',', '.')} "
-    f"percentage point in the first two and of {gap('MA').replace(',', '.')} in the Atlantic Forest. The results "
-    "define three regimes of primary productivity control: water-driven in the Cerrado, where evapotranspiration "
-    "and water availability dominate; pulsed in the Caatinga, with an immediate response to rainfall; and "
-    "multifactorial in the Atlantic Forest, where non-climatic landscape factors reduce predictability. ENSO, "
-    "analysed through the official phases (El Niño, La Niña and Neutral, without lag) and through ONI intensity, "
-    "changed temperature in the three biomes and rainfall in the Cerrado and Caatinga, but explained less than 3% "
-    "of the variance of these variables and directly affected PSN only in the Caatinga. The main contribution of "
-    "this work is a reproducible protocol of regularized polynomial regression for environmental variables, with "
-    "explicit temporal validation, which provides objective criteria to prioritize the conservation of water "
-    "availability in the Cerrado, landscape restoration in the Atlantic Forest and continuous satellite "
-    "monitoring in the Caatinga."
+    "Net Photosynthesis (PSN) is an important indicator of ecosystem response to climate variations. This study "
+    "developed and validated a Multiple Polynomial Regression Model of order N (MRMP-N) to analyze the relationships "
+    "between environmental variables and PSN in the Atlantic Forest, Cerrado and Caatinga biomes, in the state of "
+    f"Bahia, Brazil, between 2001 and 2025 ({N_OBS} months per biome). The methodology integrated monthly data on "
+    "PSN, climate, water balance and burned area, derived from MODIS products and regional climate databases. The "
+    "model, based on polynomial expansion with L2 regularization, had its polynomial degree and optimal set of "
+    "predictor variables determined empirically, and was validated by repeated cross-validation, temporal validation "
+    "schemes and a Y-randomization test. The results indicated high predictive performance in the Cerrado "
+    f"(R² = {r2('CE').replace(',', '.')}%) and Caatinga (R² = {r2('CA').replace(',', '.')}%), and moderate performance "
+    f"in the Atlantic Forest (R² = {r2('MA').replace(',', '.')}%), with a small difference between training and test "
+    "R² in the Cerrado and Caatinga (below 2 percentage points) and of about "
+    f"{v(RG.loc['MA','gap_overfitting_pp'], 0)} percentage points in the Atlantic Forest, below the 10-point "
+    "reference threshold and consistent with its greater structural complexity. The analysis revealed distinct "
+    "ecological regimes of Net Photosynthesis control: in the Cerrado, control by water seasonality, resulting from "
+    "the alternation between dry and wet seasons, predominated; in the Caatinga, the pulsed response to rainfall "
+    "events; and, in the Atlantic Forest, the greater structural complexity of the landscape and greater "
+    "environmental heterogeneity of the study area, factors that increase the variability not captured by climatic "
+    "predictors. The ENSO investigation showed results consistent with a predominantly indirect influence on PSN, "
+    "mediated mainly by temperature and precipitation, with a direct effect detected only in the Caatinga. The "
+    "results demonstrate the feasibility of regularized polynomial models for modelling complex ecological processes "
+    "and provide support for regional environmental planning."
 )
-# Ficha de referência (PT e EN): acrescenta a coorientadora, preservando o título em negrito
-regex_replace_para(ORIG[58], r'Orientador: Fabrício Berton Zanchi\. ', 'Orientador: Fabrício Berton Zanchi. Coorientadora: Nayanne Silva Benfica. ')
-regex_replace_para(ORIG[68], r'Advisor: Fabrício Berton Zanchi\. ', 'Advisor: Fabrício Berton Zanchi. Co-advisor: Nayanne Silva Benfica. ')
-ORIG[121].paragraph_format.page_break_before = True   # APRESENTAÇÃO E JUSTIFICATIVA em página nova após o Sumário
 set_text(ORIG[63], resumo)
 set_text(ORIG[73], abstract)
 
@@ -464,6 +451,7 @@ set_text(ORIG[141],
 # =============================================================================
 # 4. QUESTÃO CENTRAL, HIPÓTESES, OBJETIVOS
 # =============================================================================
+set_text(ORIG[144], "QUESTÃO CENTRAL E HIPÓTESES")
 set_text(ORIG[145], ORIG[145].text.replace("a produtividade dos biomas na Bahia.",
                                             "a produtividade primária, medida pela Fotossíntese Líquida, dos biomas na Bahia."))
 set_text(ORIG[149], "H1: A expansão polinomial não linear apresentará melhor desempenho preditivo em relação ao modelo "
@@ -835,7 +823,7 @@ set_text(ORIG[257],
     "associado ao ciclo anual de precipitação e radiação. A evapotranspiração (EV) aparece como preditor central em "
     "todos os biomas, e as variáveis hídricas (PRE ou WAI) integram o conjunto ótimo de cada um, confirmando que o "
     "balanço hídrico é o controlador primário da produtividade ecossistêmica na região.")
-set_text(ORIG[258], ORIG[258].text.replace("Já a ausência do  no conjunto ótimo", "Já a ausência da área queimada (BURNlog) no conjunto ótimo"))
+set_text(ORIG[258], re.sub(r"Já a ausência do\s+no conjunto ótimo", "Já a ausência da área queimada (BURNlog) no conjunto ótimo", ORIG[258].text))
 set_text(ORIG[261], ORIG[261].text.replace(
     "Definido como a razão entre a evapotranspiração real e a evapotranspiração potencial (ETR/ETP), o índice expressa",
     "Conforme definido na seção Dados e Pré-processamento (razão ETR/ETP), o índice expressa"))
@@ -1230,6 +1218,16 @@ fontes = {"PSN": "MOD17A2H (NASA Earthdata) / Benfica et al. (2022)", "EV": "MOD
           "PRE": "CHIRPS (UCSB) / Benfica et al. (2022)", "TST": "MOD11A2 (NASA Earthdata) / Benfica et al. (2022)",
           "WAI": "ETR/ETP do MOD16A2 / Benfica et al. (2022)", "BURN": "MCD64A1 (NASA Earthdata) / Benfica et al. (2022)",
           "ONI": "NOAA/CPC (oni.ascii.txt)"}
+set_widths(t1, [2.1, 5.1, 2.8, 6.0])
+for row in t1.rows:
+    for c in row.cells:
+        tcPr = c._tc.get_or_add_tcPr()
+        for old in tcPr.xpath('./w:vAlign'): tcPr.remove(old)
+        va = OxmlElement('w:vAlign'); va.set(qn('w:val'), 'center'); tcPr.append(va)
+for row in t1.rows[1:]:
+    if row.cells[0].text.strip() == 'PSN': set_cell(row.cells[2], "gC·m⁻²·mês⁻¹")
+    if row.cells[0].text.strip() in ('SAZSIN', 'SAZCOS'):
+        set_cell(row.cells[0], row.cells[0].text.strip().replace('SAZSIN', 'SAZsin').replace('SAZCOS', 'SAZcos'), bold=True)
 for row in t1.rows[1:]:
     k = row.cells[0].text.strip()
     if k in fontes: set_cell(row.cells[3], fontes[k])
@@ -1250,6 +1248,61 @@ for t in d.tables:
         for c in row.cells:
             for p in c.paragraphs: italicize_terms(p)
 
+# células de todas as tabelas sem o recuo de primeira linha herdado do estilo Normal
+for t in d.tables:
+    for row in t.rows:
+        for c in row.cells:
+            for par in c.paragraphs:
+                par.paragraph_format.first_line_indent = Cm(0); par.paragraph_format.left_indent = Cm(0)
+# tabelas curtas (Tabela 5, A3, A4) não se dividem entre páginas
+def manter_junta(t):
+    for row in t.rows[:-1]:
+        for c in row.cells:
+            for par in c.paragraphs: par.paragraph_format.keep_with_next = True
+        trPr = row._tr.get_or_add_trPr()
+        if trPr.find(qn('w:cantSplit')) is None: trPr.append(OxmlElement('w:cantSplit'))
+for t in d.tables:
+    if 1 < len(t.rows) <= 12 and t.rows[0].cells[0].text.strip() in ('Variável', 'Bioma'): manter_junta(t)
+_abstract = ORIG[73]; _kw_en = ORIG[74]
+def _todos_paragrafos():
+    for p in d.paragraphs: yield p
+    for t in d.tables:
+        for row in t.rows:
+            for c in row.cells:
+                for p in c.paragraphs: yield p
+for p in _todos_paragrafos():
+    if p._p is _abstract._p or p._p is _kw_en._p: continue
+    regex_replace_para(p, r'(\d)\.(\d+)%', r'\1,\2%')
+    regex_replace_para(p, r'\bdo diferença treino', 'da diferença treino')
+    regex_replace_para(p, r'\bno menor diferença', 'na menor diferença')
+    regex_replace_para(p, r'saz_sin', 'SAZsin'); regex_replace_para(p, r'saz_cos', 'SAZcos')
+    regex_replace_para(p, r'SAZSIN', 'SAZsin'); regex_replace_para(p, r'SAZCOS', 'SAZcos')
+    regex_replace_para(p, r'essas pressões apresentam magnitudes', 'elas apresentam magnitudes')
+# Sumário (campo TOC dentro de w:sdt): título e página de cada entrada a partir dos títulos atuais e do PDF renderizado
+_anc2head = {}
+for p in d.paragraphs:
+    if p.style.name.startswith('Heading'):
+        for bm in p._p.findall('.//' + qn('w:bookmarkStart')):
+            if bm.get(qn('w:name'), '').startswith('_Toc'): _anc2head[bm.get(qn('w:name'))] = p.text.strip()
+for sdt in d.element.body.findall(qn('w:sdt')):
+    for par in sdt.findall('.//' + qn('w:p')):
+        hl = par.find('.//' + qn('w:hyperlink'))
+        if hl is None: continue
+        anc = hl.get(qn('w:anchor')); titulo = _anc2head.get(anc)
+        if not titulo: continue
+        ts = [t_ for t_ in hl.findall('.//' + qn('w:t'))]
+        # texto do título = maior w:t antes do campo PAGEREF; página = último w:t
+        cand = [t_ for t_ in ts if t_.text and not t_.text.strip().isdigit() and not re.match(r'^[\d.]+$', t_.text.strip())]
+        if cand:
+            cand[0].text = titulo
+            for extra in cand[1:]: extra.text = ''
+        if ts and ts[-1].text and ts[-1].text.strip().isdigit():
+            chave = 'H:' + titulo.upper()
+            pg = PAGES.get(chave)
+            if not pg:   # título quebrado em duas linhas no PDF: usa a chave que for prefixo do título
+                cands = [k for k in PAGES if k.startswith('H:') and chave.startswith(k) and len(k) > 12]
+                if cands: pg = PAGES[max(cands, key=len)]
+            if pg: ts[-1].text = str(pg)
 for p in d.paragraphs:
     if re.match(r'^(Figura|Tabela) (A?\d+) [-–]', p.text):
         p.paragraph_format.keep_with_next = True

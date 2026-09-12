@@ -16,6 +16,9 @@ for i,p in enumerate(pl.pages, start=1):
         m=re.match(r'^(Figura|Tabela) (A?\d+) [-–] ', ln.strip())
         if m:
             k=f'{m.group(1)} {m.group(2)}'; pages.setdefault(k, i)
+        h=re.match(r'^(\d+(?:\.\d+)*)\s+([A-ZÁÉÍÓÚÂÊÔÃÕÇ][^\n]{3,})$', ln.strip())
+        if h and i > 8:
+            pages.setdefault('H:' + h.group(2).strip().upper(), i)
 json.dump(pages, open('paginas.json','w'), indent=1, ensure_ascii=False)
 print('páginas', len(pl.pages), pages)
 PY

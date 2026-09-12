@@ -327,10 +327,10 @@ var_disp = {
 }
 psn_cols   = {'MA': 'PSN_MA', 'CE': 'PSN_CE', 'CA': 'PSN_CA'}
 nomes_bio  = {'MA': 'Mata Atlântica', 'CE': 'Cerrado', 'CA': 'Caatinga'}
-cores_disp = {'MA': '#185FA5', 'CE': '#3B6D11', 'CA': '#BA7517'}
+cores_disp = {'MA': '#185FA5', 'CE': '#2E5A0B', 'CA': '#A3620F'}
 
 n_vars = len(var_disp)
-fig, axes = plt.subplots(n_vars, 3, figsize=(16, n_vars * 3.9), constrained_layout=True)
+fig, axes = plt.subplots(n_vars, 3, figsize=(14, n_vars * 3.5), constrained_layout=True)
 
 print(f"\n===== REGRESSÃO SIMPLES PSN x VARIÁVEIS (n={len(dados_total)}) =====")
 print(f"{'Variável':<26} {'Bioma':<18} {'R²adj':>6} {'Slope':>10} {'p-valor':>12} Signif.")
@@ -347,19 +347,19 @@ for row, (var, cols) in enumerate(var_disp.items()):
         slope, interc, r, p, se = stats.linregress(x, y)
         r2_adj = 1 - (1 - r**2) * (len(x) - 1) / (len(x) - 2)
 
-        ax.scatter(x, y, color=cores_disp[bio], alpha=0.35, s=12, edgecolors='none')
+        ax.scatter(x, y, color=cores_disp[bio], alpha=0.55, s=16, edgecolors='white', linewidths=0.3)
         xl = np.linspace(x.min(), x.max(), 200)
-        ax.plot(xl, slope * xl + interc, color='red', linewidth=1.8)
+        ax.plot(xl, slope * xl + interc, color='#C00000', linewidth=2.3)
 
         p_str = "p < 0,001" if p < 0.001 else f"p = {p:.3f}".replace('.', ',')
-        ax.set_title(f"R²aj = {r2_adj:.2f}   b = {slope:.2f}   {p_str}".replace('.', ','), fontsize=12, pad=5)
+        ax.set_title(f"R²aj = {r2_adj:.2f}   b = {slope:.2f}   {p_str}".replace('.', ','), fontsize=11.5, pad=6)
         if row == 0:
-            ax.text(0.5, 1.22, nomes_bio[bio], transform=ax.transAxes, ha='center',
-                    fontsize=15, fontweight='bold', color=cores_disp[bio])
-        ax.set_xlabel(var, fontsize=12)
-        ax.set_ylabel(r'PSN (gC$\cdot$m$^{-2}\cdot$mês$^{-1}$)' if c == 0 else '', fontsize=12)
-        ax.tick_params(labelsize=10)
-        ax.grid(alpha=0.25)
+            ax.text(0.5, 1.24, nomes_bio[bio], transform=ax.transAxes, ha='center',
+                    fontsize=17, fontweight='bold', color=cores_disp[bio])
+        ax.set_xlabel(var, fontsize=11)
+        ax.set_ylabel(r'PSN (gC$\cdot$m$^{-2}\cdot$mês$^{-1}$)' if c == 0 else '', fontsize=11)
+        ax.tick_params(labelsize=9.5)
+        ax.grid(alpha=0.15)
 
         sig = rotulo_sig(p)
         print(f"{var:<26} {nomes_bio[bio]:<18} {r2_adj:>6.3f} {slope:>10.3f} {p:>12.4e} {sig}")
@@ -370,7 +370,7 @@ fig.suptitle(
     'Regressão Linear Simples: PSN x Variáveis Ambientais - 3 Biomas\n'
     f'Dados mensais (n={len(dados_total)}) | '
     f'{_meses_abrev[int(_ini["MÊS"]) - 1]}/{int(_ini["ANO"])}-{_meses_abrev[int(_fim["MÊS"]) - 1]}/{int(_fim["ANO"])}',
-    fontsize=15, fontweight='bold', y=1.03)
+    fontsize=15, fontweight='bold', y=1.04)
 plt.savefig(saida('dispersao_psn_variaveis_biomas.png'), dpi=300, bbox_inches='tight')
 plt.close(fig)
 print("\nFigura salva: dispersao_psn_variaveis_biomas.png")

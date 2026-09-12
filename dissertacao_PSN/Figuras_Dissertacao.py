@@ -79,7 +79,7 @@ print('salvo fig_dispersao.png')
 
 # ---------------------------------------------------------------- Fig 5: importância relativa
 plt.rcParams.update({'font.size': 13, 'font.family': 'DejaVu Sans'})
-NOMES = {'EV': 'EV', 'PRE': 'PRE', 'TST': 'TST', 'WAI': 'WAI', 'saz_sin': 'Saz sin', 'saz_cos': 'Saz cos'}
+NOMES = {'EV': 'EV', 'PRE': 'PRE', 'TST': 'TST', 'WAI': 'WAI', 'saz_sin': 'SAZsin', 'saz_cos': 'SAZcos'}
 fig, axes = plt.subplots(1, 3, figsize=(16, 5.4))
 letras = ['(a)', '(b)', '(c)']
 for ax, (b, nome, cor), letra in zip(axes, BIOMAS, letras):
@@ -245,7 +245,7 @@ y1, y2, y3 = 6.6, 4.0, 1.3
 azul, azul_c = '#1F3B5C', '#D6E2F0'; verde, verde_c = '#1B5E3A', '#D5EADF'; marrom, marrom_c = '#5C4632', '#E8DED2'; roxo, roxo_c = '#3B2A5C', '#DED6EC'
 bloco(xs[0], y1, W, H, 1, 'Base de dados', 'MODIS (PSN, EV, TST, BURN)\nCHIRPS (PRE) · ONI (NOAA)\n2001–2025, n = 297 meses', azul, azul_c)
 bloco(xs[1], y1, W, H, 2, 'Pré-processamento', 'Agregação mensal por bioma\nlog(1 + área queimada)\nexclusão da PET (r = 0,73–0,80)', azul, azul_c)
-bloco(xs[2], y1, W, H, 3, 'Eng. de variáveis', 'Sazonalidade harmônica\n(saz_sin, saz_cos) fixa\nem todos os modelos', verde, verde_c)
+bloco(xs[2], y1, W, H, 3, 'Eng. de variáveis', 'Sazonalidade harmônica\n(SAZsin, SAZcos) fixa\nem todos os modelos', verde, verde_c)
 bloco(xs[3], y1, W, H, 4, 'Seleção de variáveis', '10 combinações C(5,3)\nde EV, PRE, TST, WAI, BURN\nmaior R² de teste', verde, verde_c)
 for i in range(3): seta_h(xs[i] + W, xs[i + 1], y1 + H / 2)
 ax.add_patch(FancyBboxPatch((0.12, y2 - 0.35), 13.76, H + 1.05, boxstyle='round,pad=0.02,rounding_size=0.15', fc='#FBF4E8', ec='#B08A50', lw=1.3, ls='--'))
