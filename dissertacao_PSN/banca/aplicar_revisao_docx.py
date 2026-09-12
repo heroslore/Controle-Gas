@@ -1016,7 +1016,14 @@ set_text(ORIG[313],
     f"{conj('CA').replace(' + SAZsin + SAZcos','')} na Caatinga, {conj('CE').replace(' + SAZsin + SAZcos','')} no "
     f"Cerrado e {conj('MA').replace(' + SAZsin + SAZcos','')} na Mata Atlântica, confirmando a maior relevância do "
     "Índice de Disponibilidade Hídrica (WAI) em sistemas com forte sazonalidade hídrica e, na Mata Atlântica, a "
-    "importância das interações entre variáveis.")
+    "importância das interações entre variáveis."
+    + (f" Ressalva-se ainda que, pelo critério estrito de H1, o grau 3 atenderia tecnicamente à definição de "
+       f"otimalidade na Mata Atlântica (R² de teste de {v(g3['MA'])}%, {v(g3['MA']-g['MA'][2])} ponto acima do grau 2, "
+       f"com diferença treino–teste de {v(gp['MA'][3])} pp, ainda dentro do limite de 10 pontos). Optou-se, contudo, "
+       f"pelo grau 2 como grau comum aos três biomas, tanto por parcimônia, com 20 termos contra 55, mais que o dobro, "
+       f"para um ganho marginal, quanto por ele ser inequivocamente superior ao grau 3 no Cerrado e na Caatinga, em R² "
+       f"de teste e em diferença treino–teste, o que reforça sua adequação como escolha comum de comparação entre os "
+       f"três biomas." if g3['MA'] > g['MA'][2] else ""))
 set_text(ORIG[314],
     "A H3 confirmou-se em sua essência: o ONI explicou no máximo 3% da variância das variáveis climáticas e, "
     "embora tenha modulado a temperatura nos três biomas e a precipitação no Cerrado e na Caatinga, só se associou "
