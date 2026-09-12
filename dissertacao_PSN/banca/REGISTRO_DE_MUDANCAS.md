@@ -179,3 +179,10 @@ Aplicadas na fonte (scripts), não no XML, e o documento foi regenerado:
 5. **Validação**: XML validado contra o esquema (sem erros); PDF renderizado
    e conferido nas páginas das Figuras 1, 2, 5 e 9 e nas quatro frases de
    datas.
+
+### Resumo/Abstract: métricas pedidas pelo Prof. Marcos (MB-7, 9, 28)
+- Acrescentada uma frase curta ao Resumo e ao Abstract com R² ± desvio-padrão por bioma,
+  faixa de RMSE e MAE de teste (gC·m⁻²·mês⁻¹), escala temporal (mensal) e espacial
+  (agregação por bioma) e menção ao VIF atenuado pela regularização Ridge.
+- Restaurados no script dois ajustes perdidos na revisão anterior: coorientadora nas
+  fichas de referência (PT/EN) e quebra de página antes de "1 APRESENTAÇÃO E JUSTIFICATIVA".

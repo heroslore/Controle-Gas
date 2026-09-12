@@ -41,6 +41,7 @@ def v(x, nd=1):
     return f'{x:.{nd}f}'.replace('.', ',')
 
 def r2(b, nd=1):  return v(RG.loc[b, 'r2_teste_medio'], nd)
+def r2dp(b, nd=1):return v(RG.loc[b, 'r2_teste_dp'], nd)
 def gap(b):       return v(RG.loc[b, 'gap_overfitting_pp'], 2)
 def rmse(b):      return v(RG.loc[b, 'rmse_teste_medio'], 2)
 def mae(b):       return v(RG.loc[b, 'mae_teste_medio'], 2)
@@ -316,7 +317,10 @@ resumo = (
     f"dados mensais de sensoriamento remoto e variáveis climáticas, totalizando {N_OBS} observações por bioma. O grau "
     "polinomial e o conjunto de variáveis preditoras foram determinados empiricamente, e o desempenho foi avaliado "
     "por validação cruzada repetida, validação temporal e teste de Y-randomization. O modelo de grau 2 explicou "
-    f"{r2('CE')}% da variância da PSN no Cerrado, {r2('CA')}% na Caatinga e {r2('MA')}% na Mata Atlântica. Os "
+    f"{r2('CE')}% (± {r2dp('CE')}) da variância da PSN no Cerrado, {r2('CA')}% (± {r2dp('CA')}) na Caatinga e "
+    f"{r2('MA')}% (± {r2dp('MA')}) na Mata Atlântica. Em escala mensal e com agregação espacial por bioma, o RMSE de "
+    f"teste variou de {rmse('CA')} a {rmse('MA')} gC·m⁻²·mês⁻¹ e o MAE de {mae('CA')} a {mae('MA')} gC·m⁻²·mês⁻¹, com a "
+    f"multicolinearidade (VIF) atenuada pela regularização Ridge. Os "
     "resultados evidenciaram regimes ecológicos distintos de controle da produtividade primária: limitação hídrica "
     "sazonal no Cerrado, resposta pulsada à precipitação na Caatinga e controle multifatorial na Mata Atlântica. A "
     "análise do El Niño–Oscilação Sul (ENSO) indicou influência predominantemente indireta sobre a produtividade, "
@@ -332,8 +336,13 @@ abstract = (
     f"remote sensing data and climate variables were used, totaling {N_OBS} observations per biome. The polynomial "
     "degree and the set of predictor variables were determined empirically, and performance was assessed by repeated "
     "cross-validation, temporal validation and a Y-randomization test. The degree-2 model explained "
-    f"{r2('CE').replace(',', '.')}% of PSN variance in the Cerrado, {r2('CA').replace(',', '.')}% in the Caatinga and "
-    f"{r2('MA').replace(',', '.')}% in the Atlantic Forest. The results revealed distinct ecological regimes of "
+    f"{r2('CE').replace(',', '.')}% (± {r2dp('CE').replace(',', '.')}) of PSN variance in the Cerrado, "
+    f"{r2('CA').replace(',', '.')}% (± {r2dp('CA').replace(',', '.')}) in the Caatinga and "
+    f"{r2('MA').replace(',', '.')}% (± {r2dp('MA').replace(',', '.')}) in the Atlantic Forest. At a monthly scale "
+    f"and with spatial aggregation by biome, test RMSE ranged from {rmse('CA').replace(',', '.')} to "
+    f"{rmse('MA').replace(',', '.')} gC·m⁻²·month⁻¹ and MAE from {mae('CA').replace(',', '.')} to "
+    f"{mae('MA').replace(',', '.')} gC·m⁻²·month⁻¹, with multicollinearity (VIF) mitigated by Ridge "
+    "regularization. The results revealed distinct ecological regimes of "
     "primary productivity control: seasonal water limitation in the Cerrado, pulsed response to rainfall in the "
     "Caatinga and multifactorial control in the Atlantic Forest. The analysis of the El Niño–Southern Oscillation "
     "(ENSO) indicated a predominantly indirect influence on productivity, with a direct effect on PSN detected only "
@@ -341,6 +350,10 @@ abstract = (
     "complex environmental relationships and reinforce the importance of differentiated approaches for monitoring "
     "the biomes of Bahia."
 )
+# Ficha de referência (PT e EN): acrescenta a coorientadora, preservando o título em negrito
+regex_replace_para(ORIG[58], r'Orientador: Fabrício Berton Zanchi\. ', 'Orientador: Fabrício Berton Zanchi. Coorientadora: Nayanne Silva Benfica. ')
+regex_replace_para(ORIG[68], r'Advisor: Fabrício Berton Zanchi\. ', 'Advisor: Fabrício Berton Zanchi. Co-advisor: Nayanne Silva Benfica. ')
+ORIG[121].paragraph_format.page_break_before = True   # APRESENTAÇÃO E JUSTIFICATIVA em página nova após o Sumário
 set_text(ORIG[63], resumo)
 set_text(ORIG[73], abstract)
 
