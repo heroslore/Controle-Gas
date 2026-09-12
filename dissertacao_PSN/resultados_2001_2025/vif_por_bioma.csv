@@ -1,9 +1,9 @@
 bioma,variavel,VIF
-MA,EV_MA,1.929
-MA,PRE_MA,1.248
-MA,TST_MA,3.291
-MA,saz_sin,1.661
-MA,saz_cos,3.765
+MA,EV_MA,2.654
+MA,TST_MA,4.229
+MA,WAI_MA,3.545
+MA,saz_sin,1.646
+MA,saz_cos,3.921
 CE,EV_CE,36.991
 CE,PRE_CE,4.017
 CE,WAI_CE,31.61

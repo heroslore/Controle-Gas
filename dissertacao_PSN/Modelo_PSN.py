@@ -268,7 +268,10 @@ config_biomas = {
     'MA': {
         'nome':     'Mata Atlântica',
         'y':        'PSN_MA',
-        'x':        ['EV_MA', 'PRE_MA', 'TST_MA', 'saz_sin', 'saz_cos'],
+        # Conjunto ótimo pela busca exaustiva C(5,3) com a base 2001-2025
+        # (Selecao_Variaveis_PSN.py): EV + TST + WAI (R² teste 73,7%) supera
+        # EV + PRE + TST (71,0%), conjunto ótimo da base 2001-2020.
+        'x':        ['EV_MA', 'TST_MA', 'WAI_MA', 'saz_sin', 'saz_cos'],
         'winsor_y': 'PSN_MA',
         'cor':      '#2CA02C',   # verde
     },

@@ -15,6 +15,17 @@ rodar algo novo ou mudar o método; `figura` = nova figura ou figura refeita;
 Os números novos usados nas propostas vêm da base 2001–2025 (n = 297), já
 rodada e guardada em `resultados_2001_2025/RESULTADOS.md`.
 
+> **Atualização de 12/09/2026 (após a aprovação do Ygor):** todas as mudanças
+> marcadas como válidas foram aplicadas em `Trabalho_revisado_2001_2025.docx`
+> (ver `REGISTRO_DE_MUDANCAS.md`). Duas coisas mudaram em relação ao que está
+> escrito abaixo: (1) a busca exaustiva de combinações com a base nova mostrou
+> que, na **Mata Atlântica, o conjunto ótimo passou a ser EV + TST + WAI**
+> (R² de teste 73,7 % contra 71,0 % de EV + PRE + TST), então os números da
+> MA no documento final são os desse conjunto; (2) com esse conjunto, na MA o
+> grau 3 tem R² de teste 0,8 pp maior que o grau 2, mas com diferença
+> treino–teste 1,7 pp maior, e o grau 2 continua sendo o ótimo pelo critério
+> composto. Os números de CE e CA não mudaram.
+
 ---
 
 ## Visão geral dos dois pareceres
@@ -551,9 +562,10 @@ pelo menos 60% da variância mensal da PSN em cada bioma". Com a base nova
 **MB-32** — as hipóteses são verificadas no fim? Hoje não explicitamente.
 Proposta: parágrafo nas Considerações Finais, "Retomando as hipóteses":
 
-> H1 confirmou-se: o grau 2 superou o grau 1 nos três biomas (ganho de
-> 5,2, 3,8 e 4,1 pontos de R² de teste em MA, CE e CA), mantendo a diferença
-> treino–teste abaixo de 10 pontos. H2 confirmou-se: o
+> H1 confirmou-se, com ressalva: o grau 2 superou o grau 1 nos três biomas
+> (ganho de 5,2, 6,6 e 1,3 pontos de R² de teste em MA, CE e CA), mantendo a
+> diferença treino–teste abaixo de 10 pontos; na Caatinga o ganho foi
+> marginal. H2 confirmou-se: o
 > modelo explicou entre 71% e 97% da variância, e o conjunto ótimo diferiu
 > entre biomas (WAI no lugar da TST no Cerrado). H3 confirmou-se: o ONI
 > explicou no máximo 3% da variância das variáveis climáticas e, apesar de
@@ -705,24 +717,22 @@ R² de teste médio e diferença treino–teste:
 
 | Grau | Termos | MA R² teste (gap) | CE R² teste (gap) | CA R² teste (gap) |
 |---|---|---|---|---|
-| 1 | 5 | 65,8% (0,8) | 92,9% (0,6) | 90,1% (1,2) |
+| 1 | 5 | 65,8% (0,8) | 90,1% (1,2) | 92,9% (0,6) |
 | **2** | 20 | **71,0% (5,1)** | **96,7% (0,6)** | **94,2% (1,0)** |
 | 3 | 55 | 68,4% (9,0) | 96,4% (1,0) | 93,4% (2,4) |
 | 4 | 125 | 29,3% (49,0) | 96,1% (1,6) | 63,8% (31,4) |
 | 5 | 251 | −349,9% (432,8) | 93,7% (3,9) | 52,3% (42,8) |
 
-Com a série nova, **o grau 2 é o melhor nos três biomas**, inclusive na
-Caatinga, onde supera o grau 1 em 4,1 pontos de R² de teste e reduz o RMSE
-de 11,6 para 6,7 gC·m⁻²·mês⁻¹. O comentário do Fernando se referia à Figura 4
-da qualificação (2001–2020), em que, na Caatinga, o grau 1 tinha R² de
-teste praticamente igual ao do grau 2. Esse empate desapareceu com mais
-dados. Portanto: a frase "grau 2 como ótimo para os três biomas" passa a
-ser verdadeira, mas a Figura 4 e a Tabela associada precisam ser refeitas
-com a base nova (figuras já geradas em
-`resultados_2001_2025/*/selecao_grau_polinomial_*.png`). Sugiro acrescentar
-ao texto que, na Caatinga, o ganho do grau 2 sobre o grau 1 é o menor dos
-três biomas, o que é coerente com a resposta quase linear da vegetação
-semiárida à disponibilidade hídrica.
+Com a série nova, **o grau 2 tem o maior R² de teste nos três biomas**, mas
+o Fernando tem razão no essencial: na Caatinga o ganho sobre o grau 1 é
+marginal (1,3 ponto de R² de teste; RMSE de 7,39 para 6,69 gC·m⁻²·mês⁻¹),
+enquanto no Cerrado é de 6,6 pontos e na Mata Atlântica de 5,2. Na Figura 4
+da qualificação (2001–2020) esse empate na Caatinga era ainda mais visível.
+Proposta de redação: "o grau 2 apresentou o maior R² de teste nos três
+biomas e foi adotado como grau comum para permitir a comparação entre eles;
+na Caatinga, porém, o ganho em relação ao modelo linear foi pequeno (1,3
+ponto percentual), indicando resposta quase linear da vegetação semiárida
+às variáveis hídricas". A Figura 4 foi refeita com a base nova.
 
 Isso também fecha o H1 (MB-32): o grau 2 superou o grau 1 nos três biomas
 com diferença treino–teste abaixo de 10 pontos.

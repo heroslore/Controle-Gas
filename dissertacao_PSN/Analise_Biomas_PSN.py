@@ -355,7 +355,7 @@ for row, (var, cols) in enumerate(var_disp.items()):
         if row == 0:
             ax.text(0.5, 1.18, nomes_bio[bio], transform=ax.transAxes, ha='center',
                     fontsize=10, fontweight='bold', color=cores_disp[bio])
-        ax.set_xlabel(var if row == n_vars - 1 else '', fontsize=8)
+        ax.set_xlabel(var, fontsize=8)
         ax.set_ylabel(r'PSN (gC$\cdot$m$^{-2}\cdot$mês$^{-1}$)' if c == 0 else '', fontsize=8)
         ax.tick_params(labelsize=7)
         ax.grid(alpha=0.25)
@@ -363,11 +363,13 @@ for row, (var, cols) in enumerate(var_disp.items()):
         sig = rotulo_sig(p)
         print(f"{var:<26} {nomes_bio[bio]:<18} {r2_adj:>6.3f} {slope:>10.3f} {p:>12.4e} {sig}")
 
+_meses_abrev = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+_ini = dados_total.sort_values('DATA').iloc[0]; _fim = dados_total.sort_values('DATA').iloc[-1]
 fig.suptitle(
     'Regressão Linear Simples: PSN x Variáveis Ambientais - 3 Biomas\n'
     f'Dados mensais (n={len(dados_total)}) | '
-    f'Jan/{int(dados_total["ANO"].min())}-Dez/{int(dados_total["ANO"].max())}',
-    fontsize=12, fontweight='bold', y=1.01)
+    f'{_meses_abrev[int(_ini["MÊS"]) - 1]}/{int(_ini["ANO"])}-{_meses_abrev[int(_fim["MÊS"]) - 1]}/{int(_fim["ANO"])}',
+    fontsize=12, fontweight='bold', y=1.035)
 plt.savefig(saida('dispersao_psn_variaveis_biomas.png'), dpi=200, bbox_inches='tight')
 plt.close(fig)
 print("\nFigura salva: dispersao_psn_variaveis_biomas.png")
