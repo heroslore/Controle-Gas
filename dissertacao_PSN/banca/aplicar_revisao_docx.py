@@ -365,6 +365,7 @@ abstract = (
 # Ficha de referência (PT e EN): acrescenta a coorientadora, preservando o título em negrito
 regex_replace_para(ORIG[58], r'Orientador: Fabrício Berton Zanchi\. ', 'Orientador: Fabrício Berton Zanchi. Coorientadora: Nayanne Silva Benfica. ')
 regex_replace_para(ORIG[68], r'Advisor: Fabrício Berton Zanchi\. ', 'Advisor: Fabrício Berton Zanchi. Co-advisor: Nayanne Silva Benfica. ')
+ORIG[121].paragraph_format.page_break_before = True   # APRESENTAÇÃO E JUSTIFICATIVA em página nova após o Sumário
 set_text(ORIG[63], resumo)
 set_text(ORIG[73], abstract)
 
