@@ -242,17 +242,18 @@ def table_after(anchor, rows, cols, style='TableGrid'):
     return t
 
 def regex_replace_para(p, pattern, repl):
-    """Substitui regex no parágrafo; se o padrão cruzar runs, funde os runs de texto."""
+    """Substitui regex no parágrafo run a run; só funde os runs (perdendo formatação parcial)
+    se o resultado run a run não coincidir com a substituição sobre o texto inteiro."""
     txt = p.text
     if not re.search(pattern, txt): return False
-    done = False
+    esperado = re.sub(pattern, repl, txt)
     for r in p.runs:
         if re.search(pattern, r.text):
-            r.text = re.sub(pattern, repl, r.text); done = True
-    if re.search(pattern, p.text):          # ainda há ocorrência cruzando runs
-        if p._p.xpath('.//w:drawing'): return done
-        set_text(p, re.sub(pattern, repl, p.text)); done = True
-    return done
+            r.text = re.sub(pattern, repl, r.text)
+    if p.text != esperado:
+        if p._p.xpath('.//w:drawing'): return True
+        set_text(p, esperado)
+    return True
 
 def italicize_terms(p):
     for term in ITALICOS:
@@ -361,6 +362,9 @@ abstract = (
     "availability in the Cerrado, landscape restoration in the Atlantic Forest and continuous satellite "
     "monitoring in the Caatinga."
 )
+# Ficha de referência (PT e EN): acrescenta a coorientadora, preservando o título em negrito
+regex_replace_para(ORIG[58], r'Orientador: Fabrício Berton Zanchi\. ', 'Orientador: Fabrício Berton Zanchi. Coorientadora: Nayanne Silva Benfica. ')
+regex_replace_para(ORIG[68], r'Advisor: Fabrício Berton Zanchi\. ', 'Advisor: Fabrício Berton Zanchi. Co-advisor: Nayanne Silva Benfica. ')
 set_text(ORIG[63], resumo)
 set_text(ORIG[73], abstract)
 
