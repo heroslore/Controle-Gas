@@ -34,6 +34,8 @@ SG  = pd.read_csv(os.path.join(RES, 'selecao_grau.csv'))
 SV  = pd.read_csv(os.path.join(RES, 'selecao_variaveis.csv'))
 NUM = json.load(open(os.path.join(RES, 'numeros_extra.json'), encoding='utf-8'))
 ENSO = json.load(open(os.path.join(RES, 'enso_resumo.json'), encoding='utf-8'))
+ABL = pd.read_csv(os.path.join(RES, 'ablacao_sazonalidade.csv'))
+SAZ = pd.read_csv(os.path.join(RES, 'sazonalidade_variaveis.csv'))
 
 def v(x, nd=1):
     return f'{x:.{nd}f}'.replace('.', ',')
@@ -557,6 +559,23 @@ set_text(ORIG[185],
     "β₁·saz_sin + β₂·saz_cos equivale a A·sin(2π·mês/12 + φ), com amplitude A e defasagem φ determinadas pelos "
     "dados. A parametrização não impõe sazonalidade ao modelo: na ausência de ciclo anual nos dados, os coeficientes "
     "das duas componentes tendem a zero, tendência reforçada pela penalização L2 da regressão Ridge.")
+def _abl(b, sem):
+    r = ABL[(ABL.bioma == nome[b]) & (ABL.conjunto.str.contains('sem') == sem)].iloc[0]; return r
+def _saz(b, var): return float(SAZ[(SAZ.bioma == nome[b]) & (SAZ.variavel == var)]['r2'].iloc[0])
+_com = {b: RG.loc[b, 'r2_teste_medio'] for b in ('MA', 'CE', 'CA')}; _sem = {b: _abl(b, True)['r2_teste'] for b in ('MA', 'CE', 'CA')}
+add_paras_after(ORIG[185], BODY_TPL, [
+    "Para verificar empiricamente essa propriedade, o modelo foi reajustado sem as componentes de sazonalidade, "
+    "mantendo as demais variáveis e o mesmo protocolo de validação (Tabela A3, Apêndice A). A remoção reduziu o R² "
+    f"de teste em {v(_com['MA'] - _sem['MA'])} pontos percentuais na Mata Atlântica (de {v(_com['MA'])}% para "
+    f"{v(_sem['MA'])}%), {v(_com['CE'] - _sem['CE'])} pontos no Cerrado e {v(_com['CA'] - _sem['CA'])} pontos na "
+    "Caatinga, uma queda muito mais acentuada do que se esperaria de um termo redundante, que a penalização L2 "
+    "tenderia a anular. Essa diferença entre biomas é coerente com o grau em que as próprias variáveis climáticas já "
+    f"estão ligadas ao calendário (Tabela A4, Apêndice A): no Cerrado, entre {v(_saz('CE','WAI'),0)}% e "
+    f"{v(_saz('CE','EV'),0)}% da variância da evapotranspiração e do WAI é explicada isoladamente pelo ciclo anual, "
+    f"contra apenas {v(_saz('MA','EV'),0)}% na Mata Atlântica, onde a variabilidade climática reflete "
+    "predominantemente as condições meteorológicas de cada ano específico. A acentuada perda de desempenho ao remover "
+    "a sazonalidade explícita nesse bioma sugere que a Fotossíntese Líquida responde a um componente do ciclo anual, "
+    "possivelmente fotoperíodo ou fenologia foliar, não inteiramente mediado pelas variáveis climáticas medidas."])
 set_text(ORIG[186],
     "Como a área queimada mensal concentra muitos valores nulos e alguns picos muito elevados, aplicou-se, antes da "
     "modelagem, a transformação logarítmica a seguir, procedimento usual para reduzir a influência desses valores "
@@ -1083,7 +1102,8 @@ intro = new_para_after(h, BODY_TPL,
     "de 2025), com o ONI e a fase ENSO oficial (NOAA) de cada mês e as seis variáveis de cada bioma (MA = Mata "
     "Atlântica, CE = Cerrado, CA = Caatinga). Unidades: PSN em gC·m⁻²·mês⁻¹; EV e PRE em mm·mês⁻¹; TST em °C; WAI "
     "adimensional (ETR/ETP); BURN em hectares. A Tabela A2 apresenta o desempenho das 10 combinações de variáveis "
-    "ambientais avaliadas por bioma.")
+    "ambientais avaliadas por bioma; a Tabela A3, o efeito da remoção das componentes de sazonalidade; e a Tabela A4, "
+    "a proporção da variância de cada variável climática explicada pelo ciclo anual.")
 cap = new_para_after(intro, TABCAP_TPL, "Tabela A1 - Base de dados mensal dos três biomas (2001–2025).", bold=True)
 cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
 cols = ['ANO', 'MÊS', 'ONI', 'Enso']; hdr = ['Ano', 'Mês', 'ONI', 'Fase']; fmt = {'ANO': '{:.0f}', 'MÊS': '{:.0f}', 'ONI': '{:.2f}'}
@@ -1110,6 +1130,33 @@ for j, hname in enumerate(['Bioma', 'Variáveis', 'R² treino (%)', 'R² teste (
 for i, (_, row) in enumerate(SV.sort_values(['bioma', 'r2_teste'], ascending=[True, False]).iterrows(), start=1):
     vals = [nome[row['bioma']], row['variaveis'].replace('BURN_log', 'BURNlog'), v(row['r2_treino']), v(row['r2_teste']), v(row['gap_pp'])]
     for j, sval in enumerate(vals): set_cell(t.rows[i].cells[j], sval, size=9)
+mid = new_para_after(t.rows[-1].cells[0].paragraphs[0], BODY_TPL, ""); mid._p.getparent().remove(mid._p); t._tbl.addnext(mid._p)
+# Tabela A3 — remoção da sazonalidade
+cap = new_para_after(mid, TABCAP_TPL, "Tabela A3 - Efeito da remoção das componentes de sazonalidade harmônica no desempenho do "
+                     "MRMP-N (grau 2, RepeatedKFold 5 × 30).", bold=True)
+cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
+t = table_after(cap, len(ABL) + 1, 6); t.alignment = 1
+set_widths(t, [3.2, 6.6, 3.0, 3.0, 4.2, 2.6])
+for j, hname in enumerate(['Bioma', 'Conjunto de variáveis', 'R² treino (%)', 'R² teste (%)', 'Dif. treino–teste (pp)', 'RMSE']):
+    set_cell(t.rows[0].cells[j], hname, bold=True, size=9)
+for i, (_, row) in enumerate(ABL.iterrows(), start=1):
+    b_ = [k for k, n_ in nome.items() if n_ == row['bioma']][0]; sem = 'sem' in row['conjunto']
+    r2te = row['r2_teste'] if sem else RG.loc[b_, 'r2_teste_medio']
+    gap_ = row['gap_pp'] if sem else RG.loc[b_, 'gap_overfitting_pp']
+    vals = [row['bioma'], row['conjunto'], v(row['r2_treino'], 1), v(r2te, 1), v(gap_, 1), v(row['rmse'], 2)]
+    for j, sval in enumerate(vals): set_cell(t.rows[i].cells[j], sval, size=9)
+mid = new_para_after(t.rows[-1].cells[0].paragraphs[0], BODY_TPL, ""); mid._p.getparent().remove(mid._p); t._tbl.addnext(mid._p)
+# Tabela A4 — R² do ciclo anual por variável
+cap = new_para_after(mid, TABCAP_TPL, "Tabela A4 - Proporção da variância de cada variável climática explicada isoladamente pelo "
+                     "ciclo anual (regressão contra saz_sin e saz_cos).", bold=True)
+cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
+t = table_after(cap, len(SAZ) + 1, 3); t.alignment = 1
+set_widths(t, [4.5, 3.0, 3.0])
+for j, hname in enumerate(['Bioma', 'Variável', 'R² (%)']):
+    set_cell(t.rows[0].cells[j], hname, bold=True, size=9)
+_ordem = {'Mata Atlântica': 0, 'Cerrado': 1, 'Caatinga': 2}
+for i, (_, row) in enumerate(SAZ.assign(o=SAZ.bioma.map(_ordem)).sort_values(['o', 'r2'], ascending=[True, False]).iterrows(), start=1):
+    for j, sval in enumerate([row['bioma'], row['variavel'], v(row['r2'], 1)]): set_cell(t.rows[i].cells[j], sval, size=9)
 fim = new_para_after(t.rows[-1].cells[0].paragraphs[0], BODY_TPL, ""); fim._p.getparent().remove(fim._p); t._tbl.addnext(fim._p)
 sect_break(fim, landscape=True)
 
@@ -1135,7 +1182,9 @@ TABS = ["Variáveis para predição da Fotossíntese Líquida (PSN)",
         "Tipologia ecológica dos regimes de produtividade primária na Bahia",
         "Fator de Inflação da Variância (VIF) das variáveis preditoras por bioma",
         "Base de dados mensal dos três biomas (2001–2025) [A1]",
-        "Desempenho das 10 combinações de variáveis ambientais por bioma [A2]"]
+        "Desempenho das 10 combinações de variáveis ambientais por bioma [A2]",
+        "Efeito da remoção das componentes de sazonalidade harmônica no desempenho do MRMP-N [A3]",
+        "Proporção da variância das variáveis climáticas explicada pelo ciclo anual [A4]"]
 PAGES = json.load(open(os.path.join(BASE, 'banca', 'paginas.json'))) if os.path.exists(os.path.join(BASE, 'banca', 'paginas.json')) else {}
 
 def rebuild_list(tbl, prefix, items):
