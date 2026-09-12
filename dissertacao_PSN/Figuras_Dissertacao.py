@@ -105,41 +105,50 @@ plt.close(fig); print('salvo fig05_importancia.png')
 
 # ---------------------------------------------------------------- Fig 4: seleção do grau (a partir do CSV)
 sg = pd.read_csv(os.path.join(RES, 'selecao_grau.csv'))
-fig, axes = plt.subplots(2, 3, figsize=(15, 8.0), gridspec_kw={'height_ratios': [3, 2]})
+plt.rcParams.update({'font.size': 12, 'font.family': 'DejaVu Sans'})
+fig, axes = plt.subplots(2, 3, figsize=(16, 10.5), gridspec_kw={'height_ratios': [3, 2.3]})
 for j, (b, nome, cor) in enumerate(BIOMAS):
     d = sg[sg['bioma'] == b].sort_values('grau')
     ax = axes[0, j]
     piso = np.floor(min(d['r2_teste'].iloc[:3].min() - d['dp_teste'].iloc[:3].max(), d['r2_treino'].iloc[0]) / 10) * 10 - 10
     piso = max(piso, 0)
-    ax.plot(d['grau'], d['r2_treino'], '-o', color='#555555', lw=2, ms=7, label='R² treino')
-    ax.errorbar(d['grau'], d['r2_teste'], yerr=d['dp_teste'], fmt='-s', color=cor, lw=2.2, ms=8,
+    ax.plot(d['grau'], d['r2_treino'], '-o', color='#555555', lw=2, ms=8, label='R² treino')
+    ax.errorbar(d['grau'], d['r2_teste'], yerr=d['dp_teste'], fmt='-s', color=cor, lw=2.2, ms=9,
                 capsize=4, label='R² teste (± 1 dp)')
-    for g, r2 in zip(d['grau'], d['r2_teste']):
-        if r2 < piso:
-            ax.annotate(f'{r2:.0f}%', (g, piso + 1.5), ha='center', va='bottom', fontsize=9, color=cor,
-                        fontweight='bold', arrowprops=dict(arrowstyle='-', color=cor, lw=0))
-            ax.plot([g], [piso + 0.8], marker='v', color=cor, ms=8, clip_on=False)
-    ax.axvline(2, color='#999999', ls='--', lw=1.2, zorder=0)
+    for g_, r2_, dp_ in zip(d['grau'], d['r2_teste'], d['dp_teste']):
+        if r2_ >= piso:
+            ax.annotate(f'{r2_:.1f}%'.replace('.', ','), (g_, r2_), xytext=(0, -16), textcoords='offset points',
+                        ha='center', va='top', fontsize=11, fontweight='bold', color=cor,
+                        bbox=dict(boxstyle='round,pad=0.15', fc='white', ec='none', alpha=0.85))
+        else:
+            ax.annotate(f'{r2_:.0f}%', (g_, piso + (100 - piso) * 0.42), ha='center', va='bottom', fontsize=12,
+                        color=cor, fontweight='bold')
+            ax.plot([g_], [piso + 0.8], marker='v', color=cor, ms=9, clip_on=False)
+    ax.axvline(2, color='#999999', ls=':', lw=1.5, zorder=0)
     ax.set_ylim(piso, 100); ax.set_xticks([1, 2, 3, 4, 5]); ax.set_xlim(0.6, 5.4)
-    ax.set_title(f'({"abc"[j]}) {nome}', fontweight='bold', fontsize=13)
+    ax.set_title(f'({"abc"[j]}) {nome}', fontweight='bold', fontsize=15)
     ax.set_ylabel('R² (%)' if j == 0 else ''); ax.grid(alpha=0.3)
-    ax.spines[['top', 'right']].set_visible(False)
-    if j == 0: ax.legend(loc='lower left', fontsize=9, framealpha=0.95)
+    if j == 0: ax.legend(loc='lower right', fontsize=11, framealpha=0.95)
     ax = axes[1, j]
-    barras = ax.bar(d['grau'], d['gap_pp'], color=[cor if g <= 10 else '#9E9E9E' for g in d['gap_pp']], width=0.6)
-    ax.axhline(10, color='#D85A30', ls='--', lw=1.3)
-    ax.set_yscale('symlog', linthresh=10); ax.set_ylim(0, 1000)
-    ax.set_yticks([0, 5, 10, 50, 100, 500]); ax.set_yticklabels(['0', '5', '10', '50', '100', '500'])
-    for g, v in zip(d['grau'], d['gap_pp']):
-        ax.text(g, v * 1.15 + 0.3, f'{v:.1f}', ha='center', va='bottom', fontsize=9, fontweight='bold')
+    cores_b = ['#2CA02C' if g_ == 2 else ('#FF7F0E' if v_ <= 10 else '#9E9E9E') for g_, v_ in zip(d['grau'], d['gap_pp'])]
+    ax.bar(d['grau'], d['gap_pp'], color=cores_b, width=0.6)
+    ax.axhline(10, color='#D62728', ls='--', lw=1.3)
+    ax.set_yscale('log'); ax.set_ylim(0.4, 1000)
+    ax.set_yticks([1, 10, 100]); ax.set_yticklabels(['1', '10', '100'])
+    for g_, v_, t_ in zip(d['grau'], d['gap_pp'], d['termos']):
+        ax.text(g_, v_ * 1.18, f'{v_:.1f}'.replace('.', ','), ha='center', va='bottom', fontsize=11.5,
+                fontweight='bold' if g_ == 2 else 'normal')
+        ax.text(g_, v_ * 2.3, f'({int(t_)} termos)', ha='center', va='bottom', fontsize=9.5, style='italic', color='#333')
     ax.set_xticks([1, 2, 3, 4, 5]); ax.set_xlim(0.6, 5.4)
-    ax.set_xlabel('Grau polinomial', fontweight='bold')
-    ax.set_ylabel('Diferença treino − teste (pp)' if j == 0 else '')
-    ax.text(5.35, 11.5, 'referência 10 pp', ha='right', va='bottom', fontsize=8.5, color='#D85A30')
-    ax.grid(axis='y', alpha=0.3); ax.spines[['top', 'right']].set_visible(False)
-fig.suptitle('Seleção do grau polinomial (1 a 5): R² de treino e teste (acima) e diferença treino − teste (abaixo, escala log)',
-             fontsize=12, fontweight='bold', y=0.995)
-plt.tight_layout(rect=(0, 0, 1, 0.97))
+    ax.set_xlabel('Grau polinomial', fontsize=13)
+    ax.set_ylabel('Diferença treino − teste (pp, escala log)' if j == 0 else '', fontsize=12)
+    ax.text(5.35, 520, 'referência 10 pp', ha='right', va='bottom', fontsize=10.5, color='#D62728')
+    ax.grid(axis='y', alpha=0.3)
+fig.suptitle('Seleção do grau polinomial (1 a 5) — com nº de termos e R² de teste anotados', fontsize=15, fontweight='bold', y=0.995)
+fig.text(0.5, 0.005, 'Grau 2 (verde) escolhido como grau comum: no Cerrado e na Caatinga já supera o grau 3 em R² de teste; na Mata Atlântica,\n'
+         'o grau 3 ganha +0,8 pp às custas de mais que o dobro de termos (55 vs. 20) e maior diferença treino−teste.',
+         ha='center', va='bottom', fontsize=11.5, style='italic', color='#333')
+plt.tight_layout(rect=(0, 0.045, 1, 0.97))
 plt.savefig(os.path.join(OUT, 'fig04_selecao_grau.png'), dpi=300, bbox_inches='tight'); plt.close(fig)
 print('salvo fig04_selecao_grau.png (gerada)')
 
