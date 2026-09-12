@@ -151,3 +151,31 @@ corrigido; siglas NASA, NOAA, CPC e ACF acrescentadas.
 6. **Etnias indígenas** (MB-75): lista conferir com FUNAI/IBGE.
 7. **Sumário**: atualizar campos no Word.
 8. A decisão da seção 1 (conjunto da MA).
+
+## 5. Correções do tutorial de revisão (segunda rodada)
+
+Aplicadas na fonte (scripts), não no XML, e o documento foi regenerado:
+
+1. **Datas**: as quatro comparações com a série antiga voltaram a dizer
+   "2001 a 2020" (Dados; 6.2; 6.4; 6.5). A causa era uma substituição
+   global no script, que foi removida. "2001 a 2025" só aparece agora onde
+   descreve a base atual.
+2. **Ponto solto no pé das páginas**: não eram parágrafos fantasmas, era um
+   "." dentro dos rodapés do modelo original (footer2, 4, 5 e 6). O script
+   agora limpa esse texto dos rodapés.
+3. **Centralização das imagens**: os parágrafos de imagem e legenda herdavam
+   o recuo de primeira linha (1,25 cm) do estilo Normal, o que empurrava a
+   figura para a direita. Recuo zerado em todos os parágrafos com imagem e
+   nas legendas.
+4. **Fontes das figuras**: Figuras 6 (observado × predito) e 9 (resíduos)
+   passaram a ser geradas diretamente dos dados em `Figuras_Dissertacao.py`,
+   com fontes 11,5–15 pt e figuras maiores (os números reproduzem os do
+   `Modelo_PSN.py`: R² fora da amostra, Shapiro-Wilk, Ljung-Box e ACF
+   idênticos). Figura 5 (regressões simples) com fontes 10–15 pt, títulos
+   "R²aj = …, b = …, p < 0,001", 300 dpi; Figuras 11–13 (ENSO) com fontes
+   maiores; Figura 8 com fontes maiores; Figura 1 redesenhada com mais espaço
+   entre as caixas e o texto vermelho quebrado em linhas curtas, sem invadir
+   a caixa do NPP.
+5. **Validação**: XML validado contra o esquema (sem erros); PDF renderizado
+   e conferido nas páginas das Figuras 1, 2, 5 e 9 e nas quatro frases de
+   datas.

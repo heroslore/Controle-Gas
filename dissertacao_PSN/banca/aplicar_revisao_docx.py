@@ -129,6 +129,7 @@ def to_inline(p):
         inline.append(copy.deepcopy(g))
         anc.getparent().replace(anc, inline)
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p.paragraph_format.first_line_indent = Cm(0); p.paragraph_format.left_indent = Cm(0)
 
 def set_caption_after_image(p, text):
     """Parágrafo com imagem + legenda: imagem vira inline e a legenda vai para um parágrafo próprio ANTES."""
@@ -168,6 +169,7 @@ def add_figure_after(anchor, caption, path, width_cm=16.0):
     cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
     pic = new_para_after(cap, IMG_TPL)
     pic.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    pic.paragraph_format.first_line_indent = Cm(0); pic.paragraph_format.left_indent = Cm(0)
     w, h = Image.open(path).size
     width = min(width_cm, 16.0)
     height = width * h / w
@@ -1180,8 +1182,6 @@ for p in d.paragraphs:
     if p.style.name.startswith('toc'): continue
     if re.search(r'gap\s+de\s+(overfitting|sobreajuste)', p.text) and not p._p.xpath('.//w:drawing'):
         set_text(p, re.sub(r'gap\s+de\s+(overfitting|sobreajuste)', 'diferença treino–teste', p.text))
-    regex_replace_para(p, r'2001 a 2020', '2001 a 2025')
-    regex_replace_para(p, r'2001-2020', '2001-2025')
     regex_replace_para(p, r'n = 240', f'n = {N_OBS}')
     italicize_terms(p)
 for t in d.tables:
@@ -1192,6 +1192,17 @@ for t in d.tables:
 for p in d.paragraphs:
     if re.match(r'^(Figura|Tabela) (A?\d+) [-–]', p.text):
         p.paragraph_format.keep_with_next = True
+        p.paragraph_format.first_line_indent = Cm(0); p.paragraph_format.left_indent = Cm(0)
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    if p._p.xpath('.//w:drawing'):
+        p.paragraph_format.first_line_indent = Cm(0); p.paragraph_format.left_indent = Cm(0)
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+# rodapés do modelo original contêm um "." solto que aparece no pé de todas as páginas
+for rel in d.part.rels.values():
+    if 'footer' in rel.reltype:
+        for t_el in rel.target_part.element.xpath('.//w:t'):
+            if t_el.text and t_el.text.strip() == '.':
+                t_el.text = ''
 uf = OxmlElement('w:updateFields'); uf.set(qn('w:val'), 'true')
 _st = d.settings.element
 _dep = [c for c in _st if c.tag.split('}')[1] in ('hdrShapeDefaults', 'footnotePr', 'endnotePr', 'compat', 'docVars', 'rsids', 'mathPr',

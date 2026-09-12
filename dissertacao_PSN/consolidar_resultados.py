@@ -76,9 +76,11 @@ for b in ['MA', 'CE', 'CA']:
     oof = None
     for m in re.finditer(r'R² out-of-fold \(Figura 3\): ([\d.]+)%\s*\|\s*R² RepeatedKFold \(tabelas\): ([\d.]+)%', t):
         if abs(float(m.group(2)) - r2t) < 0.011: oof = float(m.group(1))
+    pares = re.findall(r'Alpha médio utilizado na análise de resíduos: ([\d.]+)\nArquivo coeficientes_ridge_(\w\w)', t)
+    alpha_medio = [float(a) for a, bb in pares if bb == b][-1]
     coef = pd.read_csv(os.path.join(RES, b, f'coeficientes_ridge_{b}.csv'))
     xv = [f.replace(f'_{b}', '') for f in coef['feature'].iloc[:3]]
-    extra[b] = dict(x=xv, mae_dp=mae_dp, shapiro_w=shap_w, yr_orig=yr[0], yr_perm_media=yr[1], yr_perm_dp=yr[2], oof_r2=oof)
+    extra[b] = dict(x=xv, mae_dp=mae_dp, shapiro_w=shap_w, yr_orig=yr[0], yr_perm_media=yr[1], yr_perm_dp=yr[2], oof_r2=oof, alpha_medio=alpha_medio)
 imp = {}
 for b in ['MA', 'CE', 'CA']:
     c = pd.read_csv(os.path.join(RES, b, f'coeficientes_ridge_{b}.csv')); acc = {}

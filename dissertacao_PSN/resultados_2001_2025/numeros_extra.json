@@ -10,7 +10,8 @@
   "yr_orig": 73.81,
   "yr_perm_media": -10.61,
   "yr_perm_dp": 3.09,
-  "oof_r2": 73.85
+  "oof_r2": 73.85,
+  "alpha_medio": 0.706
  },
  "CE": {
   "x": [
@@ -23,7 +24,8 @@
   "yr_orig": 96.66,
   "yr_perm_media": -10.88,
   "yr_perm_dp": 2.64,
-  "oof_r2": 96.88
+  "oof_r2": 96.88,
+  "alpha_medio": 0.1
  },
  "CA": {
   "x": [
@@ -36,7 +38,8 @@
   "yr_orig": 94.16,
   "yr_perm_media": -13.04,
   "yr_perm_dp": 3.07,
-  "oof_r2": 94.65
+  "oof_r2": 94.65,
+  "alpha_medio": 0.1
  },
  "importancia": {
   "MA": {

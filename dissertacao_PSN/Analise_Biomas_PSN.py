@@ -258,7 +258,7 @@ paineis = [
 ]
 
 for nome, sig in sigla_bioma.items():
-    fig, axes = plt.subplots(1, 4, figsize=(15, 4.3))
+    fig, axes = plt.subplots(1, 4, figsize=(16, 5.2))
     for k, (var, ylab) in enumerate(paineis):
         ax  = axes[k]
         col = variaveis[var][sig]
@@ -271,18 +271,19 @@ for nome, sig in sigla_bioma.items():
             patch.set_alpha(0.85)
 
         stat, p = kruskal(*grupos)
-        ax.text(0.97, 0.97, f'KW: p={p:.3f} {rotulo_sig(p)}',
-                transform=ax.transAxes, ha='right', va='top', fontsize=9,
+        ax.text(0.97, 0.97, ('KW: p < 0,001' if p < 0.001 else f'KW: p = {p:.3f}'.replace('.', ',')) + f' {rotulo_sig(p)}',
+                transform=ax.transAxes, ha='right', va='top', fontsize=12,
                 bbox=dict(boxstyle='round,pad=0.3', facecolor='white',
                           edgecolor='0.7', alpha=0.9))
 
         ax.set_xticks([1, 2, 3])
-        ax.set_xticklabels(fases, fontsize=9)
-        ax.set_title(var, fontsize=12, fontweight='bold')
-        ax.set_ylabel(ylab, fontsize=10)
+        ax.set_xticklabels(fases, fontsize=12)
+        ax.tick_params(axis='y', labelsize=11)
+        ax.set_title(var, fontsize=15, fontweight='bold')
+        ax.set_ylabel(ylab, fontsize=12)
         ax.grid(alpha=0.3, axis='y')
 
-    fig.suptitle(f'Distribuição por Fase ENSO - {nome}', fontsize=14, fontweight='bold')
+    fig.suptitle(f'Distribuição por Fase ENSO - {nome}', fontsize=17, fontweight='bold')
     plt.tight_layout()
     plt.savefig(saida(f'boxplot_enso_{sig}.png'), dpi=600, bbox_inches='tight')
     plt.close(fig)
@@ -329,7 +330,7 @@ nomes_bio  = {'MA': 'Mata Atlântica', 'CE': 'Cerrado', 'CA': 'Caatinga'}
 cores_disp = {'MA': '#185FA5', 'CE': '#3B6D11', 'CA': '#BA7517'}
 
 n_vars = len(var_disp)
-fig, axes = plt.subplots(n_vars, 3, figsize=(14, n_vars * 3.2), constrained_layout=True)
+fig, axes = plt.subplots(n_vars, 3, figsize=(16, n_vars * 3.9), constrained_layout=True)
 
 print(f"\n===== REGRESSÃO SIMPLES PSN x VARIÁVEIS (n={len(dados_total)}) =====")
 print(f"{'Variável':<26} {'Bioma':<18} {'R²adj':>6} {'Slope':>10} {'p-valor':>12} Signif.")
@@ -350,14 +351,14 @@ for row, (var, cols) in enumerate(var_disp.items()):
         xl = np.linspace(x.min(), x.max(), 200)
         ax.plot(xl, slope * xl + interc, color='red', linewidth=1.8)
 
-        p_str = f"{p:.2e}" if p < 0.001 else f"{p:.4f}"
-        ax.set_title(f"Adj R² = {r2_adj:.2f}  Slope = {slope:.2f}  P = {p_str}", fontsize=8, pad=4)
+        p_str = "p < 0,001" if p < 0.001 else f"p = {p:.3f}".replace('.', ',')
+        ax.set_title(f"R²aj = {r2_adj:.2f}   b = {slope:.2f}   {p_str}".replace('.', ','), fontsize=12, pad=5)
         if row == 0:
-            ax.text(0.5, 1.18, nomes_bio[bio], transform=ax.transAxes, ha='center',
-                    fontsize=10, fontweight='bold', color=cores_disp[bio])
-        ax.set_xlabel(var, fontsize=8)
-        ax.set_ylabel(r'PSN (gC$\cdot$m$^{-2}\cdot$mês$^{-1}$)' if c == 0 else '', fontsize=8)
-        ax.tick_params(labelsize=7)
+            ax.text(0.5, 1.22, nomes_bio[bio], transform=ax.transAxes, ha='center',
+                    fontsize=15, fontweight='bold', color=cores_disp[bio])
+        ax.set_xlabel(var, fontsize=12)
+        ax.set_ylabel(r'PSN (gC$\cdot$m$^{-2}\cdot$mês$^{-1}$)' if c == 0 else '', fontsize=12)
+        ax.tick_params(labelsize=10)
         ax.grid(alpha=0.25)
 
         sig = rotulo_sig(p)
@@ -369,7 +370,7 @@ fig.suptitle(
     'Regressão Linear Simples: PSN x Variáveis Ambientais - 3 Biomas\n'
     f'Dados mensais (n={len(dados_total)}) | '
     f'{_meses_abrev[int(_ini["MÊS"]) - 1]}/{int(_ini["ANO"])}-{_meses_abrev[int(_fim["MÊS"]) - 1]}/{int(_fim["ANO"])}',
-    fontsize=12, fontweight='bold', y=1.035)
-plt.savefig(saida('dispersao_psn_variaveis_biomas.png'), dpi=200, bbox_inches='tight')
+    fontsize=15, fontweight='bold', y=1.03)
+plt.savefig(saida('dispersao_psn_variaveis_biomas.png'), dpi=300, bbox_inches='tight')
 plt.close(fig)
 print("\nFigura salva: dispersao_psn_variaveis_biomas.png")

@@ -66,10 +66,6 @@ def compor(arquivos, saida, orientacao='h', rotulos=None, largura=LARGURA_FINAL,
     print('salvo', os.path.basename(saida), tela.size)
 
 # ---------------------------------------------------------------- Fig 3, 4, 6, 7, 8-10
-compor([os.path.join(RES, b, f'obs_vs_pred_{b}.png') for b, _, _ in BIOMAS],
-       os.path.join(OUT, 'fig03_obs_vs_pred.png'), 'h', ['(a)', '(b)', '(c)'])
-compor([os.path.join(RES, b, f'analise_residuos_{b}.png') for b, _, _ in BIOMAS],
-       os.path.join(OUT, 'fig06_residuos.png'), 'v')
 compor([os.path.join(RES, b, f'yrandomization_{b}.png') for b, _, _ in BIOMAS],
        os.path.join(OUT, 'fig07_yrandomization.png'), 'h', ['(a)', '(b)', '(c)'])
 for n, (b, _, _) in zip([8, 9, 10], BIOMAS):
@@ -82,9 +78,9 @@ Image.open(os.path.join(RES, 'dispersao_psn_variaveis_biomas.png')).convert('RGB
 print('salvo fig_dispersao.png')
 
 # ---------------------------------------------------------------- Fig 5: importância relativa
-plt.rcParams.update({'font.size': 11, 'font.family': 'DejaVu Sans'})
+plt.rcParams.update({'font.size': 13, 'font.family': 'DejaVu Sans'})
 NOMES = {'EV': 'EV', 'PRE': 'PRE', 'TST': 'TST', 'WAI': 'WAI', 'saz_sin': 'Saz sin', 'saz_cos': 'Saz cos'}
-fig, axes = plt.subplots(1, 3, figsize=(15, 4.6))
+fig, axes = plt.subplots(1, 3, figsize=(16, 5.4))
 letras = ['(a)', '(b)', '(c)']
 for ax, (b, nome, cor), letra in zip(axes, BIOMAS, letras):
     c = pd.read_csv(os.path.join(RES, b, f'coeficientes_ridge_{b}.csv'))
@@ -97,8 +93,9 @@ for ax, (b, nome, cor), letra in zip(axes, BIOMAS, letras):
     s = pd.Series(imp); s = (s / s.sum() * 100).sort_values()
     ax.barh([NOMES.get(k, k) for k in s.index], s.values, color=cor, height=0.62)
     for i, v in enumerate(s.values):
-        ax.text(v + 0.6, i, f'{v:.1f}%', va='center', fontsize=10.5, fontweight='bold')
-    ax.set_title(f'{letra} {nome}', fontweight='bold', fontsize=13)
+        ax.text(v + 0.6, i, f'{v:.1f}%', va='center', fontsize=12.5, fontweight='bold')
+    ax.set_title(f'{letra} {nome}', fontweight='bold', fontsize=15)
+    ax.tick_params(labelsize=12)
     ax.set_xlabel('Importância relativa (%)', fontweight='bold')
     ax.set_xlim(0, s.max() * 1.22)
     ax.grid(axis='x', alpha=0.3); ax.spines[['top', 'right']].set_visible(False)
@@ -147,24 +144,24 @@ plt.savefig(os.path.join(OUT, 'fig04_selecao_grau.png'), dpi=300, bbox_inches='t
 print('salvo fig04_selecao_grau.png (gerada)')
 
 # ---------------------------------------------------------------- Fig nova: conceito da PSN
-fig, ax = plt.subplots(figsize=(13, 5.6)); ax.set_xlim(0, 13); ax.set_ylim(0, 5.6); ax.axis('off')
+fig, ax = plt.subplots(figsize=(15, 5.8)); ax.set_xlim(0, 15); ax.set_ylim(0, 5.8); ax.axis('off')
 def caixa(x, y, w, h, titulo, sub, cor, tcor='white'):
     ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle='round,pad=0.02,rounding_size=0.15', fc=cor, ec='none'))
-    ax.text(x + w / 2, y + h * 0.70, titulo, ha='center', va='center', fontsize=15, fontweight='bold', color=tcor)
-    ax.text(x + w / 2, y + h * 0.30, sub, ha='center', va='center', fontsize=9.5, color=tcor, linespacing=1.3)
+    ax.text(x + w / 2, y + h * 0.70, titulo, ha='center', va='center', fontsize=17, fontweight='bold', color=tcor)
+    ax.text(x + w / 2, y + h * 0.30, sub, ha='center', va='center', fontsize=10.5, color=tcor, linespacing=1.3)
 def seta(x0, x1, y, texto):
-    ax.add_patch(FancyArrowPatch((x0, y), (x1, y), arrowstyle='-|>', mutation_scale=22, lw=2.2, color='#333333'))
-    ax.text((x0 + x1) / 2, y + 0.25, texto, ha='center', va='bottom', fontsize=9.5, color='#8B0000', linespacing=1.25)
-caixa(0.2, 1.6, 2.7, 1.8, 'GPP', 'Produtividade Primária\nBruta: todo o carbono\nfixado pela fotossíntese', '#1B5E20')
-seta(3.0, 5.1, 2.5, '− respiração de\nmanutenção de folhas\ne raízes finas')
-caixa(5.15, 1.6, 2.7, 1.8, 'PSN', 'Fotossíntese Líquida:\nsaldo de carbono em\n8 dias (MOD17A2H)', '#2E7D32')
-seta(7.95, 10.05, 2.5, '− respiração de manutenção\ndo lenho e raízes grossas\n− respiração de crescimento')
-caixa(10.1, 1.6, 2.7, 1.8, 'NPP', 'Produtividade Primária\nLíquida: agregação\nanual (MOD17A3)', '#558B2F')
-ax.text(0.2, 0.95, 'Atmosfera (CO₂)  →  fotossíntese  →  GPP  →  PSN  →  NPP: cada etapa desconta uma parcela de respiração.',
-        fontsize=10.5, color='#333')
-ax.text(0.2, 0.45, 'Variável-resposta deste estudo: PSN mensal, por bioma (compostos de 8 dias do MOD17A2H agregados ao mês).',
-        fontsize=10.5, color='#333')
-ax.text(0.2, 4.9, 'Fluxos de carbono estimados pelo algoritmo MODIS/MOD17', fontsize=13, fontweight='bold')
+    ax.add_patch(FancyArrowPatch((x0, y), (x1, y), arrowstyle='-|>', mutation_scale=24, lw=2.4, color='#333333'))
+    ax.text((x0 + x1) / 2, y + 0.22, texto, ha='center', va='bottom', fontsize=10, color='#8B0000', linespacing=1.25)
+caixa(0.2, 1.7, 2.9, 1.9, 'GPP', 'Produtividade Primária\nBruta: todo o carbono\nfixado pela fotossíntese', '#1B5E20')
+seta(3.2, 5.95, 2.65, '− respiração de\nmanutenção de folhas\ne raízes finas')
+caixa(6.05, 1.7, 2.9, 1.9, 'PSN', 'Fotossíntese Líquida:\nsaldo de carbono em\n8 dias (MOD17A2H)', '#2E7D32')
+seta(9.05, 11.8, 2.65, '− respiração de\nmanutenção do lenho\ne raízes grossas\n− respiração de\ncrescimento')
+caixa(11.9, 1.7, 2.9, 1.9, 'NPP', 'Produtividade Primária\nLíquida: agregação\nanual (MOD17A3)', '#558B2F')
+ax.text(0.2, 1.05, 'Atmosfera (CO₂)  →  fotossíntese  →  GPP  →  PSN  →  NPP: cada etapa desconta uma parcela de respiração.',
+        fontsize=11.5, color='#333')
+ax.text(0.2, 0.5, 'Variável-resposta deste estudo: PSN mensal, por bioma (compostos de 8 dias do MOD17A2H agregados ao mês).',
+        fontsize=11.5, color='#333')
+ax.text(0.2, 5.2, 'Fluxos de carbono estimados pelo algoritmo MODIS/MOD17', fontsize=14, fontweight='bold')
 plt.savefig(os.path.join(OUT, 'fig01_psn_conceito.png'), dpi=300, bbox_inches='tight'); plt.close(fig)
 print('salvo fig01_psn_conceito.png')
 
@@ -261,3 +258,65 @@ for ya, yb in [(y1, y2), (y2, y3)]:
     ax.add_patch(FancyArrowPatch((xs[0] + W / 2, yb + H + 0.3), (xs[0] + W / 2, yb + H + 0.02), arrowstyle='-|>', mutation_scale=16, lw=1.6, color='#333'))
 plt.savefig(os.path.join(OUT, 'fig_fluxo.png'), dpi=300, bbox_inches='tight'); plt.close(fig)
 print('salvo fig_fluxo.png')
+
+# ---------------------------------------------------------------- Fig 6 (obs vs pred, OOF) e Fig 9 (resíduos) gerados dos dados
+import json
+from scipy import stats
+from sklearn.preprocessing import StandardScaler, PolynomialFeatures
+from sklearn.linear_model import Ridge
+from sklearn.model_selection import KFold, GridSearchCV
+from sklearn.metrics import r2_score
+from statsmodels.stats.diagnostic import acorr_ljungbox
+from statsmodels.tsa.stattools import acf
+NUMX = json.load(open(os.path.join(RES, 'numeros_extra.json'), encoding='utf-8'))
+df = pd.read_excel(os.path.join(BASE, 'Dados_base_nova_2001_2025.xlsx')); df.columns = df.columns.str.strip()
+df['saz_sin'] = np.sin(2 * np.pi * df['MÊS'] / 12); df['saz_cos'] = np.cos(2 * np.pi * df['MÊS'] / 12)
+plt.rcParams.update({'font.size': 13, 'axes.titlesize': 15, 'axes.labelsize': 13, 'xtick.labelsize': 11.5,
+                     'ytick.labelsize': 11.5, 'legend.fontsize': 11.5})
+UN = r'gC$\cdot$m$^{-2}\cdot$mês$^{-1}$'
+fig6, ax6 = plt.subplots(1, 3, figsize=(17, 5.8))
+fig9, ax9 = plt.subplots(3, 3, figsize=(17, 15))
+for k, (b, nome, cor) in enumerate(BIOMAS):
+    xcols = [f'{v_}_{b}' for v_ in NUMX[b]['x']] + ['saz_sin', 'saz_cos']
+    X = df[xcols]; y = df[f'NP_{b}']
+    # OOF (KFold 5, shuffle, rs=42), winsorização 3% só no treino, GridSearch alpha
+    pred = np.zeros(len(y))
+    for tr, te in KFold(n_splits=5, shuffle=True, random_state=42).split(X):
+        ytr = y.iloc[tr].clip(lower=np.percentile(y.iloc[tr], 3))
+        sc = StandardScaler(); pf = PolynomialFeatures(degree=2, include_bias=False)
+        Xtr = pf.fit_transform(sc.fit_transform(X.iloc[tr])); Xte = pf.transform(sc.transform(X.iloc[te]))
+        gs = GridSearchCV(Ridge(), {'alpha': [0.1, 1.0, 10.0, 50.0, 100.0]}, cv=5, scoring='r2').fit(Xtr, ytr)
+        pred[te] = gs.best_estimator_.predict(Xte)
+    r2oof = r2_score(y, pred) * 100
+    ax = ax6[k]
+    lim = [min(y.min(), pred.min()) - 5, max(y.max(), pred.max()) + 5]
+    ax.plot(lim, lim, 'k--', lw=1.3, label='Predição perfeita (1:1)')
+    ax.scatter(y, pred, s=26, color=cor, alpha=0.6, edgecolors='none')
+    ax.set_xlim(lim); ax.set_ylim(lim); ax.set_aspect('equal', adjustable='box')
+    ax.set_title(f'({"abc"[k]}) {nome}', fontweight='bold')
+    ax.set_xlabel(f'PSN observada ({UN})', fontweight='bold'); ax.set_ylabel(f'PSN predita ({UN})' if k == 0 else '', fontweight='bold')
+    ax.text(0.04, 0.95, f'R² fora da amostra = {r2oof:.1f}%'.replace('.', ','), transform=ax.transAxes, va='top',
+            fontsize=13, fontweight='bold', bbox=dict(boxstyle='round,pad=0.35', fc='white', ec=cor, lw=2))
+    ax.legend(loc='lower right'); ax.grid(alpha=0.3); ax.spines[['top', 'right']].set_visible(False)
+    # diagnóstico: ajuste completo, y não winsorizado, alpha médio
+    sc = StandardScaler(); pf = PolynomialFeatures(degree=2, include_bias=False)
+    Xf = pf.fit_transform(sc.fit_transform(X)); m = Ridge(alpha=NUMX[b]['alpha_medio']).fit(Xf, y)
+    fitted = m.predict(Xf); res = y.values - fitted
+    W, pW = stats.shapiro(res); lb = acorr_ljungbox(res, lags=[12], return_df=True); ac = acf(res, nlags=3)
+    a0, a1, a2 = ax9[k]
+    a0.scatter(fitted, res, s=22, color=cor, alpha=0.6, edgecolors='none'); a0.axhline(0, color='k', ls='--', lw=1.2)
+    a0.set_title('Resíduos vs valores ajustados', fontweight='bold'); a0.set_xlabel(f'Valores ajustados ({UN})'); a0.set_ylabel(f'Resíduos ({UN})')
+    (osm, osr), (slope, inter, _) = stats.probplot(res, dist='norm')
+    a1.scatter(osm, osr, s=22, color=cor, alpha=0.7, edgecolors='none'); a1.plot(osm, slope * np.array(osm) + inter, 'k-', lw=1.6)
+    a1.set_title('QQ-plot dos resíduos', fontweight='bold'); a1.set_xlabel('Quantis teóricos'); a1.set_ylabel('Valores ordenados')
+    a2.hist(res, bins=28, color=cor, alpha=0.85, edgecolor='white')
+    a2.set_title('Distribuição dos resíduos', fontweight='bold'); a2.set_xlabel(f'Resíduo ({UN})'); a2.set_ylabel('Frequência')
+    ptxt = lambda p: 'p < 0,001' if p < 0.001 else f'p = {p:.3f}'.replace('.', ',')
+    a2.text(0.03, 0.96, f'Shapiro-Wilk: W = {W:.3f}, {ptxt(pW)}\nLjung-Box(12): {ptxt(float(lb["lb_pvalue"].iloc[0]))}\nACF(1) = {ac[1]:+.2f}'.replace('.', ',').replace('W = 0,', 'W = 0,'),
+            transform=a2.transAxes, va='top', fontsize=12, bbox=dict(boxstyle='round,pad=0.35', fc='white', ec=cor, lw=2))
+    for a in (a0, a1, a2): a.grid(alpha=0.3); a.spines[['top', 'right']].set_visible(False)
+    a0.text(-0.32, 0.5, nome, transform=a0.transAxes, rotation=90, va='center', ha='center', fontsize=17, fontweight='bold', color=cor)
+    print(f'{b}: R² OOF {r2oof:.2f} | Shapiro p {pW:.4f} | LB p {float(lb["lb_pvalue"].iloc[0]):.4f} | ACF1 {ac[1]:.3f}')
+fig6.tight_layout(); fig6.savefig(os.path.join(OUT, 'fig03_obs_vs_pred.png'), dpi=300, bbox_inches='tight'); plt.close(fig6)
+fig9.tight_layout(); fig9.savefig(os.path.join(OUT, 'fig06_residuos.png'), dpi=300, bbox_inches='tight'); plt.close(fig9)
+print('salvo fig03_obs_vs_pred.png e fig06_residuos.png (gerados)')
