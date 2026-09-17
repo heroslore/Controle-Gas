@@ -65,13 +65,93 @@ Detalhe de latência: o IMERG Final mensal sai com ~6 meses de atraso; out–dez
 
 Nenhum bioma piorou; a Mata Atlântica melhorou ~10 pontos e ficou estável no tempo. Grau 2 continua ótimo. Y-randomization aprovado em todos os casos. Coeficientes coerentes entre bases (correlação 0,93–0,96) e estáveis ao estender para 2025 (0,97–0,999).
 
-## 6. Pareceres da banca de qualificação
+## 6. Pareceres da banca de qualificação: quem pediu o quê, onde, e situação
 
-**Não recebi os pareceres da banca.** O PDF `Trabalho_Final.pdf` não contém anotações nem seção de parecer, e nenhum outro documento com as observações dos membros foi enviado. Por isso **não consigo listar o que cada membro pontuou** nem cruzar com o que foi alterado.
+Fonte: PDFs anotados `Qualificacao_Ygor_Oliveira_-_consideracoes_MB.pdf` (Prof. Marcos
+Bernardes, 106 anotações) e `Trabalho_Final_comentarios_Fernando_1.pdf` (Prof. Fernando,
+FIOCRUZ-RO, 30 anotações). **Os dois foram feitos sobre o mesmo texto do
+`Trabalho_Final.pdf`, que é a versão que foi à banca**; por isso a coluna
+"Situação" diz o que a atualização da base já resolve e o que depende de
+edição do texto (que só posso conferir na versão revisada). Todas as 136
+anotações, com página e trecho, estão em `pareceres_banca_anotacoes.csv`.
 
-Assim que você me enviar os pareceres (arquivo, fotos ou texto, um por membro), eu monto a tabela *membro → observação → o que foi alterado → página e trecho*. Com o que existe, a única coisa que posso afirmar é o que a nova base obriga a mudar no texto, que está na seção 7.
+Legenda da situação: **RESOLVIDO (dados)** = a nova base/pipeline responde;
+**TEXTO** = edição de redação/estrutura, verificar na versão revisada;
+**DADOS + TEXTO** = a base fornece o conteúdo, falta escrever.
 
-## 7. Alterações no texto exigidas pela nova base (página e local no `Trabalho_Final.pdf`)
+### 6.1 Prof. Marcos Bernardes (MB)
+
+| # | Pág. | Local (trecho) | O que pediu | Situação / o que muda |
+|---|---|---|---|---|
+| MB-1 | 3 | Resumo, 1.ª frase | Frase de abertura sobre o uso de regressão para estudar fenômenos naturais | TEXTO |
+| MB-2 | 3, 4, 22, 23, 27 | Resumo/Abstract e 5.4 | Resumo cita só R²; metodologia usa R², RMSE, MAE, resíduos, média e DP. Citar todas no resumo/abstract (repetido 6×) | DADOS + TEXTO: valores novos prontos (RMSE, MAE, IC 95 %, gap) na seção 5 deste roteiro |
+| MB-3 | 3, 8, 13, 16, 24 | Resumo; 1; 2; 5.1; 5.4 | "Traduzir" para o público geral: MRMP-N, ONI, "resposta pulsada", "gap de overfitting", penalização L2 (repetido 7×) | TEXTO |
+| MB-4 | 3 | Resumo, "resposta pulsada"; p. 34 Tabela 4 | O que é? | TEXTO: definir na fundamentação e na Tabela 4 |
+| MB-5 | 3, 19, 37 | Resumo; 5.2 ONI; 6.5 | ENSO: fases neutro/El Niño/La Niña? com ou sem defasagem? ONI é trimestral, como conciliar com mensal? intensidades consideradas? | RESOLVIDO (dados) + TEXTO: ONI da NOAA atribuído ao mês central da estação de 3 meses; fases por limiar ±0,5; a coluna antiga estava deslocada 1 ano (corrigida). Falta escrever isso em 5.2 e testar defasagem (1–3 meses) se a orientadora quiser |
+| MB-6 | 3, 43 | Resumo; 7 | Destacar a principal contribuição acadêmica; parte do parágrafo final merece ir ao resumo | TEXTO |
+| MB-7 | 3 | Palavras-chave "Regressão Ridge Polinomial" | Mistura português/inglês? | TEXTO: "Regressão polinomial com regularização (Ridge)" |
+| MB-8 | 5, 17 | Lista de siglas; 5.2 | Itálico em termos estrangeiros (repetido 5×) | TEXTO |
+| MB-9 | 6 | Lista de figuras | Tirar as linhas de tabela | TEXTO |
+| MB-10 | 7, 16, 33, 41 | Sumário; 5.1; 6.3; 6.6 | Área de estudo com uma página é pouco; incluir referências dos dados climáticos; levar para 5.1 os temas de 6.3/6.6 (uso do solo, Corredor Central, ZEE, PLANAVEG, restauração, povos indígenas) | TEXTO: ampliar 5.1; dados de área por bioma (IBGE) já calculados: MA 113 mil km², CE 105 mil, CA 360 mil |
+| MB-11 | 8 | 1, 1.º parágrafo | "O estado da Bahia…" (não "a região") | TEXTO |
+| MB-12 | 8 | 1, MRMP-N | Quais autores já usaram esses modelos? citar referências | TEXTO |
+| MB-13 | 10, 13, 17 | 2 (MOD17); 2; 5.2 | Explicar o que é o MODIS na 1.ª citação; qual agência espacial; resolução espaço-temporal; metodologia fora do lugar (2 vs 5) | DADOS + TEXTO: NASA/Terra, 500 m, composições de 8 dias, Coleção 6.1, agregação em 4 composições (tudo em `RELATORIO_METODOLOGIA.md`) |
+| MB-14 | 10 | 2 | "Escala mensal para 19 anos?" | RESOLVIDO (dados): agora 2001–2025, 25 anos, n = 297 |
+| MB-15 | 11 | 2 (MapBiomas) | Recortes de uso do solo por bioma na Bahia | TEXTO (sugestão; pode ser feito no GEE com MapBiomas se quiserem) |
+| MB-16 | 14 | 3.2 hipóteses | Definir "grau ótimo" e "parcela significativa"; especificar o tipo de produtividade | TEXTO |
+| MB-17 | 15 | 3.2 / 7 | As hipóteses são verificadas no final com justificativas? | TEXTO: 7 já verifica; reforçar |
+| MB-18 | 15 | 4.1 / 4.2 | Ecossistemas ou biomas? mais de um objetivo geral; metodologia misturada com objetivo específico | TEXTO |
+| MB-19 | 18 | Tabela 1 | Retirar marcações de revisão; linha solta na tabela | TEXTO |
+| MB-20 | 19 | 5.2 BURN | "Isso já é resultado" (distribuição assimétrica da área queimada) | TEXTO: mover a justificativa ou citar como pré-análise |
+| MB-21 | 19 | 5.2 winsorização | O que é? como se chega ao percentil 3? esquema da metodologia | TEXTO: explicar (percentil 3 = 3 % menores valores substituídos pelo valor do percentil; escolha empírica); Figura 2 pode subir |
+| MB-22 | 23 | 5.5 | "Reconhece-se, contudo…" | TEXTO |
+| MB-23 | 24 | 5.4 resíduos | Por que n = 240? | RESOLVIDO (dados): n = 297 (2001–set/2025); 300 quando a NASA publicar a chuva de out–dez/2025 |
+| MB-24 | 25 | 5.6 random_state = 42 | Por que esse valor? | TEXTO: semente arbitrária, fixa para reprodutibilidade |
+| MB-25 | 26 | Figura 2 | Colocar a figura bem antes no capítulo | TEXTO |
+| MB-26 | 27 | Tabela 2 | Como foi estimada a "PSN observada"? pelo MODIS? | DADOS + TEXTO: sim, MOD17A2HGF PsnNet, média por bioma, soma de 4 composições |
+| MB-27 | 28 | 6.1 Cerrado | Onde está a análise PSN × preditoras? incluir linha na Tabela 3 | TEXTO; Figura 5 (importância) cobre; dados de correlação disponíveis |
+| MB-28 | 28 | Tabela 3, Mata Atlântica | (destaque) "menor capacidade de extrapolação para períodos futuros" | RESOLVIDO (dados): com 2001–2025 a queda no TimeSeriesSplit cai de 15,7 para 7,0 pp; reescrever |
+| MB-29 | 31 | 6.2 | Incluir trabalhos que corroboram o achado (limitação hídrica no Cerrado) | TEXTO |
+| MB-30 | 32 | 6.3 WAI | A definição de WAI precisa estar na metodologia | RESOLVIDO (dados) + TEXTO: WAI = ET/PET (MOD16A2GF), confirmado pela validação (r = 0,998) |
+| MB-31 | 34 | Tabela 4 | Tabela importante, síntese no resumo; "direta ou indiretamente proporcional?"; "o que são?" (componentes de sazonalidade) | TEXTO; atualizar R² da tabela (96,7 / 94,2 / 70,9) |
+| MB-32 | 35 | 6.4 | Citar Figura 6 no texto; Ljung-Box não estava na metodologia; "o que é?" (memória temporal) | TEXTO + DADOS: incluir Ljung-Box em 5.4; resultados novos: autocorrelação em MA e CA |
+| MB-33 | 36 | Figura 6 | Figura sem legenda | TEXTO |
+| MB-34 | 36 | 6.4 Y-randomization | "Boiei aqui de novo" (R² permutado negativo) | TEXTO: explicar em linguagem simples |
+| MB-35 | 40 | 6.6 | "Muito mais etnias do que Pataxó"; como isolar o efeito do eucalipto/fragmentação? | TEXTO: corrigir e marcar como hipótese, não resultado |
+
+### 6.2 Prof. Fernando (FIOCRUZ-RO)
+
+| # | Pág. | Local (trecho) | O que pediu | Situação / o que muda |
+|---|---|---|---|---|
+| F-1 | 8 | 1, definição de PSN | Explicar o que é fotossíntese líquida; talvez um gráfico da teoria vigente | TEXTO |
+| F-2 | 9 | 1 | O que é "forçamento"? | TEXTO |
+| F-3 | 10 | 2, GPP/PSN/NPP | Fundamentar; reescrever "subtrair, adicionalmente"; ele propõe PSN = GPP − Rm(folhas e raízes finas), e NPP = PSN − Rcrescimento | TEXTO: a definição do MOD17 é PSN = GPP − Rm; NPP = PSN − Rg (anual). A base nova traz NPP anual (MOD17A3HGF) e PSN para ilustrar |
+| F-4 | 10 | 2, Cerrado | Não vê evidência de controle hídrico no Cerrado; trazer dado para comparação | DADOS + TEXTO: na base nova a correlação PSN × WAI e PSN × PRE no Cerrado e a Figura 5 fornecem o dado |
+| F-5 | 12 | 2 | Pasto transpira menos que árvores? | TEXTO |
+| F-6 | 13, 20, 21, 22, 25 | 2 e 5.3–5.5, referência a Guimarães et al. (2024) | Explicar que o QSAR original previa inibição de atividade celular; corrigir: Guimarães testou graus até 8 empiricamente (não fixou grau 4); testou > 400 variáveis em combinações de 3 (não "seleção a priori"); o Y-randomization de Guimarães comparou a média dos permutados, critério de 30 % entre R² de CV e de treino/teste | TEXTO: 5 correções de descrição do trabalho de referência (p. 13, 20, 21, 22, 25) |
+| F-7 | 16 | 5.1 | Área de estudo deve ir para a introdução | TEXTO (conflita em parte com MB-10, que pede ampliar 5.1; decidir com a orientadora) |
+| F-8 | 17 | 5.2 "bases climáticas regionais" | Quais? Não pode haver indefinição; reprodutibilidade | RESOLVIDO (dados): todas as fontes identificadas (Tabela da seção 2 deste roteiro), pipeline reproduzível em um comando |
+| F-9 | 18 | Tabela 1 | Os dados são acessíveis pela web ou precisam de acesso específico? | RESOLVIDO (dados): catálogo público do Google Earth Engine, conta gratuita acadêmica; script no repositório |
+| F-10 | 19 | 5.2 sazonalidade | sin + cos somados passam de 1 (1,37) | TEXTO: esclarecer que são dois preditores separados, cada um em [−1, 1], nunca somados |
+| F-11 | 19 | 5.2 sazonalidade | Pode criar sazonalidade artificial? | TEXTO: argumentar (harmônicos ortogonais; o modelo estima o peso de cada um) |
+| F-12 | 19 | 5.2 winsorização | Explicar | TEXTO (= MB-21) |
+| F-13 | 20 | 5.3 equação | Faltou a representação de grau > 1 (termos quadráticos X_i²) | TEXTO |
+| F-14 | 21 | 5.3 Ridge | Pré-processar colinearidade com df.corr() e excluir variáveis redundantes | DADOS + TEXTO: VIF já é feito; posso gerar a matriz de correlação da base nova (EV × WAI no Cerrado r alto) |
+| F-15 | 21, 26 | 5.3 e Figura 2 | Qual a proporção treino/teste? quem é o grupo de teste? | TEXTO: RepeatedKFold com 5 partes = 80 % treino / 20 % teste em cada fold (192/48 com n = 240; 238/59 com n = 297), 30 repetições |
+| F-16 | 22 | 5.4 seleção de variáveis | sazsin e sazcos deveriam ser fixas e as combinações feitas entre as outras 5 | TEXTO: o script atual já usa as 5 variáveis fixas (C(5,5) = 1); descrever assim |
+| F-17 | 22 | 5.4 | Generalização é determinada pelo R² de teste | TEXTO |
+| F-18 | 23 | 5.5 RepeatedKFold | Esquema gráfico da divisão | TEXTO (figura) |
+| F-19 | 24, 26 | 5.4 e Figura 2 | Onde estão os dados? mostrar a tabela com os dados | RESOLVIDO (dados): `resultados/base_final_2001_2025_plan1.csv` e `.xlsx`; apêndice ou repositório |
+| F-20 | 29 | 6.2 grau ótimo | "Não pra Caatinga" (grau 2 não seria ótimo) | DADOS: na base nova o grau 2 é o máximo na Caatinga (94,2 % contra 93,8 % do grau 1 e 93,4 % do grau 3), mas a vantagem é pequena; reconhecer no texto que grau 1 e 2 são equivalentes ali |
+
+### 6.3 Síntese para a reunião
+
+- 8 itens ficam **resolvidos pela nova base**: fontes indefinidas (F-8, F-9, F-19), ONI trimestral/deslocado (MB-5), n = 240 (MB-23), WAI sem definição (MB-30), extrapolação temporal da MA (MB-28), "19 anos" (MB-14).
+- 7 itens são **dados prontos que faltam escrever**: RMSE/MAE no resumo (MB-2), MODIS/NASA/resolução (MB-13), PSN observada (MB-26), Tabela 4 (MB-31), Ljung-Box (MB-32), controle hídrico no Cerrado (F-4), correlação entre preditores (F-14).
+- Os demais (~40) são **redação, estrutura e explicações didáticas**, sem dependência dos dados.
+- **Um conflito a decidir com a orientadora**: MB pede ampliar a área de estudo (5.1); Fernando pede levá-la para a introdução.
+
+## 7. Alterações no texto exigidas pela nova base (independentes da banca) (página e local no `Trabalho_Final.pdf`)
 
 | Página | Local | O que está | O que muda |
 |---|---|---|---|
