@@ -23,3 +23,9 @@ Os dados ficam salvos **no próprio aparelho** (no navegador, via localStorage).
 
 O arquivo `index.html` é o sistema inteiro. O workflow em `.github/workflows/pages.yml` publica automaticamente no GitHub Pages a cada alteração no branch `main`.
 Para atualizar o sistema, basta substituir o `index.html` e enviar para o `main`.
+
+## Automação de tráfego pago
+
+A pasta `automacao/` tem o script que lê o Gerenciador de Anúncios da Meta e publica
+o acompanhamento diário e o relatório semanal na lista YGOR do Trello dos sócios.
+Como configurar e rodar: [automacao/README.md](automacao/README.md).
