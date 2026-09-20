@@ -1,0 +1,62 @@
+META_ACCESS_TOKEN: ok
+META_AD_ACCOUNT_ID: ok
+TRELLO_API_KEY: ok
+TRELLO_TOKEN: ok
+TRELLO_BOARD_ID: ok
+
+Trello: quadro 'My Trello Board' (https://trello.com/b/[redigido]/my-trello-board)
+  lista YGOR: id 6aaeef2d5c8a564d8f1dc698
+  cartão diário : https://trello.com/c/XfJBVyeo
+  cartão semanal: https://trello.com/c/K2KAmY5n
+
+Meta: conta act_[redigido] respondeu, 4 campanha(s) com entrega em 2026-09-18.
+
+Tudo pronto.
+exit=0
+**Acompanhamento diário — 18/09/2026** (automático)
+
+Gasto: R$ 66,01 · Alcance: 12.234 · Impressões: 13.424
+Cliques: 54 · Mensagens/leads: 14 · Custo por mensagem: R$ 4,72
+
+**Por campanha**
+- **Nova campanha de Reconhecimento**: gasto R$ 23,29 · msgs 0 · custo/msg — · cliques 22 · freq 1.00
+- **Fundo de Funil Evely 1,2 Wesley + Manu**: gasto R$ 17,26 · msgs 1 · custo/msg R$ 17,26 · cliques 7 · freq 1.60
+- **Fundo de Funil 2.0**: gasto R$ 13,59 · msgs 0 · custo/msg — · cliques 6 · freq 1.47
+- **Iphone fundo Funil**: gasto R$ 11,87 · msgs 13 · custo/msg R$ 0,91 · cliques 19 · freq 1.28
+
+**Melhor criativo do dia:** iphone teste (13 msgs, R$ 11,87)
+
+**⚠️ Atenção**
+- 'Nova campanha de Reconhecimento' gastou R$ 23,29 e não gerou nenhuma mensagem.
+- 'Fundo de Funil Evely 1,2 Wesley + Manu' com custo por mensagem de R$ 17,26, acima de R$ 15,00.
+- 'Fundo de Funil 2.0' gastou R$ 13,59 e não gerou nenhuma mensagem.
+
+[dry-run] nada foi publicado no Trello.
+exit=0
+**Relatório semanal de tráfego — 12/09 a 18/09/2026** (automático)
+
+- Investimento total: R$ 574,29
+- Leads/mensagens: 96
+- Custo médio por lead: R$ 5,98
+- Quantidade de vendas: ______ (preencher com Gustavo)
+- Faturamento atribuído ao tráfego: R$ ______ (preencher com Gustavo)
+- Custo por venda: R$ ______ (investimento ÷ vendas)
+- Melhor campanha: Iphone fundo Funil
+- Melhor anúncio/criativo: iphone teste
+- Produto mais procurado: ______
+- Produto com pior resultado: ______ (campanha com pior resultado: Reconhecimeto da Loja)
+- Campanhas pausadas: Meio de Funil - Evelyn 1 e 2 + Wesley publico, Reconhecimeto da Loja, Iphone Boleto — Cópia, Campanha Conhecimento Loja, Wesley, Promoção Iphone 12 -128, Dia dos Paes, Post do Instagram: cliente menos sincero q a..., Post do Instagram: Quando você é dançarina mas..., Campanha Conhecimento Loja, PRomoção Iphone 14 128, Iphone Boleto, Venda Iphone Inauguração, II° Inauguração, Iº Inauguração, Cupom, Post do Instagram: INAUGURAÇÃO DA LOJA FISICA DA..., Sorteio Inauguração, Post do Instagram: Ainda n sabe o que dar pro seu..., dia dos namorados II, Dia dos namorados, Promoção Lacome / Carolina, Post do Instagram: Quer presentear o SEU VEINHO..., Nova campanha de Engajamento, Post do Instagram: Vem presentear a sua mae AQUI,..., 2° Video  Campanha, Campanha de mensagens personalizadas 04/05/2026 Campanha, Campanha de tráfego para anunciantes do Instagram 01/05/2026 Campanha, Nova campanha de Tráfego, dia das maes, Campanha Video Dupe, Nova campanha de Tráfego, [IPHONE 13 128GB - NO BOLETO] Classificado do Marketplace turbinado em 27/03/2026, Nova campanha de Engajamento
+- Campanhas que devem continuar: Nova campanha de Reconhecimento, Iphone fundo Funil, Fundo de Funil 2.0, Fundo de Funil Evely 1,2 Wesley + Manu
+- O que será melhorado na próxima semana: ______
+
+**Campanhas da semana**
+- **Fundo de Funil Evely 1,2 Wesley + Manu**: gasto R$ 194,08 · msgs 23 · custo/msg R$ 8,44 · cliques 95 · freq 2.05
+- **Iphone fundo Funil**: gasto R$ 107,02 · msgs 55 · custo/msg R$ 1,95 · cliques 95 · freq 1.90
+- **Fundo de Funil 2.0**: gasto R$ 90,43 · msgs 8 · custo/msg R$ 11,30 · cliques 37 · freq 1.85
+- **Nova campanha de Reconhecimento**: gasto R$ 84,28 · msgs 1 · custo/msg R$ 84,28 · cliques 82 · freq 1.36
+- **Reconhecimeto da Loja**: gasto R$ 52,58 · msgs 0 · custo/msg — · cliques 0 · freq 1.20
+- **Meio de Funil - Evelyn 1 e 2 + Wesley publico**: gasto R$ 34,73 · msgs 6 · custo/msg R$ 5,79 · cliques 23 · freq 1.56
+- **Iphone Boleto**: gasto R$ 11,17 · msgs 3 · custo/msg R$ 3,72 · cliques 7 · freq 1.12
+
+[dry-run] nada foi publicado no Trello.
+exit=0
