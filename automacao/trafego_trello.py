@@ -60,9 +60,12 @@ ACOES_MENSAGEM = (
 )
 
 CAMPOS_INSIGHTS = (
-    "campaign_id,campaign_name,adset_name,ad_id,ad_name,spend,reach,impressions,"
+    "campaign_id,campaign_name,objective,adset_name,ad_id,ad_name,spend,reach,impressions,"
     "clicks,inline_link_clicks,frequency,actions,cost_per_action_type"
 )
+
+# Objetivos em que "zero mensagens" é esperado (não geram alerta de conversão).
+OBJETIVOS_SEM_MENSAGEM = ("OUTCOME_AWARENESS", "BRAND_AWARENESS", "REACH", "VIDEO_VIEWS", "OUTCOME_ENGAGEMENT")
 
 
 class ErroAutomacao(Exception):
@@ -170,7 +173,7 @@ def resumir(linhas, chave_nome):
     grupos = {}
     for l in linhas:
         nome = l.get(chave_nome) or "(sem nome)"
-        g = grupos.setdefault(nome, {"nome": nome, "id": l.get("campaign_id"), "gasto": 0.0,
+        g = grupos.setdefault(nome, {"nome": nome, "id": l.get("campaign_id"), "objetivo": l.get("objective") or "", "gasto": 0.0,
                                      "alcance": 0.0, "impressoes": 0.0, "cliques": 0.0,
                                      "mensagens": 0.0, "freq_soma": 0.0, "freq_n": 0})
         g["gasto"] += num(l.get("spend"))
@@ -249,6 +252,8 @@ def alertas_do_dia(campanhas, t):
     if ALERTA_GASTO_DIA and t["gasto"] > ALERTA_GASTO_DIA:
         avisos.append(f"Gasto do dia {brl(t['gasto'])} acima do limite de {brl(ALERTA_GASTO_DIA)}.")
     for g in campanhas:
+        if g["objetivo"] in OBJETIVOS_SEM_MENSAGEM:
+            continue  # campanha de alcance/engajamento: não se cobra mensagem dela
         if g["gasto"] > 0 and g["mensagens"] == 0:
             avisos.append(f"'{g['nome']}' gastou {brl(g['gasto'])} e não gerou nenhuma mensagem.")
         elif ALERTA_CUSTO_MSG and g["custo_msg"] and g["custo_msg"] > ALERTA_CUSTO_MSG:
@@ -299,8 +304,11 @@ def relatorio_semanal(fim):
     pior_camp = max(campanhas, key=lambda c: (c["mensagens"] == 0, c["custo_msg"] or 0)) if campanhas else None
     an_msg = [a for a in anuncios if a["mensagens"] > 0]
     melhor_an = min(an_msg, key=lambda a: a["custo_msg"]) if an_msg else (anuncios[0] if anuncios else None)
-    pausadas = [c["name"] for c in status.values() if c.get("effective_status") in ("PAUSED", "CAMPAIGN_PAUSED", "ADSET_PAUSED")]
-    ativas = [c["name"] for c in status.values() if c.get("effective_status") == "ACTIVE"]
+    # Só campanhas que tiveram entrega na semana; o histórico da conta não entra.
+    def situacao(c):
+        return status.get(c["id"] or "", {}).get("effective_status", "")
+    pausadas = [c["nome"] for c in campanhas if situacao(c) in ("PAUSED", "CAMPAIGN_PAUSED", "ADSET_PAUSED")]
+    ativas = [c["nome"] for c in campanhas if situacao(c) == "ACTIVE"]
 
     def nome(x):
         return x["nome"] if x else "______"
