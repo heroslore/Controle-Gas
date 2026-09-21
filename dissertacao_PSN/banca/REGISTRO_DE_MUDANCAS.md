@@ -273,3 +273,14 @@ Aplicado o parecer "Pente-fino da dissertação" (todos os itens, com as decisõ
 - **Repositório**: seção "Versão citada na dissertação" no README apontando o commit desta versão (`9f6227b`) e o
   comando para criar a tag anotada `dissertacao-v10` e a *release* (o envio de tags não é permitido a partir do
   ambiente automatizado; a branch e o link citado no texto não mudam).
+
+## 10. Versão 11 (22/09/2026): acabamento após leitura externa
+
+- 5.2: "a TST foi mediada em cada período" → "a TST foi agregada pela média em cada período".
+- 5.1 (área de estudo): citações inseridas no parágrafo do Corredor Central, PLANAVEG e ZEE
+  (Brasil, 2006; Brasil, 2017; Bahia, 2020) e após a lista de povos indígenas (IBGE, 2025a).
+- Apresentação: a afirmação de que abordagens flexíveis tendem a superar modelos lineares em respostas
+  ecológicas passou a citar literatura ecológica/metodológica (Olden, Lawler e Poff, 2008; Pichler e Hartig,
+  2023) em vez de Guimarães et al. (2024), que trata de QSAR e continua citado apenas nesse contexto.
+- Pendentes de decisão do autor: folha de rosto ("Projeto de dissertação ... qualificação" vs. dissertação
+  final/defesa) e eventual repositório exclusivo para a dissertação (o link atual permanece).

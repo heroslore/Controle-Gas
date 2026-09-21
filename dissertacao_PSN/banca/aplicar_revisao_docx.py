@@ -575,15 +575,15 @@ ultimo_area = add_paras_after(ORIG[166], BODY_TPL, [
     "Do ponto de vista hidrológico, o Cerrado baiano abriga nascentes que abastecem bacias hidrográficas regionais, "
     "entre elas afluentes do Rio São Francisco, sustentando atividades agropecuárias, comunidades rurais e "
     "ecossistemas a jusante. A Mata Atlântica do sul da Bahia integra o Corredor Central da Mata Atlântica, um dos "
-    "eixos prioritários da conservação da biodiversidade no país, e concentra iniciativas de restauração florestal, "
-    "ainda em fase inicial na maior parte dos casos, alinhadas ao Plano Nacional de Recuperação da Vegetação Nativa "
-    "(PLANAVEG) e ao Zoneamento Ecológico-Econômico da Bahia.",
+    "eixos prioritários da conservação da biodiversidade no país (Brasil, 2006), e concentra iniciativas de restauração "
+    "florestal, ainda em fase inicial na maior parte dos casos, alinhadas ao Plano Nacional de Recuperação da Vegetação "
+    "Nativa (PLANAVEG; Brasil, 2017) e ao Zoneamento Ecológico-Econômico da Bahia (Bahia, 2020).",
     "O uso do solo difere entre os biomas: na Mata Atlântica predominam os mosaicos de fragmentos florestais "
     "intercalados por pastagens, cacauicultura, silvicultura de eucalipto e áreas urbanas; no oeste do estado, a "
     "fronteira agrícola do MATOPIBA converteu extensas áreas de Cerrado em lavouras de grãos e pastagens; e na "
     "Caatinga a pecuária extensiva, a agricultura de sequeiro e a extração de lenha respondem pela maior parte da "
     "conversão e da degradação da vegetação nativa (MapBiomas, 2025). O estado abriga ainda povos indígenas de "
-    "diversas etnias (entre elas Pataxó, Pataxó Hã-Hã-Hãe, Tupinambá, Kiriri, Tuxá, Pankararé, Truká e Kaimbé), "
+    "diversas etnias (entre elas Pataxó, Pataxó Hã-Hã-Hãe, Tupinambá, Kiriri, Tuxá, Pankararé, Truká e Kaimbé; IBGE, 2025a), "
     "comunidades quilombolas e agricultores familiares que dependem diretamente dos serviços ecossistêmicos "
     "associados à produtividade da vegetação. Essa diversidade de controles ambientais e de pressões antrópicas "
     "justifica a abordagem comparativa entre biomas adotada neste estudo.",
@@ -615,8 +615,8 @@ set_text(ORIG[177],
     "válidos de cada bioma, delimitado pelo mapa de biomas do IBGE na escala 1:250.000 (IBGE, 2019) recortado pelo "
     "limite estadual da Bahia, na projeção nativa de cada produto e com os fatores de escala oficiais. Os compostos "
     "foram então agregados em períodos mensais de quatro compostos consecutivos, em janelas fixas de dia do ano, "
-    "reproduzindo a agregação empregada por Benfica et al. (2022): a PSN, a EV e a ETP foram somadas e a TST foi "
-    "mediada em cada período; o WAI foi calculado como a razão EV/ETP e a área queimada como o número de pixels "
+    "reproduzindo a agregação empregada por Benfica et al. (2022): a PSN, a EV e a ETP foram somadas, enquanto a TST foi "
+    "agregada pela média em cada período; o WAI foi calculado como a razão EV/ETP e a área queimada como o número de pixels "
     "queimados no mês multiplicado pela área do pixel (25 ha). Cada janela abrange cerca de 32 dias e foi atribuída "
     "ao mês civil que contém a maior parte dos seus dias (janeiro, por exemplo, reúne os compostos iniciados em 27 de "
     "dezembro e em 1, 9 e 17 de janeiro), e é a esse mês de referência que se associam o ONI e as componentes de "
@@ -1712,9 +1712,13 @@ add_ref_after(_ma, "MENDES, K. R.; MENEZES, R. S. C.; OLIVEIRA, P. E. S.; LIMA, 
               "2025. DOI: 10.1016/j.agrformet.2025.110573.")
 _ob = add_ref_after(ORIG[359], "O'BRIEN, R. M. A caution regarding rules of thumb for variance inflation factors. Quality & Quantity, v. 41, "
               "p. 673-690, 2007. DOI: 10.1007/s11135-006-9018-6.")
-add_ref_after(_ob, "OLIVEIRA, R. S.; BEZERRA, L.; DAVIDSON, E. A.; PINTO, F.; KLINK, C. A.; NEPSTAD, D. C.; MOREIRA, A. Deep root function "
+_ol = add_ref_after(_ob, "OLDEN, J. D.; LAWLER, J. J.; POFF, N. L. Machine learning methods without tears: a primer for ecologists. "
+              "The Quarterly Review of Biology, v. 83, n. 2, p. 171-193, 2008. DOI: 10.1086/587826.")
+_ol = add_ref_after(_ol, "OLIVEIRA, R. S.; BEZERRA, L.; DAVIDSON, E. A.; PINTO, F.; KLINK, C. A.; NEPSTAD, D. C.; MOREIRA, A. Deep root function "
               "in soil water dynamics in cerrado savannas of central Brazil. Functional Ecology, v. 19, n. 4, p. 574-581, 2005. "
               "DOI: 10.1111/j.1365-2435.2005.01003.x.")
+add_ref_after(_ol, "PICHLER, M.; HARTIG, F. Machine learning and deep learning: a review for ecologists. Methods in Ecology and "
+              "Evolution, v. 14, n. 4, p. 994-1016, 2023. DOI: 10.1111/2041-210X.14061.")
 add_ref_after(ORIG[360], "RODRIGUES, R. R.; MCPHADEN, M. J. Why did the 2011-2012 La Niña cause a severe drought in the Brazilian Northeast? "
               "Geophysical Research Letters, v. 41, n. 3, p. 1012-1018, 2014. DOI: 10.1002/2013GL058703.")
 add_ref_after(ORIG[362], "SCHWINNING, S.; SALA, O. E. Hierarchy of responses to resource pulses in arid and semi-arid ecosystems. Oecologia, "
@@ -1967,7 +1971,7 @@ _SUBS = [
     (r"e a influência da fragmentação apontam a restauração florestal", "e a hipótese da influência da fragmentação apontam a restauração florestal"),
     (r"\s*\(Hao et al\., 2019\)", ""),
     (r";\s*Hao et al\., 2019", ""),
-    (r"para as quais abordagens flexíveis superam consistentemente as estritamente lineares\.", "para as quais abordagens flexíveis tendem a superar as estritamente lineares (Guimarães et al., 2024)."),
+    (r"para as quais abordagens flexíveis superam consistentemente as estritamente lineares\.", "para as quais abordagens flexíveis tendem a superar as estritamente lineares (Olden; Lawler; Poff, 2008; Pichler; Hartig, 2023)."),
     (r"forçante climática indireta, mediada principalmente pelas variáveis de temperatura e precipitação, transmitida pela evapotranspiração no Cerrado e na Caatinga e pela temperatura na Mata Atlântica,",
      "forçante climática indireta, associada principalmente à evapotranspiração no Cerrado e na Caatinga e à temperatura na Mata Atlântica,"),
     (r"forçante climática indireta, mediada principalmente pelas variáveis de temperatura e precipitação,", "forçante climática indireta, associada principalmente à evapotranspiração no Cerrado e na Caatinga e à temperatura na Mata Atlântica,"),
