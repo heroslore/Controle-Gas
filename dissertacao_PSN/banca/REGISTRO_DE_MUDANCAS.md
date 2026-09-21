@@ -241,3 +241,34 @@ Aplicado o parecer "Pente-fino da dissertação" (todos os itens, com as decisõ
   "produtividade primária" restrita ao sentido genérico; citações acrescentadas na Apresentação.
 - **[REF] para o autor** (7 marcas): IBGE (área e litoral), FUNAI/IBGE (etnias), Corredor Central, ZEE-BA e a
   edição/URL do PLANAVEG.
+
+## 9. Versão 10 (22/09/2026): revisão final (oito pontos)
+
+- **Referências no lugar de todas as marcas [REF]** (nenhuma restante), todas verificadas nas fontes oficiais:
+  IBGE, *Cidades e Estados: Bahia* (2025b) para a área territorial (valor atualizado para 564.764 km², dado oficial
+  vigente); SEMA-BA, *A zona costeira no Estado da Bahia* (2024) para o litoral ("mais de 1.100 km", em vez do valor
+  não referenciado de 1.188 km); IBGE, *Censo Demográfico 2022: etnias e línguas indígenas* (2025a) para as etnias;
+  MMA, *O Corredor Central da Mata Atlântica* (2006) para o Corredor Central; SEMA/SEPLAN-BA, *Relatório da Comissão
+  Técnica do ZEE-BA* (2020) para o ZEE; PLANAVEG com a Portaria Interministerial nº 230/2017 e a página oficial do MMA.
+- **Cruzamento citações ↔ lista nos dois sentidos**: Rodrigues e McPhaden (2014) passou a ser citado em 6.5
+  (La Niña de 2011–2012 e seca no Nordeste); entrada INPE (não citada) removida; NASA e NOAA reposicionadas em
+  ordem alfabética; entradas IBGE de 2025 diferenciadas em 2025a/2025b.
+- **5.5**: apenas o TimeSeriesSplit é descrito como cronológico; o GroupKFold por ano é apresentado como validação
+  agrupada (anos posteriores podem treinar anos anteriores) com o papel de cada esquema explicitado.
+- **Considerações Finais**: tendência da Mata Atlântica reescrita como "tendência negativa de aproximadamente 6% em
+  24 anos, não significativa ao nível de 5% (p = 0,070), embora com sinal sugestivo de declínio" (sem "marginalmente
+  significativa"), em consonância com 6.6.
+- **"Grau ótimo" e "conjunto ótimo" eliminados** (fundamentação, 5.3, 6.2 e conclusões): grau "selecionado/adotado"
+  por "melhor compromisso entre desempenho preditivo, estabilidade e parcimônia"; conjuntos de variáveis "selecionados"
+  ou "de melhor desempenho".
+- **Figura 8**: legenda e texto reescritos como "índice de contribuição relativa" (descritivo, não causal), com a
+  ressalva de que, como a padronização precede a expansão polinomial, termos quadráticos e de interação não têm a
+  mesma escala dos lineares e o Ridge reparte o peso entre termos correlacionados. A ordem do pipeline
+  (winsorização → StandardScaler → PolynomialFeatures → Ridge) foi conferida no código e **não** foi alterada; nada
+  foi recalculado.
+- **Varredura editorial**: "( TimeSeriesSplit)" corrigido; "produtividade primária" trocada por PSN onde o texto se
+  refere aos resultados deste estudo (6.3, 6.5, conclusões), mantida no sentido genérico da literatura; abstract
+  alinhado ao resumo ("PSN control", "Ridge regression"); sem "overfitting" ou "Regressão Ridge" fora das
+  palavras-chave; unidades uniformes (gC·m⁻²·mês⁻¹, mm·mês⁻¹, °C).
+- **Repositório**: tag anotada `dissertacao-v10` no commit desta versão e seção "Versão citada na dissertação" no
+  README, sem alterar o link citado no texto.

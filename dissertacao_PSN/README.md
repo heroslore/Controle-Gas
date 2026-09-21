@@ -78,3 +78,13 @@ Cadeia completa, da base bruta ao PDF (≈ 1 h; `bash reproduzir_tudo.sh` faz tu
 Cada número do texto, das tabelas e das legendas é preenchido pelo script do Word a partir
 desses arquivos; nada é digitado à mão. Uma rodada sequencial completa feita em 21/09/2026
 reproduziu as Tabelas 2 e 3 exatamente (ver `resultados_2001_2025/RESULTADOS.md`, seção 11).
+
+## Versão citada na dissertação
+
+O texto cita o repositório pela URL fixa `https://github.com/heroslore/Controle-Gas` (pastas
+`dissertacao_PSN` e `npp_modis`). A versão exata que gerou o documento entregue à banca está
+congelada na tag anotada **`dissertacao-v10`**: `git checkout dissertacao-v10` reproduz o
+estado dos scripts, das bases e dos resultados usados no texto, mesmo que a branch continue
+a evoluir. Recomenda-se transformar a tag em *release* no GitHub (com o `.docx` e o `.pdf`
+anexados) no momento do depósito final, o que dá à banca um ponto de acesso único sem
+mudar o link citado.

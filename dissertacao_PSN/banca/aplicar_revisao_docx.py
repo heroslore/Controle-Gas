@@ -367,7 +367,7 @@ resumo = (
 abstract = (
     "Conventional linear models may be insufficient to represent non-linear ecological relationships and "
     "interactions among environmental variables. This study developed and validated a Multiple Polynomial "
-    "Regression Model of order N (MRMP-N), estimated by Ridge Regression, to analyze Net Photosynthesis (PSN) in the "
+    "Regression Model of order N (MRMP-N), estimated by Ridge regression, to analyze Net Photosynthesis (PSN) in the "
     "Atlantic Forest, Cerrado and Caatinga biomes of Bahia, Brazil, between January 2001 and September 2025. Monthly "
     f"remote sensing data and climate variables were used, totaling {N_OBS} observations per biome. The polynomial "
     "degree and the set of predictor variables were determined empirically, and performance was assessed by repeated "
@@ -380,7 +380,7 @@ abstract = (
     f"{mae('MA').replace(',', '.')} gC·m⁻²·month⁻¹; the coefficient instability associated with "
     "multicollinearity (high VIF between evapotranspiration and water availability in the Cerrado) was contained by "
     "Ridge regularization. The results revealed distinct ecological regimes of "
-    "primary productivity control: seasonal water limitation in the Cerrado, pulsed response to rainfall in the "
+    "PSN control: seasonal water limitation in the Cerrado, pulsed response to rainfall in the "
     "Caatinga and multifactorial control in the Atlantic Forest. The analysis of the El Niño–Southern Oscillation "
     "(ENSO), performed on monthly anomalies, indicated an indirect and lagged influence on PSN: in La Niña months PSN "
     f"was about {v(LN_LO,0)}–{v(LN_HI,0)}% above normal in the Cerrado and Caatinga, associated mainly with positive "
@@ -861,10 +861,12 @@ set_text(ORIG[215],
     "esses escores não constituem observações independentes, motivo pelo qual se adota a expressão \"intervalo "
     "empírico\" em vez de \"intervalo de confiança\" no sentido estatístico estrito.")
 set_text(ORIG[217], ORIG[217].text
-    .replace("O primeiro, denominado GroupKFold por ano, agrupa as observações de um mesmo ano, de modo que anos inteiros sejam mantidos fora do conjunto de treino em cada partição;",
-             "O primeiro, denominado GroupKFold por ano, agrupa as observações de um mesmo ano em cinco grupos de cinco anos, de modo que anos inteiros sejam mantidos fora do conjunto de treino em cada partição (Figura 4b);")
+    .replace("Complementarmente à validação cruzada repetida, o desempenho do modelo foi submetido a dois esquemas de validação que respeitam a estrutura cronológica da série, com o objetivo de verificar se as estimativas obtidas pelo RepeatedKFold se mantêm quando a separação entre treino e teste preserva a ordem temporal dos dados.",
+             "Complementarmente à validação cruzada repetida, o desempenho do modelo foi examinado por dois esquemas que consideram a estrutura temporal da série: uma validação agrupada por ano (GroupKFold) e uma validação estritamente cronológica (TimeSeriesSplit com janela expansível). O objetivo foi verificar se as estimativas obtidas pelo RepeatedKFold se mantêm quando meses de um mesmo ano não são repartidos entre treino e teste e, no segundo esquema, quando o teste ocorre sempre depois do treino.")
+    .replace("O primeiro, denominado GroupKFold por ano, agrupa as observações de um mesmo ano, de modo que anos inteiros sejam mantidos fora do conjunto de treino em cada partição; esse procedimento avalia a capacidade de generalização do modelo para períodos anuais não utilizados no ajuste e elimina a possibilidade de que meses consecutivos e autocorrelacionados sejam distribuídos simultaneamente entre treino e teste.",
+             "O primeiro, denominado GroupKFold por ano, agrupa as observações de um mesmo ano em cinco grupos de cinco anos, de modo que anos inteiros sejam mantidos fora do conjunto de treino em cada partição (Figura 4b); esse procedimento não preserva a ordem cronológica, pois anos posteriores podem compor o treino usado para prever anos anteriores, mas avalia a generalização para anos inteiros não utilizados no ajuste e impede que meses consecutivos e autocorrelacionados de um mesmo ano sejam repartidos entre treino e teste.")
     .replace("O segundo, o TimeSeriesSplit com janela expansível, ajusta o modelo em períodos anteriores e avalia seu desempenho em períodos subsequentes,",
-             "O segundo, o TimeSeriesSplit com janela expansível, ajusta o modelo em períodos anteriores e avalia seu desempenho no bloco de 49 meses seguinte, em cinco blocos sucessivos (Figura 4c),")
+             "O segundo, o TimeSeriesSplit com janela expansível, é o único que preserva estritamente a ordem cronológica: ajusta o modelo em períodos anteriores e avalia seu desempenho no bloco de 49 meses seguinte, em cinco blocos sucessivos (Figura 4c),")
     .replace("A concordância entre os resultados dos três esquemas foi interpretada como evidência de que o desempenho do modelo não constitui artefato de vazamento por autocorrelação temporal.",
              "A concordância entre os resultados dos três esquemas foi interpretada como evidência de que o bom desempenho não decorre apenas de meses vizinhos, muito parecidos entre si, terem caído ao mesmo tempo no treino e no teste."))
 add_figure_after(ORIG[217], "Figura 4 - Esquemas de particionamento treino/teste: (a) RepeatedKFold 5 × 30; (b) GroupKFold por ano; (c) TimeSeriesSplit com janela expansível.",
@@ -973,8 +975,9 @@ for b in ('MA', 'CE', 'CA'):
                      f"{v(gp[b][3]-gp[b][2])} pontos maior ({v(gp[b][3])} contra {v(gp[b][2])} pp) e quase o triplo de "
                      "termos, sendo preterido pelo critério composto.")
 set_text(ORIG[247],
-    "A comparação sistemática entre os graus polinomiais 1 a 5 (Figura 7) indicou o grau 2 como ótimo nos três "
-    "biomas pelo critério composto de maior R² de teste e menor diferença treino–teste. O ganho do grau 2 em relação "
+    "A comparação sistemática entre os graus polinomiais 1 a 5 (Figura 7) levou à seleção do grau 2 nos três "
+    "biomas, por oferecer o melhor compromisso entre desempenho preditivo (R² de teste), estabilidade (diferença "
+    "treino–teste) e parcimônia (número de termos), critério composto adotado neste estudo. O ganho do grau 2 em relação "
     f"ao modelo linear (grau 1) foi de {v(g['MA'][2]-g['MA'][1])} pontos percentuais de R² de teste na Mata "
     f"Atlântica ({v(g['MA'][1])}% para {v(g['MA'][2])}%) e de {v(g['CE'][2]-g['CE'][1])} pontos no Cerrado "
     f"({v(g['CE'][1])}% para {v(g['CE'][2])}%), mas de apenas {v(g['CA'][2]-g['CA'][1])} ponto na Caatinga "
@@ -1009,7 +1012,8 @@ set_text(ORIG[252],
     "padronizados do modelo Ridge. A importância relativa de cada variável foi calculada como a soma dos valores "
     "absolutos dos coeficientes padronizados de todos os termos (linear, quadrático e de interação) associados à "
     "respectiva variável, normalizada de modo que o total por bioma some 100%.")
-set_text(ORIG[253], "Figura 8 - Importância relativa das variáveis preditoras no modelo MRMP-N nos três biomas.", bold=True)
+set_text(ORIG[253], "Figura 8 - Índice de contribuição relativa das variáveis preditoras no modelo MRMP-N nos três biomas "
+         "(soma dos valores absolutos dos coeficientes dos termos que envolvem cada variável, normalizada a 100% por bioma).", bold=True)
 replace_image(ORIG[254], os.path.join(FIG, 'fig05_importancia.png'))
 ce_wai_vs_tst = sv['CE'].iloc[0]['r2_teste'] - sv['CE'][sv['CE'].variaveis == 'EV + PRE + TST']['r2_teste'].iloc[0]
 set_text(ORIG[255], ORIG[255].text.replace(
@@ -1025,10 +1029,14 @@ set_text(ORIG[257],
     "associado ao ciclo anual de precipitação e radiação. A evapotranspiração (EV) aparece como preditor central em "
     "todos os biomas, e as variáveis hídricas (PRE ou WAI) integram o conjunto ótimo de cada um, confirmando que o "
     "balanço hídrico é o principal controle preditivo da PSN na região. Cabe lembrar que a importância mostrada na "
-    "Figura 8 é um índice de contribuição relativa baseado nos coeficientes padronizados do modelo (soma dos valores "
-    "absolutos dos coeficientes dos termos que envolvem cada variável), e não uma medida causal; no Cerrado, em que EV "
-    "e WAI apresentam VIF elevado (Tabela 5), a contribuição individual desses dois preditores deve ser interpretada com "
-    "cautela, pois parte da informação é compartilhada entre eles.")
+    "Figura 8 é um índice de contribuição relativa baseado nos coeficientes do modelo ajustado sobre variáveis padronizadas (soma dos valores "
+    "absolutos dos coeficientes dos termos que envolvem cada variável), e não uma medida causal. Como a padronização é "
+    "aplicada antes da expansão polinomial, os termos quadráticos e de interação não têm exatamente a mesma escala dos "
+    "termos lineares, e a regularização Ridge reparte o peso entre termos correlacionados; o índice deve, portanto, ser "
+    "lido como uma síntese descritiva da estrutura do modelo ajustado, útil para comparar os biomas entre si, e não como "
+    "uma quantificação estrita da importância de cada variável. No Cerrado, em que EV e WAI apresentam VIF elevado "
+    "(Tabela 5), a contribuição individual desses dois preditores deve ser interpretada com cautela adicional, pois parte "
+    "da informação é compartilhada entre eles.")
 set_text(ORIG[258],
     "A ausência da área queimada (BURNlog) no conjunto selecionado de qualquer bioma, apesar de sua inclusão como "
     "candidata, indica que, na escala mensal e espacial adotada, essa variável não acrescentou poder preditivo "
@@ -1319,7 +1327,10 @@ _p7 = new_para_after(_pic14, BODY_TPL,
     "forte da série, e de 2023–2024, a PSN ficou abaixo do normal nos três biomas, e no primeiro caso a redução se "
     "aprofundou nos três meses seguintes, sobretudo no Cerrado; durante as La Niñas prolongadas de 2010–2011 e 2021–2023, "
     "a PSN ficou acima do normal no Cerrado e na Caatinga, mas não na Mata Atlântica. Os anos de 2015 e 2016 coincidem com o período de seca extrema documentado no "
-    "Nordeste e no Sudeste do Brasil (Marengo et al., 2018; Cunha et al., 2019).")
+    "Nordeste e no Sudeste do Brasil (Marengo et al., 2018; Cunha et al., 2019). Cabe lembrar, porém, que a relação entre a fase "
+    "do ENSO e a chuva no Nordeste não é unívoca: a La Niña de 2011–2012, por exemplo, coincidiu com o início de uma seca severa "
+    "na região, atribuída à configuração das temperaturas do Pacífico central e do Atlântico tropical (Rodrigues; McPhaden, 2014), "
+    "o que reforça a leitura das fases como modulação probabilística, e não determinística, das condições regionais.")
 cap7 = new_para_after(_p7, TABCAP_TPL, "Tabela 7 - Anomalia média da PSN (%) durante os dois episódios de El Niño mais intensos e "
                       "as duas La Niñas mais longas da série (2001–2025) e nos três meses seguintes, por bioma.", bold=True)
 cap7.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -1442,7 +1453,7 @@ set_text(ORIG[305],
     "contribuir para reduzir a variabilidade da PSN e elevar a produtividade ecossistêmica, implicação que este estudo "
     "apoia, mas não demonstra por si só.")
 set_text(ORIG[306], ORIG[306].text
-    .replace("um dos eixos prioritários da conservação no país.", "um dos eixos prioritários da conservação no país [REF: fonte oficial do Corredor Central].")
+    .replace("um dos eixos prioritários da conservação no país.", "um dos eixos prioritários da conservação no país (Brasil, 2006).")
     .replace("reforçam a urgência de estratégias de conectividade entre fragmentos florestais como condição para a resiliência ecossistêmica",
              "reforçam, em conjunto com a literatura sobre fragmentação (Ribeiro et al., 2009; Lima et al., 2020), a relevância de estratégias de conectividade entre fragmentos florestais para a resiliência ecossistêmica"))
 set_text(ORIG[307], ORIG[307].text
@@ -1458,7 +1469,7 @@ set_text(ORIG[308],
     "anos de El Niño.")
 set_text(ORIG[309], ORIG[309].text
     .replace("alinhada aos objetivos do Zoneamento Ecológico-Econômico da Bahia e às metas de restauração florestal do Plano Nacional de Recuperação da Vegetação Nativa (PLANAVEG).",
-             "alinhada aos objetivos do Zoneamento Ecológico-Econômico da Bahia [REF: documento oficial do ZEE-BA] e às metas de restauração florestal do Plano Nacional de Recuperação da Vegetação Nativa (PLANAVEG; Brasil, 2017).")
+             "alinhada aos objetivos do Zoneamento Ecológico-Econômico da Bahia (Bahia, 2020) e às metas de restauração florestal do Plano Nacional de Recuperação da Vegetação Nativa (PLANAVEG; Brasil, 2017).")
     .replace("ao demonstrar que os controles ecológicos", "ao indicar que os controles ecológicos"))
 set_text(ORIG[312],
     "Os principais resultados confirmaram a viabilidade do modelo nos três biomas analisados. O MRMP-N de grau 2 "
@@ -1469,8 +1480,9 @@ set_text(ORIG[312],
     "da Caatinga, indicando estabilidade do modelo frente aos anos recentes, que incluíram o El Niño intenso de "
     "2023–2024. Na escala anual (2001–2024), a produtividade variou cerca de três vezes mais nos biomas sazonais "
     f"(CV de {v(ji('CE')['cv'])}% no Cerrado e {v(ji('CA')['cv'])}% na Caatinga) do que na Mata Atlântica "
-    f"({v(ji('MA')['cv'])}%), único bioma com tendência de queda ({sgn(ji('MA')['sen_pct_periodo'], 0)}% em 24 anos, "
-    "marginalmente significativa), e os piores anos coincidiram com as secas de 2012–2013 e com o El Niño de "
+    f"({v(ji('MA')['cv'])}%), único bioma com tendência negativa, de aproximadamente "
+    f"{v(abs(ji('MA')['sen_pct_periodo']), 0)}% em 24 anos, não significativa ao nível de 5% ({pj(ji('MA')['p_mk'])}), embora "
+    "com sinal sugestivo de declínio, e os piores anos coincidiram com as secas de 2012–2013 e com o El Niño de "
     "2015–2016.")
 set_text(ORIG[313],
     "Retomando as hipóteses formuladas: a H1 confirmou-se. O grau 2 superou o modelo linear nos "
@@ -1663,8 +1675,17 @@ add_ref_after(ORIG[337], "ALBERTON, B.; ALMEIDA, J.; HENRIQUES, R.; TORRES, R. S
               "drivers across seasonally dry tropical communities. Remote Sensing, v. 11, n. 19, 2267, 2019. DOI: 10.3390/rs11192267.")
 _bo = add_ref_after(ORIG[341], "BORCHERT, R.; RIVERA, G. Photoperiodic control of seasonal development and dormancy in tropical stem-succulent "
               "trees. Tree Physiology, v. 21, n. 4, p. 213-221, 2001. DOI: 10.1093/treephys/21.4.213.")
-add_ref_after(_bo, "BRASIL. Ministério do Meio Ambiente. Plano Nacional de Recuperação da Vegetação Nativa (PLANAVEG). Brasília: "
-              "MMA, 2017. [REF: conferir edição e URL oficial]")
+_br = add_ref_after(_bo, "BRASIL. Ministério do Meio Ambiente. O Corredor Central da Mata Atlântica: uma nova escala de conservação da "
+              "biodiversidade. Brasília: MMA; Conservação Internacional; Fundação SOS Mata Atlântica, 2006. 46 p.")
+add_ref_after(_br, "BRASIL. Ministério do Meio Ambiente. Plano Nacional de Recuperação da Vegetação Nativa (Planaveg). Brasília: "
+              "MMA, 2017. Instituído pela Portaria Interministerial nº 230, de 14 de novembro de 2017. Disponível em: "
+              "https://www.gov.br/mma/pt-br/composicao/sbio/dflo/plano-nacional-de-recuperacao-da-vegetacao-nativa-planaveg. "
+              "Acesso em: 21 set. 2026.")
+_ba = add_ref_after(ORIG[339], "BAHIA. Secretaria do Meio Ambiente. A zona costeira no Estado da Bahia. Salvador: SEMA, 2024. Disponível em: "
+              "https://www.ba.gov.br/meioambiente/16479/1-zona-costeira-no-estado-da-bahia. Acesso em: 21 set. 2026.")
+add_ref_after(_ba, "BAHIA. Secretaria do Meio Ambiente; Secretaria do Planejamento. Zoneamento Ecológico-Econômico do Estado da Bahia: "
+              "Relatório da Comissão Técnica do ZEE-BA. Salvador: SEMA; SEPLAN, 2020. Disponível em: "
+              "http://www.zee.ba.gov.br/wp-content/uploads/2020/07/Relatorio.pdf. Acesso em: 21 set. 2026.")
 _ca = add_ref_after(ORIG[343], "CAI, W.; MCPHADEN, M. J.; GRIMM, A. M.; RODRIGUES, R. R.; TASCHETTO, A. S.; GARREAUD, R. D. et al. Climate "
               "impacts of the El Niño–Southern Oscillation on South America. Nature Reviews Earth & Environment, v. 1, p. 215-231, "
               "2020. DOI: 10.1038/s43017-020-0040-3.")
@@ -1706,10 +1727,18 @@ add_ref_after(_g, "GORELICK, N.; HANCHER, M.; DIXON, M.; ILYUSHCHENKO, S.; THAU,
 add_ref_after(ORIG[347], "HUFFMAN, G. J.; STOCKER, E. F.; BOLVIN, D. T.; NELKIN, E. J.; TAN, J. GPM IMERG Final Precipitation L3 1 month "
               "0.1 degree x 0.1 degree V07. Greenbelt: Goddard Earth Sciences Data and Information Services Center (GES DISC), 2023. "
               "DOI: 10.5067/GPM/IMERG/3B-MONTH/07.")
-add_ref_after(ORIG[348], "INSTITUTO BRASILEIRO DE GEOGRAFIA E ESTATÍSTICA (IBGE). Biomas e sistema costeiro-marinho do Brasil: compatível "
+_ib = add_ref_after(ORIG[348], "INSTITUTO BRASILEIRO DE GEOGRAFIA E ESTATÍSTICA (IBGE). Biomas e sistema costeiro-marinho do Brasil: compatível "
               "com a escala 1:250 000. Rio de Janeiro: IBGE, 2019. (Relatórios Metodológicos, v. 45).")
-add_ref_after(ORIG[358], "NATIONAL AERONAUTICS AND SPACE ADMINISTRATION (NASA). IMERG V08 transition schedule. Greenbelt: NASA Global "
+_ib = add_ref_after(_ib, "INSTITUTO BRASILEIRO DE GEOGRAFIA E ESTATÍSTICA (IBGE). Censo Demográfico 2022: etnias e línguas indígenas: "
+              "principais características sociodemográficas: resultados do universo. Rio de Janeiro: IBGE, 2025a. Disponível em: "
+              "https://biblioteca.ibge.gov.br/index.php/biblioteca-catalogo?view=detalhes&id=2102223. Acesso em: 21 set. 2026.")
+add_ref_after(_ib, "INSTITUTO BRASILEIRO DE GEOGRAFIA E ESTATÍSTICA (IBGE). Cidades e Estados: Bahia. Rio de Janeiro: IBGE, 2025b. "
+              "Disponível em: https://www.ibge.gov.br/cidades-e-estados/ba.html. Acesso em: 21 set. 2026.")
+remove_para(ORIG[349])   # INPE (Monitoramento do El Niño e La Niña) não é citado no texto; as fases ENSO vêm do ONI/NOAA
+_nasa = add_ref_after(ORIG[356], "NATIONAL AERONAUTICS AND SPACE ADMINISTRATION (NASA). IMERG V08 transition schedule. Greenbelt: NASA Global "
               "Precipitation Measurement, 2026. Disponível em: https://gpm.nasa.gov/data/news/imerg-v08-transition-schedule. Acesso em: 17 set. 2026.")
+add_ref_after(_nasa, ORIG[359].text.strip())   # NOAA (ONI) reposicionada em ordem alfabética
+remove_para(ORIG[359])
 add_ref_after(ORIG[361], "RUNNING, S. W.; MU, Q.; ZHAO, M.; MORENO, A. User's guide: MODIS global terrestrial evapotranspiration (ET) product "
               "(MOD16A2/A3 and year-end gap-filled MOD16A2GF/A3GF), Collection 6.1. Missoula: Numerical Terradynamic Simulation Group, "
               "University of Montana, 2021.")
@@ -1729,7 +1758,7 @@ FIGS = ["Fluxos de carbono estimados pelo algoritmo MODIS/MOD17: relação entre
         "Regressão linear simples entre a PSN e cada variável ambiental nos três biomas",
         "Observado vs. predito do MRMP-N nos três biomas",
         "Seleção do grau polinomial do MRMP-N nos três biomas",
-        "Importância relativa das variáveis preditoras no modelo MRMP-N nos três biomas",
+        "Índice de contribuição relativa das variáveis preditoras no modelo MRMP-N nos três biomas",
         "Diagnóstico de resíduos do MRMP-N nos três biomas",
         "Y-randomization do MRMP-N nos três biomas",
         "Distribuição das variáveis ambientais por fase ENSO na Mata Atlântica",
@@ -1910,6 +1939,12 @@ for p in d.paragraphs:
     if p._p.xpath('.//w:drawing'):
         p.paragraph_format.first_line_indent = Cm(0); p.paragraph_format.left_indent = Cm(0)
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+# ---- referências alinhadas à esquerda (ABNT NBR 6023: sem justificação, evita lacunas nas URLs)
+_hr = [p for p in d.paragraphs if p.text.strip().upper().startswith('REFERÊNCIAS')][-1]
+_after = False
+for p in d.paragraphs:
+    if p._p is _hr._p: _after = True; continue
+    if _after and p.text.strip(): p.alignment = WD_ALIGN_PARAGRAPH.LEFT
 # ---- ajustes pontuais de redação (pente-fino)
 _SUBS = [
     (r"a previsibilidade estatística de um ecossistema é diretamente proporcional ao grau em que ele é governado por uma única forçante ambiental dominante\. Quanto mais multifatorial o controle ecológico, menos previsível o sistema, e maior a necessidade de abordagens analíticas integradas\.",
@@ -1918,17 +1953,17 @@ _SUBS = [
      "como discutido na seção 6.1, na qual fatores de paisagem introduzem variabilidade na PSN não representada pelos preditores climáticos"),
     (r"coerente com secas severas ou queimadas de grande escala, capazes de gerar reduções abruptas da produtividade primária não plenamente capturadas pelos preditores climáticos médios",
      "compatível com eventos ambientais extremos não plenamente representados pelos preditores mensais"),
-    (r"o que o torna o quinto maior estado do país e a unidade da federação que faz divisa com o maior número de estados\.",
-     "o que o torna o quinto maior estado do país e a unidade da federação que faz divisa com o maior número de estados [REF: IBGE]."),
-    (r"de cerca de 1\.188 km,", "de cerca de 1.188 km [REF: IBGE],"),
-    (r"(Pataxó, Pataxó Hã-Hã-Hãe, Tupinambá, Kiriri, Tuxá, Pankararé, Truká e Kaimbé, entre outras)", r"\1 [REF: FUNAI/IBGE]"),
+    (r"com território de aproximadamente 564\.733 km², o que o torna o quinto maior estado do país e a unidade da federação que faz divisa com o maior número de estados\.",
+     "com território de aproximadamente 564.764 km² (IBGE, 2025b), o que o torna o quinto maior estado do país e a unidade da federação que faz divisa com o maior número de estados."),
+    (r"e a extensa faixa litorânea, de cerca de 1\.188 km,", "e a extensa faixa litorânea, a mais longa do país, com mais de 1.100 km (Bahia, 2024),"),
+    (r"(Pataxó, Pataxó Hã-Hã-Hãe, Tupinambá, Kiriri, Tuxá, Pankararé, Truká e Kaimbé, entre outras)", r"\1; IBGE, 2025a"),
     (r"apresenta desempenho robusto e estatisticamente validado nos três biomas", "apresenta desempenho consistente nos esquemas de validação avaliados nos três biomas"),
     (r"Os resultados obtidos demonstram que o MRMP-N", "Os resultados obtidos indicam que o MRMP-N"),
     (r"garantindo\s+robustez estatística e capacidade de generalização", "o que favorece a robustez estatística e a capacidade de generalização"),
     (r"potencial para o desenvolvimento de sistemas de alerta precoce de declínio de produtividade",
      "potencial para o desenvolvimento futuro de sistemas de alerta de declínio de produtividade, quando o modelo for acoplado a previsões das variáveis ambientais"),
     (r"Zoneamento Ecológico-Econômico da Bahia e o Plano Nacional de Recuperação da Vegetação Nativa \(PLANAVEG\) ao identificar",
-     "Zoneamento Ecológico-Econômico da Bahia [REF: ZEE-BA] e o Plano Nacional de Recuperação da Vegetação Nativa (PLANAVEG; Brasil, 2017) ao identificar"),
+     "Zoneamento Ecológico-Econômico da Bahia (Bahia, 2020) e o Plano Nacional de Recuperação da Vegetação Nativa (PLANAVEG; Brasil, 2017) ao identificar"),
     (r"e a influência da fragmentação apontam a restauração florestal", "e a hipótese da influência da fragmentação apontam a restauração florestal"),
     (r"\s*\(Hao et al\., 2019\)", ""),
     (r";\s*Hao et al\., 2019", ""),
@@ -1937,7 +1972,26 @@ _SUBS = [
      "forçante climática indireta, associada principalmente à evapotranspiração no Cerrado e na Caatinga e à temperatura na Mata Atlântica,"),
     (r"forçante climática indireta, mediada principalmente pelas variáveis de temperatura e precipitação,", "forçante climática indireta, associada principalmente à evapotranspiração no Cerrado e na Caatinga e à temperatura na Mata Atlântica,"),
     (r"esquemas complementares de validação temporal \(GroupKFold por ano e TimeSeriesSplit com janela expansível\)", "validação agrupada por ano (GroupKFold) e cronológica (TimeSeriesSplit com janela expansível)"),
+    (r"esquemas de validação temporal \(GroupKFold por ano e TimeSeriesSplit\)", "validação agrupada por ano (GroupKFold) e cronológica (TimeSeriesSplit)"),
     (r"esquemas de validação temporal \(GroupKFold por ano e", "validação agrupada por ano (GroupKFold) e cronológica ("),
+    (r"determinação empírica do grau polinomial ótimo, em substituição à fixação prévia de um grau, garantindo que",
+     "determinação empírica do grau polinomial, em substituição à fixação prévia de um grau, de modo que"),
+    (r"A análise empírica indicou o grau 2 como ótimo para os três biomas analisados, resultado discutido",
+     "A análise empírica indicou o grau 2 como o de melhor compromisso entre desempenho preditivo, estabilidade e parcimônia para os três biomas analisados, resultado discutido"),
+    (r"O grau polinomial ótimo foi determinado empiricamente, identificando-se o grau 2 como aquele que melhor equilibra desempenho preditivo e controle de (?:sobreajuste|overfitting)",
+     "O grau polinomial foi selecionado empiricamente, adotando-se o grau 2 como o de melhor compromisso entre desempenho preditivo, estabilidade e parcimônia"),
+    (r"foi identificado um conjunto ótimo de variáveis preditoras para cada bioma", "foi identificado, para cada bioma, o conjunto de variáveis preditoras de melhor desempenho"),
+    (r"que havia sido a ótima na série original", "que havia sido a de melhor desempenho na série original"),
+    (r"conjuntos ótimos distintos", "conjuntos selecionados distintos"),
+    (r"conjunto ótimo", "conjunto selecionado"),
+    (r"o conjunto selecionado identificado foi", "o conjunto selecionado foi"),
+    (r"A Figura 8 ilustra a importância relativa de cada variável preditora nos três biomas, calculada a partir dos coeficientes padronizados do modelo Ridge\. A importância relativa de cada variável foi calculada como a soma dos valores absolutos dos coeficientes padronizados de todos os termos",
+     "A Figura 8 apresenta o índice de contribuição relativa de cada variável preditora nos três biomas, calculado a partir dos coeficientes do modelo Ridge ajustado sobre as variáveis padronizadas. O índice de cada variável foi calculado como a soma dos valores absolutos dos coeficientes de todos os termos"),
+    (r"regimes ecológicos distintos de controle da produtividade primária, apesar de compartilharem", "regimes ecológicos distintos de controle da PSN, apesar de compartilharem"),
+    (r"sintetiza os regimes de controle da produtividade primária identificados em cada bioma", "sintetiza os regimes de controle da PSN identificados em cada bioma"),
+    (r"efeitos indiretos do ENSO sobre a produtividade primária sem a necessidade", "efeitos indiretos do ENSO sobre a PSN sem a necessidade"),
+    (r"nos mecanismos de controle da produtividade primária\.", "nos mecanismos de controle da PSN."),
+    (r"os principais controles climáticos e hídricos da produtividade primária e ao apontar", "os principais controles climáticos e hídricos da PSN e ao apontar"),
     (r"validação cruzada repetida, validação temporal e teste de Y-randomization", "validação cruzada repetida, validação agrupada por ano e cronológica, e teste de Y-randomization"),
     (r"repeated cross-validation, temporal validation and a Y-randomization test", "repeated cross-validation, year-grouped and chronological validation, and a Y-randomization test"),
     (r"validação temporal", "validação cronológica"),
