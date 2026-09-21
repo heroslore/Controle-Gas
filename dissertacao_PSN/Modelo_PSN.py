@@ -24,7 +24,7 @@ BIOMA_ATIVO = os.environ.get('BIOMA_ATIVO', 'CE')
 - Rodar só um bioma: dê o "Run" normal — ele cai no padrão 'CE'. Para rodar
   outro, troque o 'CE' logo abaixo por 'MA' ou 'CA' e rode novamente.
 - Rodar os 3 de uma vez: troque o 'CE' abaixo por 'TODOS'. Por padrão os três
-  rodam EM PARALELO (RODAR_EM_PARALELO = True, um processo por núcleo) — cada
+  rodam EM PARALELO (RODAR_EM_PARALELO = os.environ.get('RODAR_EM_PARALELO', '1') == '1'   # 0 = biomas em sequência (log ordenado), um processo por núcleo) — cada
   bioma já lê/escreve só na própria subpasta, então não há conflito. Para
   rodar em sequência em vez de paralelo, troque RODAR_EM_PARALELO para False.
 - Também dá pra rodar pelo terminal sem editar nada, definindo a variável de
@@ -113,11 +113,17 @@ def pasta_do_bioma(bioma):
     return pasta
 
 
+NUMERAR_SAIDAS = False
+
 def proximo_nome(pasta, nome_base, extensao):
     """
     Gera o próximo nome disponível no formato 'nome_base_N.extensao',
     sem nunca sobrescrever um arquivo já existente (N cresce a cada rodada).
     """
+    # Nomes fixos (cada rodada sobrescreve a anterior), conforme decidido pelo autor.
+    # Para voltar à numeração _1, _2, ..., defina NUMERAR_SAIDAS = True.
+    if not NUMERAR_SAIDAS:
+        return os.path.join(pasta, f"{nome_base}.{extensao}")
     n = 1
     while os.path.exists(os.path.join(pasta, f"{nome_base}_{n}.{extensao}")):
         n += 1
@@ -308,11 +314,11 @@ config_biomas = {
 #                        (mais lento); False pula a Y-randomization.
 # =============================================================================
 
-GRAU_MODELO       = 2     # altere aqui o grau do modelo principal
-TESTAR_GRAUS      = False  # True para comparar graus | False para pular
+GRAU_MODELO       = int(os.environ.get('GRAU_MODELO', 2))     # grau do modelo principal (ou variável de ambiente)
+TESTAR_GRAUS      = os.environ.get('TESTAR_GRAUS', '0') == '1'   # 1 para comparar graus 1..GRAU_MAXIMO_TESTE
 GRAU_MAXIMO_TESTE = 5     # até qual grau comparar (válido se TESTAR_GRAUS=True)
 
-RODAR_YRANDOMIZATION = True   # True para rodar | False para pular
+RODAR_YRANDOMIZATION = os.environ.get('RODAR_YRANDOMIZATION', '1') == '1'   # 0 para pular as 100 permutações
 
 numero_colunas_agrupamento = 5
 
@@ -329,7 +335,7 @@ BIOMA_ATIVO = os.environ.get('BIOMA_ATIVO', 'TODOS')  # altere aqui: 'MA', 'CE',
 # False → roda um de cada vez, em sequência (mais lento, usa 1 núcleo por vez).
 # Seguro em paralelo porque cada bioma já lê/escreve só na própria subpasta
 # (saidas_figuras/MA, saidas_figuras/CE, saidas_figuras/CA).
-RODAR_EM_PARALELO = True
+RODAR_EM_PARALELO = os.environ.get('RODAR_EM_PARALELO', '1') == '1'   # 0 = biomas em sequência (log ordenado)
 
 if BIOMA_ATIVO.upper() == 'TODOS':
     biomas_para_rodar = ['MA', 'CE', 'CA']

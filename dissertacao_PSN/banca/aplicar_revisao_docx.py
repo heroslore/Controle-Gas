@@ -80,6 +80,9 @@ def cmp_(b, f, L): return JA['comp'][f'{nome[b]}|{f}|{L}']
 def med(b, f, pred='TODOS'): return JA['mediacao'][f'{nome[b]}|{f}|{pred}']
 def a4x(b, var): return JA['a4'][f'{nome[b]}|{var}']
 NF = JA['n_fase']
+JI = json.load(open(os.path.join(RES, 'interanual.json'), encoding='utf-8'))
+T7 = pd.read_csv(os.path.join(RES, 'interanual', 'tabela7_interanual.csv'))
+def ji(b): return JI['biomas'][b]
 def _lagdesc(b):
     L = JA['lag'][nome[b]]; sig = [x['lag'] for x in L if x['p'] < 0.05]
     imax = max(L, key=lambda x: abs(x['rho'])); ult = max(sig) if sig else -1
@@ -1198,6 +1201,68 @@ set_text(ORIG[301],
     "PSN de forma sistemática, com persistência de vários meses no Cerrado.")
 
 # =============================================================================
+# 13b. 6.6 VARIABILIDADE INTERANUAL (nova subseção; "Implicações" passa a 6.7)
+# =============================================================================
+_h66 = new_para_after(ORIG[302], ORIG[303], "Variabilidade interanual da produtividade")
+_cv = {b: ji(b)['cv'] for b in ('MA', 'CE', 'CA')}; _ma = ji('MA'); _ce = ji('CE'); _ca = ji('CA')
+_mes25 = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'][_ma['meses_2025'] - 1]
+def _tend(b):
+    i = ji(b); return f"{sgn(i['sen_pct_periodo'], 1)}%; {pj(i['p_mk'])}"
+def _anos(lst): return ', '.join(str(a) for a in lst)
+def _p2025(b):
+    x = ji(b)['dif_2025_pct']; return f"{v(abs(x), 0)}% {'acima' if x > 0 else 'abaixo'}"
+_p66 = add_paras_after(_h66, BODY_TPL, [
+    "A extensão da série para 25 anos permite examinar a produtividade também na escala anual, dimensão que a análise "
+    "mensal não cobre. Para cada bioma, a PSN mensal foi somada por ano nos 24 anos completos (2001 a 2024); como os "
+    "meses da base seguem janelas fixas de compostos de oito dias, a soma anual aproxima o ano civil com diferença de "
+    f"um composto nas bordas. O ano de 2025 dispõe apenas de janeiro a {_mes25} e foi excluído da tendência, aparecendo "
+    "na Figura 15 como valor parcial. A variabilidade entre anos foi medida pelo coeficiente de variação (CV), a "
+    "tendência monotônica pelo estimador de inclinação de Sen com o teste de Mann-Kendall, e a soma anual foi "
+    "comparada com o NPP anual do produto MOD17A3HGF (Coleção 6.1), obtido de forma independente para as mesmas "
+    "máscaras de bioma (Tabela 7). A fase ENSO dominante de cada ano (pelo menos seis meses na mesma fase) é indicada "
+    "na figura apenas como referência, pois a mistura de meses de fases distintas dentro do ano torna a comparação "
+    "anual menos nítida do que a análise mensal em anomalias da seção 6.5, que permanece a base da conclusão sobre o "
+    "ENSO.",
+    f"A soma anual da PSN correlacionou-se em {v(min(ji(b)['r_npp'] for b in ('MA','CE','CA')), 2)} a "
+    f"{v(max(ji(b)['r_npp'] for b in ('MA','CE','CA')), 2)} com o NPP anual do MOD17A3HGF nos três biomas, o que valida a "
+    "série mensal por um produto independente (o NPP é sistematicamente menor porque desconta ainda a respiração de "
+    f"manutenção do lenho e a de crescimento). A produtividade anual média foi de {v(_ma['media'], 0)} g C·m⁻²·ano⁻¹ na "
+    f"Mata Atlântica, {v(_ce['media'], 0)} no Cerrado e {v(_ca['media'], 0)} na Caatinga, mas a variabilidade entre anos "
+    f"foi cerca de três vezes maior nos biomas sazonais (CV de {v(_cv['CE'])}% no Cerrado e {v(_cv['CA'])}% na Caatinga) "
+    f"do que na Mata Atlântica ({v(_cv['MA'])}%), o que quantifica, na escala anual, a tipologia da Tabela 4: onde a "
+    "produtividade é governada pelo balanço hídrico, os anos secos e chuvosos deixam marca proporcionalmente maior. "
+    f"Os piores anos coincidem com secas conhecidas: {_anos(_ca['piores'])} na Caatinga, período da grande seca do "
+    f"Nordeste e do El Niño de 2015–2016; {_anos(_ma['piores'])} na Mata Atlântica, com o mínimo da série em "
+    f"{_ma['min_ano']} ({v(_ma['min_val'], 0)} g C·m⁻²·ano⁻¹) durante o El Niño forte; e {_anos(_ce['piores'])} no Cerrado, "
+    f"cujo mínimo ({_ce['min_ano']}, {v(_ce['min_val'], 0)} g C·m⁻²·ano⁻¹) reflete a produtividade mais baixa do início da "
+    "série.",
+    f"A Mata Atlântica foi o único bioma com tendência de queda ao longo do período ({_tend('MA')}), de cerca de "
+    f"{v(abs(_ma['sen_pct_periodo']), 0)}% em 24 anos, marginalmente significativa e puxada em parte pelos anos de "
+    f"2015 e 2016; no Cerrado ({_tend('CE')}) e na Caatinga ({_tend('CA')}) não houve tendência significativa. Esse "
+    "resultado é compatível com a hipótese, discutida na seção 6.3, de que fatores de paisagem, como a fragmentação e a "
+    "expansão da silvicultura, reduzam a produtividade do bioma mais alterado do estado, mas não a comprova: sem "
+    "variáveis de uso do solo no modelo, a queda não pode ser separada do aquecimento da superfície, que a seção 6.5 "
+    "mostra ser o canal pelo qual o El Niño deprime a PSN da Mata Atlântica. Em 2025, o período de janeiro a "
+    f"{_mes25} esteve {_p2025('MA')} da média do mesmo período na Mata Atlântica, {_p2025('CE')} no Cerrado e "
+    f"{_p2025('CA')} na Caatinga, valores que só poderão ser interpretados quando o ano estiver completo."])
+_pic15 = add_figure_after(_p66, "Figura 15 - Soma anual da PSN por bioma (2001–2024), tendência de Sen, ano parcial de 2025 e "
+                          "anos com fase ENSO dominante (pelo menos seis meses na fase); os três piores anos de cada bioma "
+                          "estão identificados.", os.path.join(FIG, 'fig15_interanual.png'), width_cm=15.0)
+cap7 = new_para_after(_pic15, TABCAP_TPL, "Tabela 7 - Variabilidade interanual da PSN por bioma nos anos completos (2001–2024): média e "
+                      "coeficiente de variação da soma anual, tendência de Sen (variação percentual acumulada no período e valor-p "
+                      "de Mann-Kendall), piores e melhores anos e correlação com o NPP anual do MOD17A3HGF.", bold=True)
+cap7.alignment = WD_ALIGN_PARAGRAPH.CENTER
+t = table_after(cap7, len(T7) + 1, 7); t.alignment = 1
+set_widths(t, [2.6, 2.3, 1.6, 3.0, 2.3, 2.3, 1.9])
+for j, hname in enumerate(['Bioma', 'PSN anual média\n(g C·m⁻²·ano⁻¹)', 'CV (%)', 'Tendência de Sen\n2001–2024', 'Piores anos', 'Melhores anos', 'r com NPP anual']):
+    set_cell(t.rows[0].cells[j], hname, bold=True, size=8); t.rows[0].cells[j].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
+for i, r in enumerate(T7.itertuples(), start=1):
+    vals = [r.bioma, f"{v(r.media, 0)} ± {v(r.dp, 0)}", v(r.cv, 1), f"{sgn(r.sen_pct_periodo, 1)}% ({pj(r.p_mk)})", r.piores, r.melhores, v(r.r_npp, 2)]
+    for j, sval in enumerate(vals): set_cell(t.rows[i].cells[j], sval, size=8)
+_fim7 = new_para_after(t.rows[-1].cells[0].paragraphs[0], BODY_TPL, ""); _fim7._p.getparent().remove(_fim7._p); t._tbl.addnext(_fim7._p)
+ORIG[303].paragraph_format.page_break_before = False
+
+# =============================================================================
 # 14. IMPLICAÇÕES E CONSIDERAÇÕES FINAIS
 # =============================================================================
 set_text(ORIG[304], ORIG[304].text.replace(
@@ -1220,7 +1285,11 @@ set_text(ORIG[312],
     "controle da produtividade primária na região. A extensão da série para 2001–2025 (297 meses) elevou o R² da "
     f"Mata Atlântica em relação à série original de 2001–2020 (de 62,3% para {r2('MA')}%) e manteve os do Cerrado e "
     "da Caatinga, indicando estabilidade do modelo frente aos anos recentes, que incluíram o El Niño intenso de "
-    "2023–2024.")
+    "2023–2024. Na escala anual (2001–2024), a produtividade variou cerca de três vezes mais nos biomas sazonais "
+    f"(CV de {v(ji('CE')['cv'])}% no Cerrado e {v(ji('CA')['cv'])}% na Caatinga) do que na Mata Atlântica "
+    f"({v(ji('MA')['cv'])}%), único bioma com tendência de queda ({sgn(ji('MA')['sen_pct_periodo'], 0)}% em 24 anos, "
+    "marginalmente significativa), e os piores anos coincidiram com as secas de 2012–2013 e com o El Niño de "
+    "2015–2016.")
 set_text(ORIG[313],
     "Retomando as hipóteses formuladas: a H1 confirmou-se, com uma ressalva. O grau 2 superou o modelo linear nos "
     f"três biomas ({v(g['MA'][2]-g['MA'][1])}, {v(g['CE'][2]-g['CE'][1])} e {v(g['CA'][2]-g['CA'][1])} pontos "
@@ -1422,13 +1491,15 @@ FIGS = ["Fluxos de carbono estimados pelo algoritmo MODIS/MOD17: relação entre
         "Distribuição das variáveis ambientais por fase ENSO na Mata Atlântica",
         "Distribuição das variáveis ambientais por fase ENSO no Cerrado",
         "Distribuição das variáveis ambientais por fase ENSO na Caatinga",
-        "Anomalia média da PSN durante e após meses de El Niño e de La Niña, por defasagem de 0 a 12 meses, nos três biomas"]
+        "Anomalia média da PSN durante e após meses de El Niño e de La Niña, por defasagem de 0 a 12 meses, nos três biomas",
+        "Soma anual da PSN por bioma (2001–2024), tendência de Sen, ano parcial de 2025 e anos com fase ENSO dominante"]
 TABS = ["Variáveis para predição da Fotossíntese Líquida (PSN)",
         "Desempenho preditivo do MRMP-N nos biomas Mata Atlântica, Cerrado e Caatinga na Bahia",
         "Comparação do desempenho preditivo (R²) dos modelos sob diferentes estratégias de validação",
         "Tipologia ecológica dos regimes de produtividade primária na Bahia",
         "Fator de Inflação da Variância (VIF) das variáveis preditoras por bioma",
         "Anomalias médias das variáveis por fase ENSO e testes de posição, dispersão e extremos",
+        "Variabilidade interanual da PSN por bioma (2001–2024): média, CV, tendência de Sen e correlação com o NPP anual",
         "Base de dados mensal dos três biomas (2001–2025) [A1]",
         "Desempenho das 10 combinações de variáveis ambientais por bioma [A2]",
         "Efeito da remoção das componentes de sazonalidade harmônica no desempenho do MRMP-N [A3]",
@@ -1535,6 +1606,10 @@ for p in _todos_paragrafos():
     regex_replace_para(p, r'SAZSIN', 'SAZsin'); regex_replace_para(p, r'SAZCOS', 'SAZcos')
     regex_replace_para(p, r'essas pressões apresentam magnitudes', 'elas apresentam magnitudes')
 # Sumário (campo TOC dentro de w:sdt): título e página de cada entrada a partir dos títulos atuais e do PDF renderizado
+_BM66 = '_Toc900000066'
+_bs = OxmlElement('w:bookmarkStart'); _bs.set(qn('w:id'), '9066'); _bs.set(qn('w:name'), _BM66)
+_be = OxmlElement('w:bookmarkEnd'); _be.set(qn('w:id'), '9066')
+_h66._p.insert(1 if _h66._p.pPr is not None else 0, _bs); _h66._p.append(_be)
 _anc2head = {}
 for p in d.paragraphs:
     if p.style.name.startswith('Heading'):
@@ -1559,6 +1634,28 @@ for sdt in d.element.body.findall(qn('w:sdt')):
                 cands = [k for k in PAGES if k.startswith('H:') and chave.startswith(k) and len(k) > 12]
                 if cands: pg = PAGES[max(cands, key=len)]
             if pg: ts[-1].text = str(pg)
+# entrada nova do Sumário para 6.6 (cópia da entrada de "Implicações", que passa a 6.7)
+for sdt in d.element.body.findall(qn('w:sdt')):
+    for par in sdt.findall('.//' + qn('w:p')):
+        hl = par.find('.//' + qn('w:hyperlink'))
+        if hl is None or not _anc2head.get(hl.get(qn('w:anchor')), '').startswith('Implicações ambientais'): continue
+        novo = copy.deepcopy(par); par.addprevious(novo)
+        nhl = novo.find('.//' + qn('w:hyperlink')); nhl.set(qn('w:anchor'), _BM66)
+        for it in novo.findall('.//' + qn('w:instrText')):
+            if it.text and 'PAGEREF' in it.text: it.text = re.sub(r'_Toc\d+', _BM66, it.text)
+        nts = [t_ for t_ in nhl.findall('.//' + qn('w:t')) if t_.text]
+        nums = [t_ for t_ in nts if re.match(r'^\d+(\.\d+)*$', t_.text.strip())]
+        if nums: nums[0].text = '6.6'
+        tit = [t_ for t_ in nts if not re.match(r'^[\d.]+$', t_.text.strip())]
+        if tit:
+            tit[0].text = 'Variabilidade interanual da produtividade'
+            for extra in tit[1:]: extra.text = ''
+        pg66 = PAGES.get('H:VARIABILIDADE INTERANUAL DA PRODUTIVIDADE')
+        if nts and nts[-1].text.strip().isdigit() and pg66: nts[-1].text = str(pg66)
+        ots = [t_ for t_ in hl.findall('.//' + qn('w:t')) if t_.text]
+        onums = [t_ for t_ in ots if re.match(r'^\d+(\.\d+)*$', t_.text.strip())]
+        if onums: onums[0].text = '6.7'
+        break
 for p in d.paragraphs:
     if re.match(r'^(Figura|Tabela) (A?\d+) [-–]', p.text):
         p.paragraph_format.keep_with_next = True

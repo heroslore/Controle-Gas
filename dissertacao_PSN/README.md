@@ -17,6 +17,9 @@ Leia `handoff_claude_code.md` para o contexto completo e a lista de pendências.
 | `Selecao_Variaveis_PSN.py` | Busca exaustiva das 10 combinações C(5,3) de variáveis ambientais por bioma, mesmo pipeline do modelo. |
 | `consolidar_resultados.py` | Junta logs e CSVs em `numeros_extra.json` / `enso_resumo.json` (usados pelo script do Word). |
 | `Analise_ENSO_Anomalias_PSN.py` | ENSO em anomalias mensais (fase oficial): Tabela 6, mediação, defasagem, Figura 14, Tabelas A4/A5. |
+| `Analise_Interanual_PSN.py` | Variabilidade interanual (6.6): soma anual 2001–2024, CV, Sen/Mann-Kendall, Figura 15, Tabela 7. |
+| `coletar_resultados.py` | Lê os logs de uma rodada completa e sequencial e grava resumo_geral, VIF, graus, JSONs e figuras por bioma. |
+| `reproduzir_tudo.sh` | Roda a cadeia inteira, da base bruta ao Word/PDF. |
 | `Figuras_Dissertacao.py` | Monta as figuras da dissertação em `figuras_dissertacao/` a partir de `resultados_2001_2025/`. |
 | `resultados_2001_2025/` | Resultados da rodada com a base 2001–2025 (ver `RESULTADOS.md`). |
 | `../npp_modis/` | Pipeline GEE que gerou a base (outra sessão): extração, validação contra a planilha antiga, planilha original de Benfica. |
@@ -48,3 +51,30 @@ As saídas vão para `saidas_figuras/` (uma subpasta por bioma no modelo).
 Essa pasta não é versionada aqui e nada dela é publicado no site do
 Controle-Gás: o workflow de Pages copia apenas `index.html`, `manifest.json`
 e os ícones.
+
+## Reprodução completa (o que a banca ou a orientação precisa saber)
+
+O código oficial do modelo é `Modelo_PSN.py` desta pasta, com `GRAU_MODELO = 2`,
+Mata Atlântica = EV + TST + WAI, Cerrado = EV + PRE + WAI, Caatinga = EV + PRE + TST
+(mais SAZsin e SAZcos), winsorização no percentil 3 só no treino, RepeatedKFold 5 × 30,
+GroupKFold por ano, TimeSeriesSplit, Ljung-Box, VIF e Y-randomization com 100 permutações.
+As saídas têm nomes fixos (cada rodada sobrescreve; `NUMERAR_SAIDAS = True` volta à numeração).
+Os toggles aceitam variáveis de ambiente: `BIOMA_ATIVO`, `GRAU_MODELO`, `TESTAR_GRAUS`,
+`RODAR_YRANDOMIZATION`, `RODAR_EM_PARALELO`.
+
+Cadeia completa, da base bruta ao PDF (≈ 1 h; `bash reproduzir_tudo.sh` faz tudo):
+
+| Etapa | Script | Produz |
+|---|---|---|
+| 0 | `../npp_modis/npp_modis_gee.py` (Google Earth Engine) | `base_final_2001_2025_plan1_excel_ptbr.csv` (MODIS 6.1 + IMERG V07) |
+| 1 | `Modelo_PSN.py` (sequencial, graus 1–5, Y-rand) | `saidas_figuras/`, log com todas as métricas |
+| 2 | `Analise_Biomas_PSN.py` | ENSO com fases oficiais, dispersão, boxplots |
+| 3 | `coletar_resultados.py` | `resumo_geral.csv`, `vif_por_bioma.csv`, `selecao_grau.csv`, `numeros_extra.json`, `enso_resumo.json` |
+| 4 | `Selecao_Variaveis_PSN.py`, `Ablacao_Sazonalidade_PSN.py` | Tabelas A2 e A3 |
+| 5 | `Analise_ENSO_Anomalias_PSN.py`, `Analise_Interanual_PSN.py` | Seções 6.5 e 6.6 (Tabelas 6, 7, A4, A5; Figuras 14 e 15) |
+| 6 | `Figuras_Dissertacao.py` | todas as figuras em `figuras_dissertacao/` |
+| 7 | `banca/aplicar_revisao_docx.py` + `banca/render_e_paginas.sh` (duas vezes) | `banca/Trabalho_revisado_2001_2025.docx` e `.pdf` |
+
+Cada número do texto, das tabelas e das legendas é preenchido pelo script do Word a partir
+desses arquivos; nada é digitado à mão. Uma rodada sequencial completa feita em 21/09/2026
+reproduziu as Tabelas 2 e 3 exatamente (ver `resultados_2001_2025/RESULTADOS.md`, seção 11).
