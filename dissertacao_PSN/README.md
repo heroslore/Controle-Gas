@@ -82,9 +82,16 @@ reproduziu as Tabelas 2 e 3 exatamente (ver `resultados_2001_2025/RESULTADOS.md`
 ## Versão citada na dissertação
 
 O texto cita o repositório pela URL fixa `https://github.com/heroslore/Controle-Gas` (pastas
-`dissertacao_PSN` e `npp_modis`). A versão exata que gerou o documento entregue à banca está
-congelada na tag anotada **`dissertacao-v10`**: `git checkout dissertacao-v10` reproduz o
-estado dos scripts, das bases e dos resultados usados no texto, mesmo que a branch continue
-a evoluir. Recomenda-se transformar a tag em *release* no GitHub (com o `.docx` e o `.pdf`
-anexados) no momento do depósito final, o que dá à banca um ponto de acesso único sem
-mudar o link citado.
+`dissertacao_PSN` e `npp_modis`). A versão exata que gerou o documento entregue à banca é o
+commit `9f6227b` da branch `claude/tender-hawking-f81psp` (arquivo
+`banca/Trabalho_revisado_2001_2025.docx`). Para congelá-la com um nome estável, sem mudar o
+link citado, crie a tag anotada e publique-a (o ambiente automatizado só pode enviar a branch):
+
+```bash
+git fetch origin claude/tender-hawking-f81psp
+git tag -a dissertacao-v10 9f6227b -m "Dissertação MRMP-N: versão 10 entregue à banca"
+git push origin dissertacao-v10
+```
+
+Em seguida, no GitHub, transforme a tag em *release* anexando o `.docx` e o `.pdf`: a banca
+passa a ter um ponto de acesso único e imutável, e a branch pode continuar a evoluir.

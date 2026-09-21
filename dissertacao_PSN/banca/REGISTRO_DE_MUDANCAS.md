@@ -270,5 +270,6 @@ Aplicado o parecer "Pente-fino da dissertação" (todos os itens, com as decisõ
   refere aos resultados deste estudo (6.3, 6.5, conclusões), mantida no sentido genérico da literatura; abstract
   alinhado ao resumo ("PSN control", "Ridge regression"); sem "overfitting" ou "Regressão Ridge" fora das
   palavras-chave; unidades uniformes (gC·m⁻²·mês⁻¹, mm·mês⁻¹, °C).
-- **Repositório**: tag anotada `dissertacao-v10` no commit desta versão e seção "Versão citada na dissertação" no
-  README, sem alterar o link citado no texto.
+- **Repositório**: seção "Versão citada na dissertação" no README apontando o commit desta versão (`9f6227b`) e o
+  comando para criar a tag anotada `dissertacao-v10` e a *release* (o envio de tags não é permitido a partir do
+  ambiente automatizado; a branch e o link citado no texto não mudam).
