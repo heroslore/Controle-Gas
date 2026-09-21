@@ -309,7 +309,7 @@ config_biomas = {
 #
 # GRAU_MAXIMO_TESTE: até qual grau comparar quando TESTAR_GRAUS = True.
 #                     Recomendado: máximo 5 (acima disso há overfitting severo
-#                     com n=240 e 5 variáveis preditoras).
+#                     com cerca de 300 meses e 5 variáveis preditoras).
 #
 # RODAR_YRANDOMIZATION: True roda as 100 permutações com validação cruzada
 #                        (mais lento); False pula a Y-randomization.
@@ -720,7 +720,7 @@ def rodar_modelo_bioma(bioma, dados_total):
 
     # =============================================================================
     # ANÁLISE DE RESÍDUOS - MODELO AJUSTADO EM TODOS OS DADOS
-    # O modelo é ajustado no conjunto completo (n=240) apenas para diagnóstico visual.
+    # O modelo é ajustado no conjunto completo (todos os meses da base; 297 na série 2001-2025) apenas para diagnóstico visual.
     # A avaliação preditiva real é feita pela validação cruzada acima.
     # =============================================================================
 
