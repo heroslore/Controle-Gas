@@ -1,0 +1,157 @@
+﻿bioma,variavel,lag_meses,rho_spearman,p,n
+Mata Atlântica,NP,0,-0.1391,0.0164,297
+Mata Atlântica,NP,1,-0.1516,0.009,296
+Mata Atlântica,NP,2,-0.158,0.0065,295
+Mata Atlântica,NP,3,-0.1478,0.0112,294
+Mata Atlântica,NP,4,-0.141,0.0158,293
+Mata Atlântica,NP,5,-0.1271,0.0299,292
+Mata Atlântica,NP,6,-0.1094,0.0624,291
+Mata Atlântica,NP,7,-0.0868,0.1403,290
+Mata Atlântica,NP,8,-0.0788,0.1817,289
+Mata Atlântica,NP,9,-0.0741,0.2097,288
+Mata Atlântica,NP,10,-0.0599,0.3121,287
+Mata Atlântica,NP,11,-0.0452,0.4462,286
+Mata Atlântica,NP,12,-0.0269,0.6515,285
+Mata Atlântica,EV,0,-0.0724,0.2136,297
+Mata Atlântica,EV,1,-0.0628,0.2817,296
+Mata Atlântica,EV,2,-0.0475,0.4165,295
+Mata Atlântica,EV,3,-0.0313,0.593,294
+Mata Atlântica,EV,4,-0.0201,0.7319,293
+Mata Atlântica,EV,5,-0.0092,0.8752,292
+Mata Atlântica,EV,6,-0.0009,0.9877,291
+Mata Atlântica,EV,7,0.0069,0.9074,290
+Mata Atlântica,EV,8,-0.0036,0.9509,289
+Mata Atlântica,EV,9,-0.018,0.7612,288
+Mata Atlântica,EV,10,-0.0258,0.6629,287
+Mata Atlântica,EV,11,-0.0259,0.6631,286
+Mata Atlântica,EV,12,-0.0267,0.6534,285
+Mata Atlântica,PRE,0,-0.0385,0.5092,297
+Mata Atlântica,PRE,1,-0.0375,0.5201,296
+Mata Atlântica,PRE,2,-0.0305,0.6015,295
+Mata Atlântica,PRE,3,-0.0182,0.7559,294
+Mata Atlântica,PRE,4,-0.0034,0.9542,293
+Mata Atlântica,PRE,5,0.0145,0.8055,292
+Mata Atlântica,PRE,6,0.0359,0.5419,291
+Mata Atlântica,PRE,7,0.0244,0.6785,290
+Mata Atlântica,PRE,8,0.0168,0.7755,289
+Mata Atlântica,PRE,9,0.0128,0.8291,288
+Mata Atlântica,PRE,10,0.0221,0.7094,287
+Mata Atlântica,PRE,11,0.0203,0.7322,286
+Mata Atlântica,PRE,12,0.0234,0.6935,285
+Mata Atlântica,TST,0,0.2496,0.0,297
+Mata Atlântica,TST,1,0.2556,0.0,296
+Mata Atlântica,TST,2,0.2554,0.0,295
+Mata Atlântica,TST,3,0.2297,0.0001,294
+Mata Atlântica,TST,4,0.1989,0.0006,293
+Mata Atlântica,TST,5,0.1707,0.0034,292
+Mata Atlântica,TST,6,0.136,0.0203,291
+Mata Atlântica,TST,7,0.1239,0.035,290
+Mata Atlântica,TST,8,0.1093,0.0636,289
+Mata Atlântica,TST,9,0.1031,0.0807,288
+Mata Atlântica,TST,10,0.0894,0.131,287
+Mata Atlântica,TST,11,0.0741,0.2117,286
+Mata Atlântica,TST,12,0.049,0.4102,285
+Cerrado,NP,0,-0.1043,0.0727,297
+Cerrado,NP,1,-0.1187,0.0413,296
+Cerrado,NP,2,-0.1252,0.0315,295
+Cerrado,NP,3,-0.1239,0.0337,294
+Cerrado,NP,4,-0.1239,0.0341,293
+Cerrado,NP,5,-0.1207,0.0393,292
+Cerrado,NP,6,-0.1172,0.0458,291
+Cerrado,NP,7,-0.1239,0.035,290
+Cerrado,NP,8,-0.137,0.0198,289
+Cerrado,NP,9,-0.16,0.0065,288
+Cerrado,NP,10,-0.1642,0.0053,287
+Cerrado,NP,11,-0.1638,0.0055,286
+Cerrado,NP,12,-0.1562,0.0082,285
+Cerrado,EV,0,-0.0584,0.3157,297
+Cerrado,EV,1,-0.0767,0.1881,296
+Cerrado,EV,2,-0.0875,0.1339,295
+Cerrado,EV,3,-0.0997,0.088,294
+Cerrado,EV,4,-0.1075,0.0661,293
+Cerrado,EV,5,-0.1093,0.0621,292
+Cerrado,EV,6,-0.1085,0.0645,291
+Cerrado,EV,7,-0.1171,0.0462,290
+Cerrado,EV,8,-0.1335,0.0233,289
+Cerrado,EV,9,-0.157,0.0076,288
+Cerrado,EV,10,-0.1662,0.0048,287
+Cerrado,EV,11,-0.1694,0.0041,286
+Cerrado,EV,12,-0.1639,0.0055,285
+Cerrado,PRE,0,0.037,0.5251,297
+Cerrado,PRE,1,0.0253,0.6648,296
+Cerrado,PRE,2,0.0105,0.8569,295
+Cerrado,PRE,3,0.0009,0.9884,294
+Cerrado,PRE,4,-0.0021,0.971,293
+Cerrado,PRE,5,0.0094,0.8735,292
+Cerrado,PRE,6,0.0086,0.8839,291
+Cerrado,PRE,7,-0.0065,0.9124,290
+Cerrado,PRE,8,-0.0326,0.5812,289
+Cerrado,PRE,9,-0.0356,0.5471,288
+Cerrado,PRE,10,-0.0203,0.7321,287
+Cerrado,PRE,11,-0.0018,0.9762,286
+Cerrado,PRE,12,0.0091,0.879,285
+Cerrado,WAI,0,-0.0894,0.1242,297
+Cerrado,WAI,1,-0.1105,0.0576,296
+Cerrado,WAI,2,-0.1237,0.0337,295
+Cerrado,WAI,3,-0.1368,0.0189,294
+Cerrado,WAI,4,-0.1443,0.0134,293
+Cerrado,WAI,5,-0.1447,0.0133,292
+Cerrado,WAI,6,-0.1409,0.0161,291
+Cerrado,WAI,7,-0.1463,0.0126,290
+Cerrado,WAI,8,-0.158,0.0071,289
+Cerrado,WAI,9,-0.1753,0.0028,288
+Cerrado,WAI,10,-0.1786,0.0024,287
+Cerrado,WAI,11,-0.176,0.0028,286
+Cerrado,WAI,12,-0.1648,0.0053,285
+Caatinga,NP,0,-0.1908,0.001,297
+Caatinga,NP,1,-0.1849,0.0014,296
+Caatinga,NP,2,-0.1714,0.0032,295
+Caatinga,NP,3,-0.1465,0.0119,294
+Caatinga,NP,4,-0.1217,0.0373,293
+Caatinga,NP,5,-0.0949,0.1054,292
+Caatinga,NP,6,-0.0741,0.2075,291
+Caatinga,NP,7,-0.068,0.2484,290
+Caatinga,NP,8,-0.0764,0.1952,289
+Caatinga,NP,9,-0.0922,0.1186,288
+Caatinga,NP,10,-0.0936,0.1136,287
+Caatinga,NP,11,-0.0932,0.1158,286
+Caatinga,NP,12,-0.0849,0.1531,285
+Caatinga,EV,0,-0.137,0.0182,297
+Caatinga,EV,1,-0.1245,0.0322,296
+Caatinga,EV,2,-0.104,0.0745,295
+Caatinga,EV,3,-0.0788,0.178,294
+Caatinga,EV,4,-0.0545,0.3525,293
+Caatinga,EV,5,-0.0323,0.5824,292
+Caatinga,EV,6,-0.0145,0.8056,291
+Caatinga,EV,7,-0.0088,0.8814,290
+Caatinga,EV,8,-0.0161,0.7848,289
+Caatinga,EV,9,-0.0347,0.5574,288
+Caatinga,EV,10,-0.0466,0.432,287
+Caatinga,EV,11,-0.0545,0.3584,286
+Caatinga,EV,12,-0.0543,0.3612,285
+Caatinga,PRE,0,-0.0364,0.5316,297
+Caatinga,PRE,1,-0.0309,0.5959,296
+Caatinga,PRE,2,-0.0199,0.7333,295
+Caatinga,PRE,3,-0.006,0.9182,294
+Caatinga,PRE,4,0.0161,0.7836,293
+Caatinga,PRE,5,0.0285,0.6277,292
+Caatinga,PRE,6,0.0465,0.429,291
+Caatinga,PRE,7,0.0296,0.6161,290
+Caatinga,PRE,8,0.0197,0.7387,289
+Caatinga,PRE,9,0.0109,0.8545,288
+Caatinga,PRE,10,0.0156,0.7924,287
+Caatinga,PRE,11,0.02,0.7361,286
+Caatinga,PRE,12,0.0336,0.5727,285
+Caatinga,TST,0,0.1927,0.0008,297
+Caatinga,TST,1,0.1838,0.0015,296
+Caatinga,TST,2,0.1779,0.0022,295
+Caatinga,TST,3,0.1569,0.007,294
+Caatinga,TST,4,0.1349,0.0209,293
+Caatinga,TST,5,0.1107,0.0589,292
+Caatinga,TST,6,0.0868,0.1397,291
+Caatinga,TST,7,0.0769,0.1918,290
+Caatinga,TST,8,0.0725,0.2193,289
+Caatinga,TST,9,0.0781,0.1861,288
+Caatinga,TST,10,0.0771,0.1929,287
+Caatinga,TST,11,0.0708,0.2326,286
+Caatinga,TST,12,0.0529,0.3732,285
