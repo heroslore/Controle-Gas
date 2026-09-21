@@ -200,3 +200,12 @@ Aplicadas na fonte (scripts), não no XML, e o documento foi regenerado:
 - Resumo/Abstract (mantido o ± dp), H3, parágrafo dos objetivos e perspectivas atualizados; ferramentas (5.6) citam os testes novos.
 - Correções em relação à versão 6: fases 149/76/72 (coerente com A1 e Figuras 11–13); citação da Tabela A4 corrigida;
   figuras em resolução original; Figura 14 legível; listas e sumário regenerados; sem revisões marcadas.
+
+## 7. Versão 8 (21/09/2026): variabilidade interanual e reprodutibilidade
+
+- Nova subseção 6.6 "Variabilidade interanual da produtividade" (Figura 15, Tabela 7) gerada por
+  `Analise_Interanual_PSN.py`; "Implicações" passou a 6.7 e o Sumário ganhou a entrada nova.
+  Frase de síntese acrescentada às Considerações Finais.
+- `Modelo_PSN.py`: toggles por variável de ambiente e saídas com nomes fixos; `coletar_resultados.py`
+  substitui o consolidador antigo (que dependia de um log fora do repositório); `reproduzir_tudo.sh`
+  roda a cadeia inteira. Rodada completa refeita: reproduz as Tabelas 2 e 3 com diferença zero.

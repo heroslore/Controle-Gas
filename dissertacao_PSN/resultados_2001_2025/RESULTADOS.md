@@ -163,3 +163,14 @@ Saídas em `enso_anomalias/` e `enso_anomalias.json`; Tabela 6, Figura 14, Tabel
 - Diferenças em relação à versão 6 do docx (outra sessão): fases 149/76/72 em vez de 151/76/70 (jan–fev/2001
   são La Niña pela tabela completa da NOAA); Δ mudam ≤ 0,7 pp; importâncias com/sem harmônicos recalculadas com
   o pipeline do modelo (Tabela A4).
+
+## 11. Prova de reprodutibilidade (rodada completa e sequencial, 21/09/2026)
+
+`BIOMA_ATIVO=TODOS RODAR_EM_PARALELO=0 TESTAR_GRAUS=1 RODAR_YRANDOMIZATION=1 python3 Modelo_PSN.py`
+(log em `log_modelo_psn_completo.txt`) seguido de `coletar_resultados.py`. Comparação com os
+arquivos que alimentam a dissertação (`resumo_geral.csv`, `selecao_grau.csv`, `vif_por_bioma.csv`,
+`numeros_extra.json`): **diferença zero** em todas as métricas das Tabelas 2 e 3, nos 15 pares
+grau × bioma, nos VIF, nos alfas médios, no R² fora da amostra e nas importâncias da Figura 8
+(única diferença: `vif_max` do Cerrado gravado com 2 casas, 36,99 contra 36,990854).
+Ou seja: a cadeia CSV bruto → `Modelo_PSN.py` → `coletar_resultados.py` → Word regenera a
+dissertação sem nenhum número digitado à mão.
