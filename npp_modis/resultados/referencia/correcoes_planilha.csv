@@ -1,0 +1,8 @@
+﻿variavel,ano,mes,bioma,valor_planilha,valor_corrigido,fonte_correcao,desvio_pct
+psn_g_c_m2,2004,10,Mata Atlântica,51.30455932713214,142.589,"GEE, mesma regra de agregação",177.9
+lst_dia_c,2011,10,Mata Atlântica,33.035000000000004,28.9367,"GEE, mesma regra de agregação",-12.4
+precip_mm,2003,1,Cerrado,79.3121,198.1685,IMERG V06 (GEE),149.9
+precip_mm,2003,1,Caatinga,45.395,102.4499,IMERG V06 (GEE),125.7
+precip_mm,2020,4,Mata Atlântica,117.81,179.5735,IMERG V06 (GEE),52.4
+precip_mm,2001,9,Caatinga,81.6,21.5019,IMERG V06 (GEE),-73.6
+precip_mm,2016,10,Cerrado,22.27,66.4499,IMERG V06 (GEE),198.4

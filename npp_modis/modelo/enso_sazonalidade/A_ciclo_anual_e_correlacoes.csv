@@ -1,0 +1,13 @@
+﻿bioma,variavel,pct_variancia_ciclo_anual,r_PSN_bruto,r_PSN_anomalias
+Mata Atlântica,EV,40.018,0.358,0.731
+Mata Atlântica,PRE,9.216,-0.241,-0.136
+Mata Atlântica,TST,65.008,-0.339,-0.582
+Mata Atlântica,PSN,3.079,1.0,1.0
+Cerrado,EV,79.387,0.865,0.898
+Cerrado,PRE,59.186,0.283,0.023
+Cerrado,WAI,70.477,0.862,0.76
+Cerrado,PSN,60.562,1.0,1.0
+Caatinga,EV,63.498,0.873,0.932
+Caatinga,PRE,31.637,0.278,0.163
+Caatinga,TST,53.905,-0.737,-0.765
+Caatinga,PSN,44.112,1.0,1.0
