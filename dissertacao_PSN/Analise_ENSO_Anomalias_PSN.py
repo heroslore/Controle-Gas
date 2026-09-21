@@ -10,6 +10,10 @@ pela orientação e feitas originalmente em npp_modis/modelo/analise_enso_sazona
      anomalias (Tabela A4 ampliada).
   2. Efeito das fases sobre as anomalias de PSN e dos preditores: posição (Kruskal-Wallis,
      Mann-Whitney), dispersão (Fligner-Killeen) e extremos (qui-quadrado, % < P10) (Tabela 6).
+  2b. Unidade amostral: a mesma diferença (anomalia média da fase ativa menos a dos meses
+     neutros) com intervalo de confiança de 95% por bootstrap de 10.000 reamostragens em dois
+     esquemas — mês como unidade (i.i.d.) e episódio como unidade (blocos, sorteando sequências
+     contíguas inteiras de meses na mesma fase). Tabela A11.
   3. Mediação: quanto da resposta da PSN o modelo reproduz via cada preditor.
   4. Defasagem: Spearman ONI(t) x anomalia PSN(t+L) e compósitos por fase (Figura 14).
   5. Valores exatos dos boxplots brutos por fase (Tabela A5).
@@ -96,6 +100,71 @@ J['bruto'] = {f"{r.bioma}|{r.variavel}": {k: float(v) for k, v in r._asdict().it
 J['eps2_range'] = [float(T6.eps2.min()), float(T6.eps2.max())]
 # TST da MA em °C (anomalia absoluta média sob El Niño)
 J['tst_MA_EN_graus'] = float(T6[(T6.bioma == 'Mata Atlântica') & (T6.variavel == 'TST')].media_abs_EN.iloc[0])
+
+# ------------------------------------------------------------------ Tabela A11: unidade amostral (mês x episódio)
+# Os meses de uma mesma fase não são observações independentes: pertencem a um número pequeno de
+# episódios do ENSO, dentro dos quais a série é fortemente autocorrelacionada. A estatística de
+# interesse (Δ = anomalia percentual média da fase ativa − a dos meses neutros) é a mesma nos dois
+# esquemas; o que muda é a reamostragem. O bootstrap em blocos (Künsch, 1989; Politis e Romano,
+# 1994) sorteia episódios inteiros, preservando a dependência interna de cada um.
+EPISODIO = np.zeros(len(d), int)
+for i in range(len(d)):
+    EPISODIO[i] = 1 if i == 0 else EPISODIO[i - 1] + int(fase[i] != fase[i - 1])
+_eps = {f: [np.where((EPISODIO == e))[0] for e in np.unique(EPISODIO[fase == f])] for f in FASES}
+J['episodios'] = {f: dict(n_meses=n_fase[f], n_sequencias=len(_eps[f]),
+                          duracao_mediana=float(np.median([len(i) for i in _eps[f]])),
+                          duracao_min=int(min(len(i) for i in _eps[f])), duracao_max=int(max(len(i) for i in _eps[f]))) for f in FASES}
+J['episodios']['total_sequencias'] = int(EPISODIO.max())
+N_BOOT = 10000
+
+def _ic_boot(vals_ativa, vals_neutro, blocos_ativa=None, blocos_neutro=None, semente=42):
+    """IC95% e p bilateral da diferença de médias, por bootstrap i.i.d. (blocos=None) ou em blocos."""
+    rng = np.random.default_rng(semente); difs = np.empty(N_BOOT)
+    for k in range(N_BOOT):
+        if blocos_ativa is None:
+            a = rng.choice(vals_ativa, size=len(vals_ativa), replace=True)
+            n = rng.choice(vals_neutro, size=len(vals_neutro), replace=True)
+        else:
+            ia = rng.integers(0, len(blocos_ativa), len(blocos_ativa)); a = np.concatenate([blocos_ativa[j] for j in ia])
+            inn = rng.integers(0, len(blocos_neutro), len(blocos_neutro)); n = np.concatenate([blocos_neutro[j] for j in inn])
+        difs[k] = a.mean() - n.mean()
+    lo, hi = np.percentile(difs, [2.5, 97.5])
+    p = min(1.0, 2 * min((difs <= 0).mean(), (difs >= 0).mean()))
+    return lo, hi, p, difs.std()
+
+a11 = []
+for b in ['MA', 'CE', 'CA']:
+    for var in ['PSN', 'EV', 'PRE', 'TST', 'WAI']:
+        col = f'NP_{b}' if var == 'PSN' else f'{var}_{b}'
+        _, a_pct = anom(col); ap = a_pct.values
+        blocos = {f: [ap[i] for i in _eps[f]] for f in FASES}
+        for f in ATIVAS:
+            delta = ap[fase == f].mean() - ap[fase == 'Neutro'].mean()
+            lo_m, hi_m, p_m, se_m = _ic_boot(ap[fase == f], ap[fase == 'Neutro'])
+            lo_e, hi_e, p_e, se_e = _ic_boot(None, None, blocos[f], blocos['Neutro'])
+            a11.append(dict(bioma=NOME[b], variavel=var, fase=f, delta_pp=delta,
+                            mes_ic_inf=lo_m, mes_ic_sup=hi_m, mes_p=p_m, mes_largura=hi_m - lo_m,
+                            ep_ic_inf=lo_e, ep_ic_sup=hi_e, ep_p=p_e, ep_largura=hi_e - lo_e,
+                            razao_largura=(hi_e - lo_e) / (hi_m - lo_m),
+                            sig_mes=bool(lo_m * hi_m > 0), sig_episodio=bool(lo_e * hi_e > 0)))
+A11 = pd.DataFrame(a11)
+A11.round(4).to_csv(os.path.join(OUT, 'tabelaA11_unidade_amostral.csv'), index=False)
+_sm, _se = int(A11.sig_mes.sum()), int(A11.sig_episodio.sum())
+J['unidade_amostral'] = dict(
+    n_testes=len(A11), sig_mes=_sm, sig_episodio=_se, perderam=_sm - _se,
+    razao_largura_mediana=float(A11.razao_largura.median()), razao_largura_max=float(A11.razao_largura.max()),
+    razao_largura_max_caso=A11.loc[A11.razao_largura.idxmax(), ['bioma', 'variavel', 'fase']].to_dict(),
+    resistem=[{k: (float(v) if isinstance(v, (int, float, np.floating)) and k not in ('bioma', 'variavel', 'fase') else v)
+               for k, v in r._asdict().items() if k != 'Index'} for r in A11[A11.sig_episodio].itertuples()],
+    perdidos=[{k: (float(v) if isinstance(v, (int, float, np.floating)) and k not in ('bioma', 'variavel', 'fase') else v)
+               for k, v in r._asdict().items() if k != 'Index'} for r in A11[A11.sig_mes & ~A11.sig_episodio].itertuples()],
+    tabela={f"{r.bioma}|{r.variavel}|{r.fase}": {k: (float(v) if not isinstance(v, (str, bool)) else v)
+            for k, v in r._asdict().items() if k not in ('Index', 'bioma', 'variavel', 'fase')} for r in A11.itertuples()})
+print("\n===== UNIDADE AMOSTRAL (Tabela A11) =====")
+print(f"sequências contíguas: {J['episodios']['total_sequencias']} " +
+      "; ".join(f"{f}: {J['episodios'][f]['n_meses']} meses em {J['episodios'][f]['n_sequencias']} sequências" for f in FASES))
+print(f"significativos: {_sm}/30 com o mês como unidade, {_se}/30 com o episódio como unidade")
+print(A11[['bioma', 'variavel', 'fase', 'delta_pp', 'mes_ic_inf', 'mes_ic_sup', 'mes_p', 'ep_ic_inf', 'ep_ic_sup', 'ep_p', 'razao_largura']].round(3).to_string(index=False))
 
 # ------------------------------------------------------------------ modelo (mesmo da Figura 9) e mediação
 def ajuste_completo(b, cols):

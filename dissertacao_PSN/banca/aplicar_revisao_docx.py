@@ -73,6 +73,10 @@ N_OBS = 297
 nome = {'MA': 'Mata Atlântica', 'CE': 'Cerrado', 'CA': 'Caatinga'}
 # ---- análise do ENSO em anomalias mensais (Analise_ENSO_Anomalias_PSN.py; fase oficial NOAA da base)
 JA  = json.load(open(os.path.join(RES, 'enso_anomalias.json'), encoding='utf-8'))
+UA  = JA['unidade_amostral']; EPI = JA['episodios']
+A11 = pd.read_csv(os.path.join(RES, 'enso_anomalias', 'tabelaA11_unidade_amostral.csv'))
+def ua(b, var, f): return UA['tabela'][f"{nome[b]}|{var}|{f}"]
+def _ic(r, pre): return f"{sgn(r[pre + '_ic_inf'], 1)} a {sgn(r[pre + '_ic_sup'], 1)} pp"
 T6  = pd.read_csv(os.path.join(RES, 'enso_anomalias', 'tabela6_anomalias_por_fase.csv'))
 A5  = pd.read_csv(os.path.join(RES, 'enso_anomalias', 'tabelaA5_boxplots_por_fase.csv'))
 A4X = pd.read_csv(os.path.join(RES, 'enso_anomalias', 'tabelaA4_sazonalidade_importancia.csv'))
@@ -363,11 +367,13 @@ resumo = (
     "sazonal no Cerrado, resposta pulsada à precipitação na Caatinga e controle multifatorial na Mata Atlântica. A "
     "análise do El Niño–Oscilação Sul (ENSO), conduzida sobre anomalias mensais, indicou influência indireta e "
     f"defasada sobre a PSN: nos meses de La Niña a PSN ficou cerca de {v(LN_LO,0)}% a {v(LN_HI,0)}% acima do normal "
-    "no Cerrado e na Caatinga, associada principalmente a anomalias positivas de evapotranspiração e com persistência "
-    "de vários meses no Cerrado; na Mata Atlântica, as medianas brutas foram semelhantes entre as fases, mas, após a "
-    f"remoção do ciclo sazonal, os meses de El Niño apresentaram redução média de {v(abs(t6('MA','PSN')['delta_EN']))}% "
-    f"na PSN e aumento da frequência de meses extremamente baixos (de {v(P10_MA[1],0)}% para {v(P10_MA[0],0)}%), "
-    "associados ao aquecimento da superfície. Os resultados indicam a viabilidade da regressão "
+    "no Cerrado e na Caatinga, associada principalmente a anomalias positivas de evapotranspiração; na Mata Atlântica, "
+    f"os meses de El Niño apresentaram redução média de {v(abs(t6('MA','PSN')['delta_EN']))}% na PSN e aumento da "
+    f"frequência de meses extremamente baixos (de {v(P10_MA[1],0)}% para {v(P10_MA[0],0)}%), associados ao aquecimento "
+    "da superfície. Tomando o episódio, e não o mês, como unidade amostral, apenas "
+    f"{UA['sig_episodio']} dos {UA['n_testes']} contrastes permanecem distinguíveis de zero, o que indica que 24 anos "
+    "de registro contêm poucos episódios para sustentar afirmações fortes sobre o efeito do ENSO. Os resultados "
+    "indicam a viabilidade da regressão "
     "polinomial regularizada para representar relações ambientais complexas e reforçam a importância de abordagens "
     "diferenciadas para o monitoramento dos biomas baianos."
 )
@@ -391,10 +397,12 @@ abstract = (
     "Caatinga and multifactorial control in the Atlantic Forest. The analysis of the El Niño–Southern Oscillation "
     "(ENSO), performed on monthly anomalies, indicated an indirect and lagged influence on PSN: in La Niña months PSN "
     f"was about {v(LN_LO,0)}–{v(LN_HI,0)}% above normal in the Cerrado and Caatinga, associated mainly with positive "
-    "evapotranspiration anomalies and persisting for several months in the Cerrado; in the Atlantic Forest, raw medians "
-    "were similar across phases, but after removing the seasonal cycle El Niño months showed a mean PSN reduction of "
+    "evapotranspiration anomalies; in the Atlantic Forest, El Niño months showed a mean PSN reduction of "
     f"{v(abs(t6('MA','PSN')['delta_EN'])).replace(',', '.')}% and a higher frequency of extremely low months (from "
-    f"{v(P10_MA[1],0)}% to {v(P10_MA[0],0)}%), associated with surface warming. The results indicate the feasibility of regularized polynomial regression to represent "
+    f"{v(P10_MA[1],0)}% to {v(P10_MA[0],0)}%), associated with surface warming. Taking the episode, rather than the "
+    f"month, as the sampling unit, only {UA['sig_episodio']} of the {UA['n_testes']} contrasts remain distinguishable "
+    "from zero, indicating that 24 years of record contain too few episodes to support strong claims about the ENSO "
+    "effect. The results indicate the feasibility of regularized polynomial regression to represent "
     "complex environmental relationships and reinforce the importance of differentiated approaches for monitoring "
     "the biomes of Bahia."
 )
@@ -826,6 +834,17 @@ _p541 = add_paras_after(_h541, BODY_TPL, [
     "muitos testes, os valores-p foram submetidos à correção de Benjamini-Hochberg para taxa de falsas descobertas de "
     "5%, aplicada separadamente a cada família de testes, e os resultados que permanecem significativos após a "
     "correção são identificados na Tabela 6.",
+    "Esses testes tratam cada mês como uma observação independente, premissa que a estrutura do ENSO não satisfaz: "
+    f"os {EPI['El Niño']['n_meses']} meses de El Niño da série correspondem a apenas {EPI['El Niño']['n_sequencias']} "
+    f"episódios, e os {EPI['La Niña']['n_meses']} meses de La Niña a {EPI['La Niña']['n_sequencias']} sequências, com "
+    f"duração mediana de {v(EPI['El Niño']['duracao_mediana'], 1)} e {v(EPI['La Niña']['duracao_mediana'], 0)} meses; "
+    "dentro de cada episódio os meses são fortemente autocorrelacionados. Para medir o efeito dessa escolha, a mesma "
+    "estatística de interesse (a diferença entre a anomalia percentual média de uma fase ativa e a dos meses neutros) "
+    "recebeu intervalos de confiança de 95% por dois esquemas de bootstrap com 10.000 reamostragens cada: o primeiro "
+    "sorteia meses com reposição dentro de cada grupo, que é a premissa implícita nos testes acima; o segundo sorteia "
+    "sequências contíguas inteiras de meses na mesma fase, isto é, o episódio como unidade amostral (Künsch, 1989; "
+    "Politis; Romano, 1994). Os dois esquemas foram aplicados à PSN e aos quatro preditores nos três biomas, "
+    f"totalizando {UA['n_testes']} comparações, e os resultados constam da Tabela A11 do Apêndice.",
     "Para estimar quanto da resposta da PSN pode ser reproduzido pelas variáveis intermediárias, realizou-se um "
     "experimento de perturbação baseado no modelo, sem pretensão de inferência causal: o MRMP-N ajustado à série "
     "completa foi usado para prever a PSN com os preditores em sua climatologia mensal e, alternativamente, com cada "
@@ -836,7 +855,8 @@ _p541 = add_paras_after(_h541, BODY_TPL, [
     "Niño e de La Niña, com intervalos de confiança de 95% por bootstrap (2.000 reamostragens) e teste de Mann-Whitney "
     "contra os meses neutros; por serem fortemente correlacionadas entre si, as defasagens não foram submetidas a "
     "correção para múltiplas comparações e devem ser lidas como descrição do padrão temporal, não como testes "
-    "independentes. Por fim, para os episódios com pelo menos cinco meses consecutivos na mesma fase, calculou-se a "
+    "independentes; elas compartilham, além disso, a premissa de independência entre meses discutida acima, de modo "
+    "que os valores-p das defasagens devem ser lidos como indicativos. Por fim, para os episódios com pelo menos cinco meses consecutivos na mesma fase, calculou-se a "
     "anomalia média de PSN durante o episódio e nos três meses seguintes."])
 _h542 = h3(_p541, "5.4.2 Variabilidade interanual")
 add_paras_after(_h542, BODY_TPL, [
@@ -903,7 +923,8 @@ set_text(ORIG[224],
     "todas as validações da seção 5.5, inclusive as Tabelas A7 a A10. As análises foram "
     "executadas em Python 3.11, com numpy 2.4, pandas 3.0, scikit-learn 1.9, scipy 1.17 e statsmodels 0.15; o código, "
     "a base de dados e os scripts de extração estão disponíveis em repositório público "
-    "(https://github.com/heroslore/Controle-Gas, pastas dissertacao_PSN e npp_modis).")
+    "(https://github.com/heroslore/MRMP-N-PSN-Bahia) e arquivados de forma permanente no Zenodo, sob o identificador "
+    "permanente https://doi.org/10.5281/zenodo.22883915, que resolve sempre para a versão mais recente do arquivo.")
 
 # =============================================================================
 # 10. RESULTADOS — desempenho
@@ -1367,13 +1388,45 @@ set_text(ORIG[299],
     "concentrados nos extremos. A influência do ENSO sobre o sistema regional não se manifesta, portanto, de forma "
     "linear e direta, mas por relações indiretas, defasadas e, em parte, assimétricas entre as fases, mais "
     "adequadamente representadas pela classificação em fases e pela análise de anomalias.")
+_res = {f"{r['bioma']}|{r['variavel']}|{r['fase']}": r for r in UA['resistem']}
+_ma_psn = _res['Mata Atlântica|PSN|El Niño']; _ma_tst = _res['Mata Atlântica|TST|El Niño']; _ca_psn = _res['Caatinga|PSN|La Niña']
+_ce_psn = ua('CE', 'PSN', 'La Niña')
+_perd = "; ".join(f"{r['bioma']}, {r['variavel']}, {r['fase']} ({pj(r['mes_p'])} para {pj(r['ep_p'])})" for r in UA['perdidos'])
+_p_ua = add_paras_after(ORIG[299], BODY_TPL, [
+    "A leitura acima trata cada mês como uma observação independente. A série, porém, contém apenas "
+    f"{EPI['El Niño']['n_sequencias']} episódios de El Niño e {EPI['La Niña']['n_sequencias']} sequências de La Niña "
+    f"em {EPI['total_sequencias']} sequências contíguas no total, de modo que a unidade amostral efetiva é o episódio, "
+    "e não o mês (seção 5.4.1). Refeitas as mesmas diferenças com intervalos de confiança por bootstrap nos dois "
+    f"esquemas (Tabela A11), {UA['sig_mes']} das {UA['n_testes']} comparações excluem o zero quando o mês é a unidade, "
+    f"e apenas {UA['sig_episodio']} quando o episódio o é. Os intervalos alargam-se em "
+    f"{v(UA['razao_largura_mediana'], 2)} vez na mediana, chegando a {v(UA['razao_largura_max'], 2)} vezes "
+    f"({UA['razao_largura_max_caso']['bioma']}, {UA['razao_largura_max_caso']['variavel']}, "
+    f"{UA['razao_largura_max_caso']['fase']}), o que é o esperado quando a amostra efetiva passa de dezenas de meses "
+    "para menos de uma dezena de episódios por fase.",
+    f"Resistem ao esquema por episódio três efeitos: o aquecimento da superfície da Mata Atlântica em El Niño "
+    f"({sgn(_ma_tst['delta_pp'])} pp; IC 95% de {sgn(_ma_tst['ep_ic_inf'])} a {sgn(_ma_tst['ep_ic_sup'])} pp; "
+    f"{pj(_ma_tst['ep_p'])}), o mais robusto do conjunto; a redução da PSN desse mesmo bioma e fase "
+    f"({sgn(_ma_psn['delta_pp'])} pp; {sgn(_ma_psn['ep_ic_inf'])} a {sgn(_ma_psn['ep_ic_sup'])} pp; {pj(_ma_psn['ep_p'])}); "
+    f"e o aumento da PSN da Caatinga em La Niña ({sgn(_ca_psn['delta_pp'])} pp; {sgn(_ca_psn['ep_ic_inf'])} a "
+    f"{sgn(_ca_psn['ep_ic_sup'])} pp; {pj(_ca_psn['ep_p'])}). Os dois últimos são marginais: seus intervalos quase "
+    f"tocam o zero. Deixam de ser distinguíveis de zero: {_perd}. A mudança mais expressiva ocorre no Cerrado, onde o "
+    f"aumento de {v(_ce_psn['delta_pp'])} pp da PSN em La Niña, o efeito mais forte sob o esquema convencional, passa a "
+    f"{pj(_ce_psn['ep_p'])}, com intervalo de {sgn(_ce_psn['ep_ic_inf'])} a {sgn(_ce_psn['ep_ic_sup'])} pp quando as "
+    f"nove sequências de La Niña são tomadas como as nove observações que de fato são. Não se trata de dados "
+    "diferentes nem de outra estatística: a diferença Δ é a mesma nas duas colunas da Tabela A11, e o que muda é apenas "
+    "a reamostragem. O bootstrap em blocos com oito ou nove blocos é ele próprio impreciso, de modo que os valores-p "
+    "marginais devem ser lidos como indicativos; a leitura honesta, contudo, é que 24 anos de registro contêm poucos "
+    "episódios para sustentar afirmações fortes sobre diferenças de poucos pontos percentuais entre fases."])
 set_text(ORIG[300],
     "A interpretação conjunta desses resultados sustenta um padrão de influência indireta, na qual o ENSO atua como "
     "forçante de larga escala que modula variáveis intermediárias, com canais distintos por bioma: a evapotranspiração "
     "e o WAI, expressões da água efetivamente disponível, no Cerrado e na Caatinga, onde a PSN dos meses de La Niña fica "
     f"cerca de {v(LN_LO,0)}% a {v(LN_HI,0)}% acima do normal; e a temperatura da superfície na Mata Atlântica, onde os "
     "meses de El Niño apresentam redução modesta da PSN típica e aumento acentuado da frequência de meses de "
-    "produtividade muito baixa.")
+    "produtividade muito baixa. Esse padrão descreve a série observada, mas, como mostra a análise por episódio, só o "
+    "canal térmico da Mata Atlântica se sustenta com folga quando a dependência entre meses do mesmo episódio é levada "
+    "em conta; as respostas dos biomas sazonais devem ser tomadas como indicações compatíveis com a literatura "
+    "regional, e não como efeitos estabelecidos por esta série.")
 set_text(ORIG[301],
     "O deslocamento apenas modesto da produtividade típica da Mata Atlântica, apesar da resposta significativa da "
     "temperatura, sugere que esse ecossistema apresenta capacidade parcial de amortecimento frente às oscilações "
@@ -1518,7 +1571,13 @@ set_text(ORIG[314],
     f"({sgn(t6('MA','PSN')['delta_EN'])}%) e aumento da frequência de meses de produtividade extremamente baixa (de "
     f"{v(P10_MA[1],0)}% para {v(P10_MA[0],0)}%), associados ao aquecimento da superfície. O padrão é, portanto, o de uma "
     "influência indireta, defasada e assimétrica entre fases, associada à água efetivamente utilizada pela vegetação "
-    "nos biomas sazonais e à temperatura no bioma úmido.")
+    "nos biomas sazonais e à temperatura no bioma úmido. Esse padrão, contudo, depende da unidade amostral adotada: "
+    f"quando o episódio substitui o mês, apenas {UA['sig_episodio']} dos {UA['n_testes']} contrastes permanecem "
+    "distinguíveis de zero (o aquecimento da Mata Atlântica em El Niño, a redução da PSN desse bioma e fase e o "
+    "aumento da PSN da Caatinga em La Niña, os dois últimos marginais), e o efeito mais forte sob o esquema "
+    f"convencional, o ganho de {v(ua('CE', 'PSN', 'La Niña')['delta_pp'])} pp da PSN do Cerrado em La Niña, deixa de "
+    "sê-lo. A evidência disponível sobre o efeito do ENSO na produtividade destes biomas é, portanto, mais fraca do "
+    "que o procedimento convencional sugere, e deve ser apresentada como tal.")
 set_text(ORIG[316], ORIG[316].text.replace(
     "sem efeito linear direto significativo sobre a PSN.",
     "transmitida pela evapotranspiração no Cerrado e na Caatinga e pela temperatura na Mata Atlântica, com respostas da "
@@ -1679,7 +1738,12 @@ for _t in d.tables:
         if _c.text.strip() == 'Controlador dominante': set_cell(_c, 'Preditor dominante', bold=True)
 # --- 7: limitações e perspectivas
 set_text(ORIG[317], ORIG[317].text.rstrip() +
-    " Três limitações de origem dos dados devem ainda ser explicitadas: (i) a PSN e a EV provêm de algoritmos MODIS que "
+    " A análise do ENSO tem ainda uma limitação de desenho: com 24 anos de registro, cada fase dispõe de menos de dez "
+    "episódios, e os testes mês a mês tratam observações do mesmo episódio como independentes; a Tabela A11 mostra que, "
+    f"corrigida essa premissa, apenas {UA['sig_episodio']} dos {UA['n_testes']} contrastes permanecem distinguíveis de "
+    "zero, dois deles de forma marginal. O bootstrap em blocos com oito ou nove blocos é, por sua vez, impreciso, de "
+    "modo que os dois procedimentos delimitam o que a série permite afirmar, em vez de um substituir o outro. "
+    "Três limitações de origem dos dados devem ainda ser explicitadas: (i) a PSN e a EV provêm de algoritmos MODIS que "
     "compartilham entradas (seção 6.3), de modo que parte da associação entre elas pode ser algorítmica; (ii) a temperatura da "
     "superfície (MOD11A2) não passou por filtro pela banda de qualidade QC_Day, e a sensibilidade da série de TST a esse filtro "
     "não foi avaliada; e (iii) os períodos aqui chamados mensais são janelas fixas de 32 dias, associadas a um mês civil de "
@@ -1687,7 +1751,10 @@ set_text(ORIG[317], ORIG[317].text.rstrip() +
 set_text(ORIG[320], ORIG[320].text.replace(
     "a extensão da análise do ENSO a compósitos",
     "a validação das relações entre PSN e variáveis climáticas com medições independentes de fluxo por covariância de "
-    "vórtices e a reextração da TST com filtro pela banda QC_Day; a extensão da análise do ENSO a compósitos"))
+    "vórtices e a reextração da TST com filtro pela banda QC_Day; a ampliação do número de episódios de ENSO "
+    "disponíveis, por meio de sensores anteriores ao MODIS ou de reconstruções, e o aumento da replicação espacial, "
+    "com sub-regiões dentro de cada bioma em vez de uma única média por bioma, para reduzir a incerteza identificada "
+    "na Tabela A11; a extensão da análise do ENSO a compósitos"))
 
 # =============================================================================
 # 16. APÊNDICE A — base de dados + combinações (antes das REFERÊNCIAS)
@@ -1725,7 +1792,8 @@ intro = new_para_after(h, BODY_TPL,
     "adimensional (ETR/ETP); BURN em hectares. A Tabela A2 apresenta o desempenho das 10 combinações de variáveis "
     "ambientais avaliadas por bioma; a Tabela A3, o efeito da remoção das componentes de sazonalidade; e a Tabela A4, "
     "a proporção da variância de cada variável climática explicada pelo ciclo anual; as Tabelas A7 a A10 reúnem a robustez "
-    "da seleção sob validação temporal, a importância por permutação e os nulos que preservam a estrutura temporal (seção 5.5).")
+    "da seleção sob validação temporal, a importância por permutação e os nulos que preservam a estrutura temporal (seção 5.5); "
+    "e a Tabela A11 compara os dois esquemas de unidade amostral nos compósitos do ENSO (seção 5.4.1).")
 cap = new_para_after(intro, TABCAP_TPL, "Tabela A1 - Base de dados mensal dos três biomas (2001–2025).", bold=True)
 cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
 cols = ['ANO', 'MÊS', 'ONI', 'Enso']; hdr = ['Ano', 'Mês', 'ONI', 'Fase']; fmt = {'ANO': '{:.0f}', 'MÊS': '{:.0f}', 'ONI': '{:.2f}'}
@@ -1897,6 +1965,24 @@ for i, r in enumerate(NT.itertuples(), start=1):
                               v(r.r2_nulo_max, 1), pv3(r.p_empirico)]):
         set_cell(t.rows[i].cells[j], sval, size=8)
     _prev = r.bioma
+_left(t); mid = new_para_after(t.rows[-1].cells[0].paragraphs[0], BODY_TPL, ""); mid._p.getparent().remove(mid._p); t._tbl.addnext(mid._p)
+# Tabela A11 — unidade amostral (mês x episódio)
+cap = new_para_after(mid, TABCAP_TPL, "Tabela A11 - Unidade amostral nos compósitos do ENSO: diferença entre a anomalia percentual média de "
+                     "cada fase ativa e a dos meses neutros (Δ), com intervalo de confiança de 95% e valor-p bilateral por bootstrap de "
+                     "10.000 reamostragens em dois esquemas — mês como unidade (i.i.d.) e episódio como unidade (blocos). A estatística Δ é "
+                     "a mesma nos dois esquemas; muda apenas a reamostragem. Em negrito, os contrastes cujo intervalo exclui o zero.", bold=True)
+cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
+t = table_after(cap, len(A11) + 1, 8); t.alignment = 1
+set_widths(t, [2.8, 1.6, 1.9, 1.8, 3.2, 2.0, 3.2, 2.0]); _left_pending = t
+for j, hname in enumerate(['Bioma', 'Variável', 'Fase', 'Δ (pp)', 'Mês: IC 95%', 'Mês: p', 'Episódio: IC 95%', 'Episódio: p']):
+    set_cell(t.rows[0].cells[j], hname, bold=True, size=8)
+_prev = None
+for i, r in enumerate(A11.itertuples(), start=1):
+    _b = r.bioma if r.bioma != _prev else ''
+    for j, sval in enumerate([_b, r.variavel, r.fase, sgn(r.delta_pp), f"{sgn(r.mes_ic_inf)} a {sgn(r.mes_ic_sup)}", pv3(r.mes_p),
+                              f"{sgn(r.ep_ic_inf)} a {sgn(r.ep_ic_sup)}", pv3(r.ep_p)]):
+        set_cell(t.rows[i].cells[j], sval, size=8, bold=(True if (j >= 6 and r.sig_episodio) or (4 <= j <= 5 and r.sig_mes) else None))
+    _prev = r.bioma
 _left(t); fim = new_para_after(t.rows[-1].cells[0].paragraphs[0], BODY_TPL, ""); fim._p.getparent().remove(fim._p); t._tbl.addnext(fim._p)
 sect_break(fim, landscape=True)
 
@@ -1952,8 +2038,10 @@ _ol = add_ref_after(_ob, "OLDEN, J. D.; LAWLER, J. J.; POFF, N. L. Machine learn
 _ol = add_ref_after(_ol, "OLIVEIRA, R. S.; BEZERRA, L.; DAVIDSON, E. A.; PINTO, F.; KLINK, C. A.; NEPSTAD, D. C.; MOREIRA, A. Deep root function "
               "in soil water dynamics in cerrado savannas of central Brazil. Functional Ecology, v. 19, n. 4, p. 574-581, 2005. "
               "DOI: 10.1111/j.1365-2435.2005.01003.x.")
-add_ref_after(_ol, "PICHLER, M.; HARTIG, F. Machine learning and deep learning: a review for ecologists. Methods in Ecology and "
+_pi_ref = add_ref_after(_ol, "PICHLER, M.; HARTIG, F. Machine learning and deep learning: a review for ecologists. Methods in Ecology and "
               "Evolution, v. 14, n. 4, p. 994-1016, 2023. DOI: 10.1111/2041-210X.14061.")
+add_ref_after(_pi_ref, "POLITIS, D. N.; ROMANO, J. P. The stationary bootstrap. Journal of the American Statistical Association, "
+              "v. 89, n. 428, p. 1303-1313, 1994. DOI: 10.1080/01621459.1994.10476870.")
 add_ref_after(ORIG[360], "RODRIGUES, R. R.; MCPHADEN, M. J. Why did the 2011-2012 La Niña cause a severe drought in the Brazilian Northeast? "
               "Geophysical Research Letters, v. 41, n. 3, p. 1012-1018, 2014. DOI: 10.1002/2013GL058703.")
 add_ref_after(ORIG[362], "SCHWINNING, S.; SALA, O. E. Hierarchy of responses to resource pulses in arid and semi-arid ecosystems. Oecologia, "
@@ -1971,8 +2059,10 @@ _ib = add_ref_after(ORIG[348], "INSTITUTO BRASILEIRO DE GEOGRAFIA E ESTATÍSTICA
 _ib = add_ref_after(_ib, "INSTITUTO BRASILEIRO DE GEOGRAFIA E ESTATÍSTICA (IBGE). Censo Demográfico 2022: etnias e línguas indígenas: "
               "principais características sociodemográficas: resultados do universo. Rio de Janeiro: IBGE, 2025a. Disponível em: "
               "https://biblioteca.ibge.gov.br/index.php/biblioteca-catalogo?view=detalhes&id=2102223. Acesso em: 21 set. 2026.")
-add_ref_after(_ib, "INSTITUTO BRASILEIRO DE GEOGRAFIA E ESTATÍSTICA (IBGE). Cidades e Estados: Bahia. Rio de Janeiro: IBGE, 2025b. "
+_ib = add_ref_after(_ib, "INSTITUTO BRASILEIRO DE GEOGRAFIA E ESTATÍSTICA (IBGE). Cidades e Estados: Bahia. Rio de Janeiro: IBGE, 2025b. "
               "Disponível em: https://www.ibge.gov.br/cidades-e-estados/ba.html. Acesso em: 21 set. 2026.")
+add_ref_after(_ib, "KÜNSCH, H. R. The jackknife and the bootstrap for general stationary observations. The Annals of Statistics, "
+              "v. 17, n. 3, p. 1217-1241, 1989. DOI: 10.1214/aos/1176347265.")
 remove_para(ORIG[349])   # INPE (Monitoramento do El Niño e La Niña) não é citado no texto; as fases ENSO vêm do ONI/NOAA
 _nasa = add_ref_after(ORIG[356], "NATIONAL AERONAUTICS AND SPACE ADMINISTRATION (NASA). IMERG V08 transition schedule. Greenbelt: NASA Global "
               "Precipitation Measurement, 2026. Disponível em: https://gpm.nasa.gov/data/news/imerg-v08-transition-schedule. Acesso em: 17 set. 2026.")
@@ -2022,7 +2112,8 @@ TABS = ["Variáveis para predição da Fotossíntese Líquida (PSN)",
         "R² de teste por grau polinomial sob os três esquemas de validação [A7]",
         "Combinações de variáveis sob validação temporal e estabilidade da seleção [A8]",
         "Importância por permutação fora da amostra por bloco temporal [A9]",
-        "Nulos que preservam a estrutura temporal da PSN [A10]"]
+        "Nulos que preservam a estrutura temporal da PSN [A10]",
+        "Unidade amostral nos compósitos do ENSO: mês e episódio [A11]"]
 PAGES = json.load(open(os.path.join(BASE, 'banca', 'paginas.json'))) if os.path.exists(os.path.join(BASE, 'banca', 'paginas.json')) else {}
 
 def rebuild_list(tbl, prefix, items):
