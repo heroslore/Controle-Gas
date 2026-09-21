@@ -100,5 +100,10 @@ if os.path.exists(a.log_enso):
     json.dump(enso, open(os.path.join(OUT, 'enso_resumo.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     for f in ['boxplot_enso_MA.png', 'boxplot_enso_CE.png', 'boxplot_enso_CA.png', 'dispersao_psn_variaveis_biomas.png', 'serie_temporal_biomas.png']:
         if os.path.exists(os.path.join(SF, f)): shutil.copy(os.path.join(SF, f), os.path.join(OUT, f))
+rob_src = os.path.join(SF, 'robustez')
+if os.path.isdir(rob_src):                       # bloco de robustez do Modelo_PSN.py (Tabelas A7-A10)
+    os.makedirs(os.path.join(OUT, 'robustez'), exist_ok=True)
+    for f in os.listdir(rob_src): shutil.copy(os.path.join(rob_src, f), os.path.join(OUT, 'robustez', f))
+    print('robustez copiada de saidas_figuras/robustez')
 print(pd.DataFrame(rows)[['bioma', 'r2_teste_medio', 'gap_overfitting_pp', 'rmse_teste_medio', 'mae_teste_medio', 'r2_groupkfold_ano', 'r2_timeseriessplit', 'vif_max', 'shapiro_p', 'acf_lag1', 'yrand_diferenca_pp']].to_string(index=False))
 print('gravado em', OUT)

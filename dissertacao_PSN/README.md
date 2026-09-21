@@ -19,7 +19,7 @@ Leia `handoff_claude_code.md` para o contexto completo e a lista de pendências.
 | `Analise_ENSO_Anomalias_PSN.py` | ENSO em anomalias mensais (fase oficial): Tabela 6, mediação, defasagem, Figura 14, Tabelas A4/A5. |
 | `Analise_Interanual_PSN.py` | Variabilidade interanual (6.6): soma anual 2001–2024, CV, Sen/Mann-Kendall, Figura 15, Tabela 7. |
 | `Sensibilidade_Winsor_PSN.py` | Sensibilidade ao percentil de winsorização (Tabela A6). |
-| `Robustez_Selecao_PSN.py` | Seleção de grau e de variáveis sob GroupKFold/TimeSeriesSplit, estabilidade partição a partição, importância por permutação por bloco temporal e nulos que preservam a estrutura temporal (Tabelas A7–A10; `resultados_2001_2025/robustez/`). |
+| `Robustez_Selecao_PSN.py` | Atalho que roda só o bloco de robustez do `Modelo_PSN.py` (função `rodar_robustez`): seleção de grau e de variáveis sob GroupKFold/TimeSeriesSplit, estabilidade partição a partição, importância por permutação por bloco temporal e nulos temporais (Tabelas A7–A10; `resultados_2001_2025/robustez/`). |
 | `coletar_resultados.py` | Lê os logs de uma rodada completa e sequencial e grava resumo_geral, VIF, graus, JSONs e figuras por bioma. |
 | `reproduzir_tudo.sh` | Roda a cadeia inteira, da base bruta ao Word/PDF. |
 | `Figuras_Dissertacao.py` | Monta as figuras da dissertação em `figuras_dissertacao/` a partir de `resultados_2001_2025/`. |
@@ -59,10 +59,12 @@ e os ícones.
 O código oficial do modelo é `Modelo_PSN.py` desta pasta, com `GRAU_MODELO = 2`,
 Mata Atlântica = EV + TST + WAI, Cerrado = EV + PRE + WAI, Caatinga = EV + PRE + TST
 (mais SAZsin e SAZcos), winsorização no percentil 3 só no treino, RepeatedKFold 5 × 30,
-GroupKFold por ano, TimeSeriesSplit, Ljung-Box, VIF e Y-randomization com 100 permutações.
+GroupKFold por ano, TimeSeriesSplit, Ljung-Box, VIF, Y-randomization com 100 permutações e, ao final, o bloco de
+robustez (seleção de grau e de variáveis sob validação temporal, estabilidade da seleção, importância por
+permutação e nulos temporais: Tabelas A7–A10).
 As saídas têm nomes fixos (cada rodada sobrescreve; `NUMERAR_SAIDAS = True` volta à numeração).
 Os toggles aceitam variáveis de ambiente: `BIOMA_ATIVO`, `GRAU_MODELO`, `TESTAR_GRAUS`,
-`RODAR_YRANDOMIZATION`, `RODAR_EM_PARALELO`.
+`RODAR_YRANDOMIZATION`, `RODAR_ROBUSTEZ`, `RODAR_EM_PARALELO`.
 
 Cadeia completa, da base bruta ao PDF (≈ 1 h; `bash reproduzir_tudo.sh` faz tudo):
 
@@ -74,7 +76,7 @@ Cadeia completa, da base bruta ao PDF (≈ 1 h; `bash reproduzir_tudo.sh` faz tu
 | 3 | `coletar_resultados.py` | `resumo_geral.csv`, `vif_por_bioma.csv`, `selecao_grau.csv`, `numeros_extra.json`, `enso_resumo.json` |
 | 4 | `Selecao_Variaveis_PSN.py`, `Ablacao_Sazonalidade_PSN.py` | Tabelas A2 e A3 |
 | 5 | `Analise_ENSO_Anomalias_PSN.py`, `Analise_Interanual_PSN.py` | Seções 6.5 e 6.6 (Tabelas 6, 7, A4, A5; Figuras 14 e 15) |
-| 5b | `Sensibilidade_Winsor_PSN.py`, `Robustez_Selecao_PSN.py` | Tabelas A6 a A10 (sensibilidade, seleção sob validação temporal, permutação, nulos temporais) |
+| 5b | `Sensibilidade_Winsor_PSN.py` | Tabela A6 (sensibilidade à winsorização); as Tabelas A7–A10 saem do próprio `Modelo_PSN.py` (bloco de robustez, copiado pelo coletor) |
 | 6 | `Figuras_Dissertacao.py` | todas as figuras em `figuras_dissertacao/` |
 | 7 | `banca/aplicar_revisao_docx.py` + `banca/render_e_paginas.sh` (duas vezes) | `banca/Trabalho_revisado_2001_2025.docx` e `.pdf` |
 

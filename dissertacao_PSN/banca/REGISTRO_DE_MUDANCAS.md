@@ -339,3 +339,13 @@ Novo script `Robustez_Selecao_PSN.py` (saídas em `resultados_2001_2025/robustez
   alinhado.
 - Referência nova: Breiman (2001). Lista de tabelas, sumário e apêndice atualizados; `reproduzir_tudo.sh` e README
   incluem o novo script.
+
+## 13. Versão 14 (22/09/2026): bloco de robustez dentro do Modelo_PSN.py
+
+- As análises das Tabelas A7–A10 (seleção de grau e de variáveis sob GroupKFold/TimeSeriesSplit, estabilidade
+  partição a partição, importância por permutação por bloco temporal e nulos temporais) passaram a fazer parte do
+  próprio `Modelo_PSN.py` (função `rodar_robustez`, toggle `RODAR_ROBUSTEZ`, padrão ligado), executadas ao final
+  da rodada com o alfa médio e o conjunto de variáveis do modelo. Saída em `saidas_figuras/robustez/`, copiada
+  pelo `coletar_resultados.py` para `resultados_2001_2025/robustez/`.
+- `Robustez_Selecao_PSN.py` virou um atalho que chama a mesma função sem refazer o modelo.
+- Rodada de conferência do modelo com o bloco embutido reproduziu os oito arquivos de robustez da versão 13.

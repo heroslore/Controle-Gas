@@ -68,6 +68,7 @@ Ambos aplicam-se igualmente a todos os biomas selecionados.
 # =============================================================================
 
 import os
+import json
 import pandas as pd
 import numpy as np
 import matplotlib
@@ -319,6 +320,13 @@ TESTAR_GRAUS      = os.environ.get('TESTAR_GRAUS', '0') == '1'   # 1 para compar
 GRAU_MAXIMO_TESTE = 5     # até qual grau comparar (válido se TESTAR_GRAUS=True)
 
 RODAR_YRANDOMIZATION = os.environ.get('RODAR_YRANDOMIZATION', '1') == '1'   # 0 para pular as 100 permutações
+
+# RODAR_ROBUSTEZ: ao final da rodada, executa o bloco "ROBUSTEZ DA SELEÇÃO E
+# COMPLEMENTOS DE VALIDAÇÃO" (Tabelas A7 a A10 da dissertação): seleção do grau e
+# das combinações de variáveis sob GroupKFold por ano e TimeSeriesSplit, estabilidade
+# da seleção partição a partição, importância por permutação por bloco temporal e
+# nulos que preservam a estrutura temporal da PSN. Demora ~15 min com 4 núcleos.
+RODAR_ROBUSTEZ = os.environ.get('RODAR_ROBUSTEZ', '1') == '1'   # 0 para pular
 
 numero_colunas_agrupamento = 5
 
@@ -1281,7 +1289,185 @@ def rodar_modelo_bioma(bioma, dados_total):
         'yrand_p_empirico':   round(yrand_p_empirico, 4) if not np.isnan(yrand_p_empirico) else None,
         'yrand_status':       yrand_status,
         'arquivo_coef':       os.path.basename(caminho_coef),
+        'alpha_medio':        round(float(alpha_medio), 4),
     }
+
+
+# =============================================================================
+# ROBUSTEZ DA SELEÇÃO E COMPLEMENTOS DE VALIDAÇÃO (Tabelas A7 a A10)
+#
+# Responde a quatro perguntas que a validação principal deixa em aberto:
+#   (a) o grau 2 e (b) o conjunto de variáveis continuariam a ser escolhidos se a
+#       própria seleção usasse esquemas que consideram a estrutura temporal
+#       (GroupKFold por ano e TimeSeriesSplit)?
+#   (c) quão estável é a escolha do conjunto partição a partição no RepeatedKFold
+#       (frequência de vitória; diferença pareada 1ª-2ª com IC bootstrap e Wilcoxon)?
+#   (d) que importância cada variável tem fora da amostra, por bloco temporal
+#       (importância por permutação, Breiman 2001), independentemente da escala dos
+#       coeficientes?
+#   (e) o desempenho resiste a nulos que preservam a autocorrelação e o ciclo
+#       sazonal da PSN (deslocamento circular; permutação de anos inteiros)?
+#
+# Mesmo pipeline do modelo (winsorização 3% só no treino, StandardScaler,
+# PolynomialFeatures, Ridge com GridSearchCV; random_state = 42). As funções de
+# tarefa recebem tudo por argumento para funcionar com multiprocessing em qualquer
+# sistema operacional (spawn no Windows). Saídas: saidas_figuras/robustez/.
+# =============================================================================
+
+_ALPHAS_GRADE = [0.1, 1.0, 10.0, 50.0, 100.0]
+_VARS_CANDIDATAS = ['EV', 'PRE', 'TST', 'WAI', 'BURNlog']
+
+def _rob_colunas(bioma, combo):
+    return [f'{v}_{bioma}' if v != 'BURNlog' else f'BURN_{bioma}_log' for v in combo] + ['saz_sin', 'saz_cos']
+
+def _rob_pacote(dados_total, bioma):
+    """Subconjunto pequeno da base (uma linha por mês) enviado a cada tarefa."""
+    cols = ['ANO', 'MÊS', f'PSN_{bioma}', 'saz_sin', 'saz_cos'] + [f'{v}_{bioma}' for v in ('EV', 'PRE', 'TST', 'WAI')] + [f'BURN_{bioma}_log']
+    return dados_total[cols].reset_index(drop=True)
+
+def _rob_fit(x_tr, y_tr, grau=2, alpha=None):
+    y_tr = y_tr.clip(lower=np.percentile(y_tr.values, 3))
+    sc = StandardScaler(); pf = PolynomialFeatures(degree=grau, include_bias=False)
+    Xtr = pf.fit_transform(sc.fit_transform(x_tr))
+    if alpha is None:
+        m = GridSearchCV(Ridge(), {'alpha': _ALPHAS_GRADE}, cv=5, scoring='r2').fit(Xtr, y_tr.values).best_estimator_
+    else:
+        m = Ridge(alpha=alpha).fit(Xtr, y_tr.values)
+    return sc, pf, m, r2_score(y_tr, m.predict(Xtr)) * 100
+
+def _rob_pred(sc, pf, m, x): return m.predict(pf.transform(sc.transform(x)))
+
+def _rob_splits(esquema, x, anos):
+    if esquema == 'GroupKFold':      return list(GroupKFold(n_splits=5).split(x, groups=anos))
+    if esquema == 'TimeSeriesSplit': return list(TimeSeriesSplit(n_splits=5).split(x))
+    return list(RepeatedKFold(n_splits=5, n_repeats=30, random_state=42).split(x))
+
+def _rob_tarefa_grau(args):
+    bioma, nome, x_sel, grau, esq, dd = args
+    x, y, anos = dd[_rob_colunas(bioma, x_sel)], dd[f'PSN_{bioma}'], dd['ANO'].values; tr_l, te_l = [], []
+    for tr, te in _rob_splits(esq, x, anos):
+        sc, pf, m, r2tr = _rob_fit(x.iloc[tr], y.iloc[tr].copy(), grau)
+        tr_l.append(r2tr); te_l.append(r2_score(y.iloc[te], _rob_pred(sc, pf, m, x.iloc[te])) * 100)
+    return dict(bioma=nome, grau=grau, esquema=esq, r2_treino=np.mean(tr_l), r2_teste=np.mean(te_l), gap_pp=np.mean(tr_l) - np.mean(te_l))
+
+def _rob_tarefa_combo(args):
+    bioma, combo, esq, dd = args
+    x, y, anos = dd[_rob_colunas(bioma, combo)], dd[f'PSN_{bioma}'], dd['ANO'].values; te_l = []
+    for tr, te in _rob_splits(esq, x, anos):
+        sc, pf, m, _ = _rob_fit(x.iloc[tr], y.iloc[tr].copy(), 2)
+        te_l.append(r2_score(y.iloc[te], _rob_pred(sc, pf, m, x.iloc[te])) * 100)
+    return dict(bioma=bioma, variaveis=' + '.join(combo), esquema=esq, r2_teste=np.mean(te_l), folds=te_l)
+
+def _rob_tarefa_perm(args):
+    bioma, nome, x_sel, esq, dd = args
+    vars_ = list(x_sel) + ['SAZsin', 'SAZcos']; x, y, anos = dd[_rob_colunas(bioma, x_sel)], dd[f'PSN_{bioma}'], dd['ANO'].values
+    rng = np.random.default_rng(42); quedas = {v: [] for v in vars_}; razao = {v: [] for v in vars_}; parcela = {v: [] for v in vars_}; r2_base = []
+    for tr, te in _rob_splits(esq, x, anos):
+        sc, pf, m, _ = _rob_fit(x.iloc[tr], y.iloc[tr].copy(), 2)
+        x_te = x.iloc[te].reset_index(drop=True); y_te = y.iloc[te].values
+        pb = _rob_pred(sc, pf, m, x_te); r2b = r2_score(y_te, pb) * 100; r2_base.append(r2b); rmse_b = np.sqrt(np.mean((y_te - pb) ** 2))
+        q_bloco = {}
+        for j, v in enumerate(vars_):
+            qs, rz = [], []
+            for _ in range(20):
+                xp = x_te.copy(); xp.iloc[:, j] = rng.permutation(xp.iloc[:, j].values); pp = _rob_pred(sc, pf, m, xp)
+                qs.append(r2b - r2_score(y_te, pp) * 100); rz.append(np.sqrt(np.mean((y_te - pp) ** 2)) / rmse_b)
+            q_bloco[v] = np.mean(qs); quedas[v].append(np.mean(qs)); razao[v].append(np.mean(rz))
+        tot = sum(max(q, 0) for q in q_bloco.values())
+        for v in vars_: parcela[v].append(max(q_bloco[v], 0) / tot * 100 if tot > 0 else np.nan)
+    return [dict(bioma=nome, esquema=esq, variavel=v, queda_media_pp=np.mean(quedas[v]), queda_dp_pp=np.std(quedas[v]),
+                 razao_rmse_media=np.mean(razao[v]), razao_rmse_dp=np.std(razao[v]), parcela_media_pct=np.nanmean(parcela[v]),
+                 parcela_dp_pct=np.nanstd(parcela[v]), r2_base=np.mean(r2_base)) for v in vars_]
+
+def _rob_r2_cv_fixo(bioma, x_sel, alpha, dd, y_vetor):
+    x, anos = dd[_rob_colunas(bioma, x_sel)], dd['ANO'].values; y = pd.Series(y_vetor, index=x.index); r2s = []
+    for tr, te in _rob_splits('RepeatedKFold', x, anos):
+        sc, pf, m, _ = _rob_fit(x.iloc[tr], y.iloc[tr].copy(), 2, alpha=alpha)
+        r2s.append(r2_score(y.iloc[te], _rob_pred(sc, pf, m, x.iloc[te])) * 100)
+    return np.mean(r2s)
+
+def _rob_tarefa_nulo(args):
+    bioma, x_sel, alpha, tipo, k, dd = args
+    y = dd[f'PSN_{bioma}'].values.copy(); anos = dd['ANO'].values
+    if tipo == 'shift':
+        y_n = np.roll(y, k)
+    else:                                   # permutação de anos inteiros (anos completos), último ano parcial fixo
+        completos = [a for a in np.unique(anos) if (anos == a).sum() == 12]
+        rng = np.random.default_rng(1000 + k); perm = rng.permutation(completos); y_n = y.copy()
+        for a_dest, a_orig in zip(completos, perm):
+            y_n[anos == a_dest] = y[anos == a_orig]
+    return dict(bioma=bioma, tipo=tipo, k=int(k), r2=_rob_r2_cv_fixo(bioma, x_sel, alpha, dd, y_n))
+
+def rodar_robustez(dados_total, config, alphas, biomas, pasta_saida, max_workers=4):
+    """Executa (a)-(e) para os biomas indicados e grava CSVs + robustez.json em pasta_saida/robustez.
+    alphas: dict bioma -> alfa médio dos folds do modelo principal (usado nos nulos, como no Y-randomization)."""
+    OUT = os.path.join(pasta_saida, 'robustez'); os.makedirs(OUT, exist_ok=True)
+    ESQ_T = ['GroupKFold', 'TimeSeriesSplit']
+    nome = {b: config[b]['nome'] for b in biomas}
+    x_sel = {b: [c.replace(f'_{b}', '') for c in config[b]['x'] if c not in ('saz_sin', 'saz_cos')] for b in biomas}
+    dd = {b: _rob_pacote(dados_total, b) for b in biomas}
+    n_meses = len(dados_total)
+    print("\n===== ROBUSTEZ DA SELEÇÃO E COMPLEMENTOS DE VALIDAÇÃO (Tabelas A7 a A10) =====")
+    with ProcessPoolExecutor(max_workers=max_workers) as ex:
+        grau = pd.DataFrame(list(ex.map(_rob_tarefa_grau, [(b, nome[b], x_sel[b], g, e, dd[b]) for b in biomas for g in range(1, 6) for e in ESQ_T])))
+        grau.to_csv(os.path.join(OUT, 'grau_temporal.csv'), index=False)
+        print("\n(a) R² de teste por grau e esquema temporal:\n" + grau.round(2).to_string(index=False))
+        combos = list(combinations(_VARS_CANDIDATAS, 3))
+        res = list(ex.map(_rob_tarefa_combo, [(b, c, e, dd[b]) for b in biomas for c in combos for e in ESQ_T + ['RepeatedKFold']]))
+        perm = pd.DataFrame([r for lst in ex.map(_rob_tarefa_perm, [(b, nome[b], x_sel[b], e, dd[b]) for b in biomas for e in ESQ_T]) for r in lst])
+        perm.to_csv(os.path.join(OUT, 'permutation_importance.csv'), index=False)
+        print("\n(d) Importância por permutação fora da amostra:\n" + perm.round(2).to_string(index=False))
+        tarefas = ([(b, x_sel[b], alphas[b], 'shift', k, dd[b]) for b in biomas for k in range(1, n_meses)] +
+                   [(b, x_sel[b], alphas[b], 'anos', k, dd[b]) for b in biomas for k in range(100)])
+        nulos = pd.DataFrame(list(ex.map(_rob_tarefa_nulo, tarefas, chunksize=8)))
+    # (b) posição de cada combinação por esquema
+    tab = pd.DataFrame([{k: v for k, v in r.items() if k != 'folds'} for r in res])
+    tab['rank'] = tab.groupby(['bioma', 'esquema'])['r2_teste'].rank(ascending=False, method='min').astype(int)
+    tab['bioma'] = tab['bioma'].map(nome); tab.sort_values(['bioma', 'esquema', 'rank']).to_csv(os.path.join(OUT, 'combos_temporal.csv'), index=False)
+    print("\n(b) Combinações sob os esquemas temporais (3 primeiras):\n" + tab[tab['rank'] <= 3].sort_values(['bioma', 'esquema', 'rank']).round(2).to_string(index=False))
+    # (c) estabilidade partição a partição no RepeatedKFold
+    est_rows, dif_rows = [], []
+    for b in biomas:
+        rk = [r for r in res if r['bioma'] == b and r['esquema'] == 'RepeatedKFold']
+        F = np.array([r['folds'] for r in rk]); nomes = [r['variaveis'] for r in rk]
+        vence = np.bincount(F.argmax(axis=0), minlength=len(nomes)) / F.shape[1] * 100
+        ordem = np.argsort(-F.mean(axis=1))
+        for i in ordem: est_rows.append(dict(bioma=nome[b], variaveis=nomes[i], r2_teste=F[i].mean(), freq_melhor_pct=vence[i]))
+        i1, i2 = ordem[0], ordem[1]; d = F[i1] - F[i2]
+        rng = np.random.default_rng(42); boots = [rng.choice(d, size=len(d), replace=True).mean() for _ in range(5000)]
+        dif_rows.append(dict(bioma=nome[b], primeira=nomes[i1], segunda=nomes[i2], dif_media_pp=d.mean(), ic95_inf=np.percentile(boots, 2.5),
+                             ic95_sup=np.percentile(boots, 97.5), prop_particoes_primeira_maior=(d > 0).mean() * 100, p_wilcoxon=stats.wilcoxon(d).pvalue))
+    est = pd.DataFrame(est_rows); est.to_csv(os.path.join(OUT, 'estabilidade_selecao.csv'), index=False)
+    dif = pd.DataFrame(dif_rows); dif.to_csv(os.path.join(OUT, 'diferenca_pareada.csv'), index=False)
+    print("\n(c) Estabilidade da seleção (RepeatedKFold):\n" + est.round(2).to_string(index=False) + "\n" + dif.round(4).to_string(index=False))
+    # (e) nulos temporais
+    nulos.to_csv(os.path.join(OUT, 'nulos_temporais_bruto.csv'), index=False)
+    orig = {b: _rob_r2_cv_fixo(b, x_sel[b], alphas[b], dd[b], dd[b][f'PSN_{b}'].values) for b in biomas}; nul_rows = []
+    for b in biomas:
+        for tipo, sub in [(f'Deslocamento circular (todos os {n_meses - 1})', nulos[(nulos.bioma == b) & (nulos.tipo == 'shift')]),
+                          ('Deslocamento circular múltiplo de 12 meses (calendário preservado)', nulos[(nulos.bioma == b) & (nulos.tipo == 'shift') & (nulos.k % 12 == 0)]),
+                          ('Permutação de anos inteiros (calendário preservado)', nulos[(nulos.bioma == b) & (nulos.tipo == 'anos')])]:
+            r = sub['r2'].values
+            nul_rows.append(dict(bioma=nome[b], teste=tipo, n=len(r), r2_original=orig[b], r2_nulo_media=r.mean(), r2_nulo_dp=r.std(),
+                                 r2_nulo_max=r.max(), p_empirico=((r >= orig[b]).sum() + 1) / (len(r) + 1)))
+    nul = pd.DataFrame(nul_rows); nul.to_csv(os.path.join(OUT, 'nulos_temporais.csv'), index=False)
+    print("\n(e) Nulos que preservam a estrutura temporal:\n" + nul.round(3).to_string(index=False))
+    # síntese em JSON (lida pelo script do Word)
+    js = {}
+    for b in biomas:
+        nb = nome[b]; sel = ' + '.join(x_sel[b])
+        js[b] = dict(selecionado=sel,
+                     grau={e: {int(g): float(grau[(grau.bioma == nb) & (grau.esquema == e) & (grau.grau == g)]['r2_teste'].iloc[0]) for g in range(1, 6)} for e in ESQ_T},
+                     melhor_grau={e: int(grau[(grau.bioma == nb) & (grau.esquema == e)].sort_values('r2_teste', ascending=False)['grau'].iloc[0]) for e in ESQ_T},
+                     rank_selecionado={e: int(tab[(tab.bioma == nb) & (tab.esquema == e) & (tab.variaveis == sel)]['rank'].iloc[0]) for e in ESQ_T},
+                     top3={e: tab[(tab.bioma == nb) & (tab.esquema == e)].sort_values('rank').head(3)[['variaveis', 'r2_teste']].values.tolist() for e in ESQ_T},
+                     freq_melhor=float(est[(est.bioma == nb) & (est.variaveis == sel)]['freq_melhor_pct'].iloc[0]),
+                     dif=dif[dif.bioma == nb].iloc[0].to_dict(),
+                     perm={e: perm[(perm.bioma == nb) & (perm.esquema == e)][['variavel', 'queda_media_pp', 'queda_dp_pp', 'razao_rmse_media', 'razao_rmse_dp', 'parcela_media_pct', 'parcela_dp_pct']].values.tolist() for e in ESQ_T},
+                     nulos=nul[nul.bioma == nb].to_dict('records'))
+    json.dump(js, open(os.path.join(OUT, 'robustez.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1, default=float)
+    print(f"\nRobustez concluída: {OUT}")
+    return js
 
 # =============================================================================
 # EXECUÇÃO — roda 1 bioma, ou os 3 em sequência, ou os 3 em paralelo
@@ -1335,3 +1521,10 @@ if __name__ == '__main__':
         df_resumo.to_csv(caminho_resumo, index=False)
         print(f"\nTabela comparativa salva em {os.path.basename(caminho_resumo)} "
               f"(pasta 'saidas_figuras/')")
+
+    # =========================================================================
+    # ROBUSTEZ DA SELEÇÃO E COMPLEMENTOS DE VALIDAÇÃO (Tabelas A7 a A10)
+    # =========================================================================
+    if RODAR_ROBUSTEZ:
+        rodar_robustez(dados_total_base, config_biomas, {r['bioma']: r['alpha_medio'] for r in resumos},
+                       [r['bioma'] for r in resumos], PASTA_SAIDA, max_workers=min(4, os.cpu_count() or 1))
