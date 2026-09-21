@@ -16,8 +16,10 @@ Leia `handoff_claude_code.md` para o contexto completo e a lista de pendências.
 | `oni_noaa_cpc.txt` | Tabela ONI completa da NOAA (1950–presente), fonte das fases nas bordas do período. Atualizar com `curl -o oni_noaa_cpc.txt https://www.cpc.ncep.noaa.gov/data/indices/oni.ascii.txt`. |
 | `Selecao_Variaveis_PSN.py` | Busca exaustiva das 10 combinações C(5,3) de variáveis ambientais por bioma, mesmo pipeline do modelo. |
 | `consolidar_resultados.py` | Junta logs e CSVs em `numeros_extra.json` / `enso_resumo.json` (usados pelo script do Word). |
+| `Analise_ENSO_Anomalias_PSN.py` | ENSO em anomalias mensais (fase oficial): Tabela 6, mediação, defasagem, Figura 14, Tabelas A4/A5. |
 | `Figuras_Dissertacao.py` | Monta as figuras da dissertação em `figuras_dissertacao/` a partir de `resultados_2001_2025/`. |
 | `resultados_2001_2025/` | Resultados da rodada com a base 2001–2025 (ver `RESULTADOS.md`). |
+| `../npp_modis/` | Pipeline GEE que gerou a base (outra sessão): extração, validação contra a planilha antiga, planilha original de Benfica. |
 | `banca/` | Pareceres da banca, análise comentário a comentário, script que aplica as mudanças no Word e o documento revisado. |
 | `handoff_claude_code.md` | Resumo do estado do projeto, resultados confirmados e o que falta rodar. |
 
@@ -35,6 +37,8 @@ Para regenerar a dissertação revisada a partir dos resultados:
 ```bash
 python3 Selecao_Variaveis_PSN.py      # opcional, lento (~15 min)
 python3 consolidar_resultados.py
+python3 Ablacao_Sazonalidade_PSN.py     # Tabela A3 e R² do ciclo anual
+python3 Analise_ENSO_Anomalias_PSN.py  # seção 6.5 (anomalias, mediação, defasagem)
 python3 Figuras_Dissertacao.py
 python3 banca/aplicar_revisao_docx.py # gera banca/Trabalho_revisado_2001_2025.docx
 banca/render_e_paginas.sh             # PDF via LibreOffice + páginas das listas (rodar o script de novo depois)

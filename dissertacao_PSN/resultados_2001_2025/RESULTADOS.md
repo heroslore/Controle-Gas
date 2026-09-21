@@ -146,3 +146,20 @@ Grau 2 é o ótimo nos três biomas pelo critério R² teste − 0,5 × gap (MA 
 - **CA**: EV + PRE + TST (94,2 %, 1,0 pp); EV + PRE + WAI (94,0 %, 1,1 pp); PRE + TST + WAI (93,9 %, 1,1 pp)
 
 Conclusão: CE (EV+PRE+WAI) e CA (EV+PRE+TST) confirmam os conjuntos da qualificação. Na **MA o conjunto ótimo mudou** para EV+TST+WAI (+2,7 pp de R² de teste, mesmo gap). O `Modelo_PSN.py` foi atualizado para esse conjunto e a MA foi rodada de novo (`log_modelo_psn_MA_EV_TST_WAI.txt`). Para voltar ao conjunto antigo, basta trocar a linha `'x'` da MA em `config_biomas`.
+
+## 10. ENSO em anomalias mensais, mediação e defasagem — NOVO (21/09/2026)
+
+Script `Analise_ENSO_Anomalias_PSN.py` (fase oficial NOAA da coluna `Enso`: 149 neutros, 76 El Niño, 72 La Niña).
+Saídas em `enso_anomalias/` e `enso_anomalias.json`; Tabela 6, Figura 14, Tabelas A4 (ampliada) e A5 da dissertação.
+
+- Anomalia = valor − média do mês do calendário; Δ em % da média; testes (Kruskal-Wallis, Mann-Whitney,
+  Fligner-Killeen, qui-quadrado nos extremos P10/P90) sobre as anomalias nas unidades originais.
+- PSN: La Niña +11,7 % no Cerrado (p < 0,001) e +10,4 % na Caatinga (p = 0,002); El Niño −5,4 % na Mata
+  Atlântica (p = 0,010), com 22 % dos meses abaixo do P10 contra 5 % nos neutros (qui-quadrado p < 0,001).
+- Mediação pelo modelo (Ridge, alpha médio, série completa): La Niña → +8,0 % (CE, obs. +11,7) e +9,8 % (CA,
+  obs. +10,4), via EV; El Niño → −3,1 % na MA (obs. −5,4), via TST.
+- Defasagem (Spearman ONI × anomalia PSN): CA máximo no mês 0 (ρ = −0,19), significativo até 4 meses; MA máximo
+  aos 2 meses (−0,16), até 5; CE significativo de 1 a 12 meses (máximo −0,16 aos 10). Compósitos na Figura 14.
+- Diferenças em relação à versão 6 do docx (outra sessão): fases 149/76/72 em vez de 151/76/70 (jan–fev/2001
+  são La Niña pela tabela completa da NOAA); Δ mudam ≤ 0,7 pp; importâncias com/sem harmônicos recalculadas com
+  o pipeline do modelo (Tabela A4).

@@ -186,3 +186,17 @@ Aplicadas na fonte (scripts), não no XML, e o documento foi regenerado:
   (agregação por bioma) e menção ao VIF atenuado pela regularização Ridge.
 - Restaurados no script dois ajustes perdidos na revisão anterior: coorientadora nas
   fichas de referência (PT/EN) e quebra de página antes de "1 APRESENTAÇÃO E JUSTIFICATIVA".
+
+## 6. Versão 7 (21/09/2026): integração da versão 6 do autor + análise do ENSO em anomalias
+
+- Branch `claude/vigilant-goodall-0zmvla` (pipeline GEE, planilha antiga, análises) fundida nesta branch (pasta `npp_modis/`).
+- 5.2 e Tabela 1: fontes reais (GEE, Coleção 6.1, MOD17A2HGF/MOD16A2GF, MOD11A2, MCD64A1, IMERG V07, IBGE 2019,
+  agregação em 4 compostos, validação r > 0,97); motivo dos 3 meses excluídos (fim do IMERG V07); siglas GEE e IMERG
+  (CHIRPS removido); Figura 3 (fluxo) regenerada com IMERG; 7 referências novas.
+- 6.2: parágrafo novo sobre a importância das variáveis com e sem harmônicos, com números da Tabela A4 ampliada
+  (R² ciclo anual, r bruto, r anomalias, importância sem/com harmônicos).
+- 6.5 reescrita em anomalias mensais (`Analise_ENSO_Anomalias_PSN.py`, fase oficial): Tabela 6 (15 linhas), parágrafos
+  por bioma, mediação, defasagem, Figura 14 (compósitos, 3 painéis) e Tabela A5 (valores dos boxplots).
+- Resumo/Abstract (mantido o ± dp), H3, parágrafo dos objetivos e perspectivas atualizados; ferramentas (5.6) citam os testes novos.
+- Correções em relação à versão 6: fases 149/76/72 (coerente com A1 e Figuras 11–13); citação da Tabela A4 corrigida;
+  figuras em resolução original; Figura 14 legível; listas e sumário regenerados; sem revisões marcadas.

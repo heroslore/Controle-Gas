@@ -1,0 +1,16 @@
+bioma,variavel,r2_ciclo,r_bruto,r_anom,imp_sem,imp_com,imp_fig8
+Mata Atlântica,EV,39.8,0.358,0.731,30.689,26.485,26.9
+Mata Atlântica,TST,64.9,-0.339,-0.582,38.6,15.002,14.5
+Mata Atlântica,WAI,39.8,0.128,0.418,30.712,19.851,19.0
+Mata Atlântica,SAZsin,,,,,19.512,18.8
+Mata Atlântica,SAZcos,,,,,19.149,20.9
+Cerrado,EV,79.1,0.865,0.898,34.328,38.201,37.4
+Cerrado,PRE,58.9,0.283,0.023,28.776,10.124,9.1
+Cerrado,WAI,70.2,0.862,0.76,36.896,16.935,17.9
+Cerrado,SAZsin,,,,,18.982,19.5
+Cerrado,SAZcos,,,,,15.758,16.1
+Caatinga,EV,63.3,0.873,0.932,49.64,42.441,42.8
+Caatinga,PRE,31.5,0.278,0.163,23.656,10.022,10.2
+Caatinga,TST,54.2,-0.737,-0.765,26.703,16.62,15.2
+Caatinga,SAZsin,,,,,13.273,13.6
+Caatinga,SAZcos,,,,,17.644,18.2

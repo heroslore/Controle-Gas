@@ -1,3 +1,5 @@
+> **Status (21/09):** todos os itens abaixo foram resolvidos na versão 7 gerada por `aplicar_revisao_docx.py`; ver `REGISTRO_DE_MUDANCAS.md`, seção 6.
+
 # Revisão da versão 6 (`Trabalho_revisado_2001_2025_6_claude.docx`, 21/09/2026)
 
 Origem: outra sessão do Claude, branch `claude/vigilant-goodall-0zmvla`, pasta
