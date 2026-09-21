@@ -80,6 +80,13 @@ for b in ['MA', 'CE', 'CA']:
             a5.append(dict(bioma=NOME[b], variavel=var, fase=f, **box(d.loc[fase == f, col])))
         bruto.append(dict(bioma=NOME[b], variavel=var, **{f'media_{k}': d.loc[fase == f, col].mean() for k, f in zip(['EN', 'N', 'LN'], FASES)}))
 T6 = pd.DataFrame(t6); A5 = pd.DataFrame(a5); BR = pd.DataFrame(bruto)
+# Correção de Benjamini-Hochberg (FDR 5%) por família de testes: Mann-Whitney (30), Kruskal (15), Fligner (15), qui-quadrado (15)
+def bh(pvals, q=0.05):
+    p = np.asarray(pvals, float); n = len(p); order = np.argsort(p); ranked = p[order]
+    thr = q * (np.arange(1, n + 1) / n); ok = ranked <= thr; k = np.where(ok)[0].max() + 1 if ok.any() else 0
+    sig = np.zeros(n, bool); sig[order[:k]] = True; return sig
+mw = bh(np.concatenate([T6.p_mw_EN.values, T6.p_mw_LN.values])); T6['bh_mw_EN'] = mw[:len(T6)]; T6['bh_mw_LN'] = mw[len(T6):]
+T6['bh_kw'] = bh(T6.p_kw.values); T6['bh_fligner'] = bh(T6.p_fligner.values); T6['bh_chi2'] = bh(T6.p_chi2.values)
 T6.round(4).to_csv(os.path.join(OUT, 'tabela6_anomalias_por_fase.csv'), index=False)
 A5.round(3).to_csv(os.path.join(OUT, 'tabelaA5_boxplots_por_fase.csv'), index=False)
 BR.round(2).to_csv(os.path.join(OUT, 'medias_brutas_por_fase.csv'), index=False)
@@ -175,9 +182,11 @@ fig.tight_layout(); fig.savefig(os.path.join(FIG, 'fig14_compositos_enso.png'), 
 
 # ------------------------------------------------------------------ sazonalidade: importância com/sem harmônicos e correlações
 def importancia(b, cols):
-    X = d[cols].values; y = d[f'NP_{b}'].clip(lower=np.percentile(d[f'NP_{b}'], 3)).values
+    """Mesmo procedimento da Figura 8 / coeficientes_ridge_*.csv do Modelo_PSN.py: Ridge com o alfa médio
+    dos folds, ajustado à série completa, sem winsorização; importância = soma de |coef| por variável."""
+    X = d[cols].values; y = d[f'NP_{b}'].values
     sc = StandardScaler(); pf = PolynomialFeatures(degree=2, include_bias=False); Xf = pf.fit_transform(sc.fit_transform(X))
-    m = GridSearchCV(Ridge(), {'alpha': [0.1, 1.0, 10.0, 50.0, 100.0]}, cv=5, scoring='r2').fit(Xf, y).best_estimator_
+    m = Ridge(alpha=NUMX[b]['alpha_medio']).fit(Xf, y)
     names = pf.get_feature_names_out(cols); acc = {}
     for nm, c in zip(names, m.coef_):
         for var in set(x.replace(f'_{b}', '').replace('^2', '') for x in nm.split(' ')):

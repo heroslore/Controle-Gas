@@ -87,7 +87,12 @@
    "pct_acima_P90_N": 10.06711409395973,
    "pct_acima_P90_LN": 15.277777777777779,
    "media_abs_EN": -7.189947281349348,
-   "media_abs_LN": -0.2686568175335584
+   "media_abs_LN": -0.2686568175335584,
+   "bh_mw_EN": 1.0,
+   "bh_mw_LN": 0.0,
+   "bh_kw": 1.0,
+   "bh_fligner": 0.0,
+   "bh_chi2": 1.0
   },
   "Mata Atlântica|EV": {
    "bioma": "Mata Atlântica",
@@ -107,7 +112,12 @@
    "pct_acima_P90_N": 8.724832214765101,
    "pct_acima_P90_LN": 13.88888888888889,
    "media_abs_EN": -1.756053649196396,
-   "media_abs_LN": 1.4966062532158844
+   "media_abs_LN": 1.4966062532158844,
+   "bh_mw_EN": 0.0,
+   "bh_mw_LN": 0.0,
+   "bh_kw": 0.0,
+   "bh_fligner": 1.0,
+   "bh_chi2": 1.0
   },
   "Mata Atlântica|PRE": {
    "bioma": "Mata Atlântica",
@@ -127,7 +137,12 @@
    "pct_acima_P90_N": 8.053691275167784,
    "pct_acima_P90_LN": 9.722222222222223,
    "media_abs_EN": -5.897570817953019,
-   "media_abs_LN": 2.0694228139914235
+   "media_abs_LN": 2.0694228139914235,
+   "bh_mw_EN": 0.0,
+   "bh_mw_LN": 0.0,
+   "bh_kw": 0.0,
+   "bh_fligner": 0.0,
+   "bh_chi2": 0.0
   },
   "Mata Atlântica|TST": {
    "bioma": "Mata Atlântica",
@@ -147,7 +162,12 @@
    "pct_acima_P90_N": 5.369127516778524,
    "pct_acima_P90_LN": 4.166666666666666,
    "media_abs_EN": 0.8954056580713523,
-   "media_abs_LN": -0.16898694244034357
+   "media_abs_LN": -0.16898694244034357,
+   "bh_mw_EN": 1.0,
+   "bh_mw_LN": 0.0,
+   "bh_kw": 1.0,
+   "bh_fligner": 0.0,
+   "bh_chi2": 1.0
   },
   "Mata Atlântica|WAI": {
    "bioma": "Mata Atlântica",
@@ -167,7 +187,12 @@
    "pct_acima_P90_N": 9.395973154362416,
    "pct_acima_P90_LN": 12.5,
    "media_abs_EN": -0.012839040665842466,
-   "media_abs_LN": 0.011887634041759874
+   "media_abs_LN": 0.011887634041759874,
+   "bh_mw_EN": 0.0,
+   "bh_mw_LN": 0.0,
+   "bh_kw": 0.0,
+   "bh_fligner": 0.0,
+   "bh_chi2": 0.0
   },
   "Cerrado|PSN": {
    "bioma": "Cerrado",
@@ -187,7 +212,12 @@
    "pct_acima_P90_N": 7.38255033557047,
    "pct_acima_P90_LN": 12.5,
    "media_abs_EN": 2.3027370764747452,
-   "media_abs_LN": 8.926811944164804
+   "media_abs_LN": 8.926811944164804,
+   "bh_mw_EN": 0.0,
+   "bh_mw_LN": 1.0,
+   "bh_kw": 1.0,
+   "bh_fligner": 0.0,
+   "bh_chi2": 0.0
   },
   "Cerrado|EV": {
    "bioma": "Cerrado",
@@ -207,7 +237,12 @@
    "pct_acima_P90_N": 5.369127516778524,
    "pct_acima_P90_LN": 18.055555555555554,
    "media_abs_EN": 2.872439043006006,
-   "media_abs_LN": 6.546514998415362
+   "media_abs_LN": 6.546514998415362,
+   "bh_mw_EN": 0.0,
+   "bh_mw_LN": 1.0,
+   "bh_kw": 1.0,
+   "bh_fligner": 0.0,
+   "bh_chi2": 0.0
   },
   "Cerrado|PRE": {
    "bioma": "Cerrado",
@@ -227,7 +262,12 @@
    "pct_acima_P90_N": 6.7114093959731544,
    "pct_acima_P90_LN": 13.88888888888889,
    "media_abs_EN": 0.6192895621246879,
-   "media_abs_LN": 8.117850446262121
+   "media_abs_LN": 8.117850446262121,
+   "bh_mw_EN": 0.0,
+   "bh_mw_LN": 0.0,
+   "bh_kw": 0.0,
+   "bh_fligner": 1.0,
+   "bh_chi2": 0.0
   },
   "Cerrado|TST": {
    "bioma": "Cerrado",
@@ -247,7 +287,12 @@
    "pct_acima_P90_N": 6.7114093959731544,
    "pct_acima_P90_LN": 6.944444444444445,
    "media_abs_EN": 0.4213087453638283,
-   "media_abs_LN": -0.36694094323266313
+   "media_abs_LN": -0.36694094323266313,
+   "bh_mw_EN": 0.0,
+   "bh_mw_LN": 0.0,
+   "bh_kw": 1.0,
+   "bh_fligner": 0.0,
+   "bh_chi2": 0.0
   },
   "Cerrado|WAI": {
    "bioma": "Cerrado",
@@ -267,7 +312,12 @@
    "pct_acima_P90_N": 8.053691275167784,
    "pct_acima_P90_LN": 15.277777777777779,
    "media_abs_EN": 0.010871855086541864,
-   "media_abs_LN": 0.04687292855145414
+   "media_abs_LN": 0.04687292855145414,
+   "bh_mw_EN": 0.0,
+   "bh_mw_LN": 1.0,
+   "bh_kw": 1.0,
+   "bh_fligner": 0.0,
+   "bh_chi2": 0.0
   },
   "Caatinga|PSN": {
    "bioma": "Caatinga",
@@ -287,7 +337,12 @@
    "pct_acima_P90_N": 10.06711409395973,
    "pct_acima_P90_LN": 15.277777777777779,
    "media_abs_EN": -3.1053436899505478,
-   "media_abs_LN": 8.512167584172257
+   "media_abs_LN": 8.512167584172257,
+   "bh_mw_EN": 0.0,
+   "bh_mw_LN": 1.0,
+   "bh_kw": 1.0,
+   "bh_fligner": 0.0,
+   "bh_chi2": 0.0
   },
   "Caatinga|EV": {
    "bioma": "Caatinga",
@@ -307,7 +362,12 @@
    "pct_acima_P90_N": 10.738255033557047,
    "pct_acima_P90_LN": 13.88888888888889,
    "media_abs_EN": -0.29959755002649424,
-   "media_abs_LN": 6.5882808403243835
+   "media_abs_LN": 6.5882808403243835,
+   "bh_mw_EN": 0.0,
+   "bh_mw_LN": 1.0,
+   "bh_kw": 1.0,
+   "bh_fligner": 0.0,
+   "bh_chi2": 0.0
   },
   "Caatinga|PRE": {
    "bioma": "Caatinga",
@@ -327,7 +387,12 @@
    "pct_acima_P90_N": 6.0402684563758395,
    "pct_acima_P90_LN": 13.88888888888889,
    "media_abs_EN": 0.9747259444101052,
-   "media_abs_LN": 3.8859075584451928
+   "media_abs_LN": 3.8859075584451928,
+   "bh_mw_EN": 0.0,
+   "bh_mw_LN": 0.0,
+   "bh_kw": 0.0,
+   "bh_fligner": 1.0,
+   "bh_chi2": 0.0
   },
   "Caatinga|TST": {
    "bioma": "Caatinga",
@@ -347,7 +412,12 @@
    "pct_acima_P90_N": 9.395973154362416,
    "pct_acima_P90_LN": 5.555555555555555,
    "media_abs_EN": 0.4927304751854466,
-   "media_abs_LN": -0.718542014215138
+   "media_abs_LN": -0.718542014215138,
+   "bh_mw_EN": 0.0,
+   "bh_mw_LN": 1.0,
+   "bh_kw": 1.0,
+   "bh_fligner": 0.0,
+   "bh_chi2": 0.0
   },
   "Caatinga|WAI": {
    "bioma": "Caatinga",
@@ -367,7 +437,12 @@
    "pct_acima_P90_N": 10.06711409395973,
    "pct_acima_P90_LN": 15.277777777777779,
    "media_abs_EN": -0.0017200750618156062,
-   "media_abs_LN": 0.03531282186800896
+   "media_abs_LN": 0.03531282186800896,
+   "bh_mw_EN": 0.0,
+   "bh_mw_LN": 1.0,
+   "bh_kw": 1.0,
+   "bh_fligner": 0.0,
+   "bh_chi2": 0.0
   }
  },
  "a5": {
@@ -1854,24 +1929,24 @@
    "r2_ciclo": 39.8,
    "r_bruto": 0.3578241415321039,
    "r_anom": 0.7309985092427274,
-   "imp_sem": 30.688588650313545,
-   "imp_com": 26.485444828674222,
+   "imp_sem": 26.962077610403398,
+   "imp_com": 26.8765293763199,
    "imp_fig8": 26.9
   },
   "Mata Atlântica|TST": {
    "r2_ciclo": 64.9,
    "r_bruto": -0.3387688961576779,
    "r_anom": -0.5816192168552979,
-   "imp_sem": 38.599504091855074,
-   "imp_com": 15.002372438461151,
+   "imp_sem": 40.255663275606004,
+   "imp_com": 14.476907382624875,
    "imp_fig8": 14.5
   },
   "Mata Atlântica|WAI": {
    "r2_ciclo": 39.8,
    "r_bruto": 0.12766654545828487,
    "r_anom": 0.417584956295179,
-   "imp_sem": 30.711907257831378,
-   "imp_com": 19.850734291232722,
+   "imp_sem": 32.78225911399061,
+   "imp_com": 18.95632953638305,
    "imp_fig8": 19.0
   },
   "Mata Atlântica|SAZsin": {
@@ -1879,7 +1954,7 @@
    "r_bruto": null,
    "r_anom": null,
    "imp_sem": null,
-   "imp_com": 19.51231617897417,
+   "imp_com": 18.77448355924281,
    "imp_fig8": 18.8
   },
   "Mata Atlântica|SAZcos": {
@@ -1887,31 +1962,31 @@
    "r_bruto": null,
    "r_anom": null,
    "imp_sem": null,
-   "imp_com": 19.149132262657744,
+   "imp_com": 20.915750145429364,
    "imp_fig8": 20.9
   },
   "Cerrado|EV": {
    "r2_ciclo": 79.1,
    "r_bruto": 0.8651222899550113,
    "r_anom": 0.8982255785645713,
-   "imp_sem": 34.327871397030364,
-   "imp_com": 38.20091402497455,
+   "imp_sem": 34.73896761510243,
+   "imp_com": 37.434706987092206,
    "imp_fig8": 37.4
   },
   "Cerrado|PRE": {
    "r2_ciclo": 58.9,
    "r_bruto": 0.2830497507269215,
    "r_anom": 0.02327366358524578,
-   "imp_sem": 28.77574624774068,
-   "imp_com": 10.123725835212403,
+   "imp_sem": 29.017771341272248,
+   "imp_com": 9.127555511585543,
    "imp_fig8": 9.1
   },
   "Cerrado|WAI": {
    "r2_ciclo": 70.2,
    "r_bruto": 0.8615442716667079,
    "r_anom": 0.7599831555132979,
-   "imp_sem": 36.89638235522895,
-   "imp_com": 16.935277271195552,
+   "imp_sem": 36.24326104362531,
+   "imp_com": 17.87092772393735,
    "imp_fig8": 17.9
   },
   "Cerrado|SAZsin": {
@@ -1919,7 +1994,7 @@
    "r_bruto": null,
    "r_anom": null,
    "imp_sem": null,
-   "imp_com": 18.98192949335083,
+   "imp_com": 19.473381847974018,
    "imp_fig8": 19.5
   },
   "Cerrado|SAZcos": {
@@ -1927,31 +2002,31 @@
    "r_bruto": null,
    "r_anom": null,
    "imp_sem": null,
-   "imp_com": 15.75815337526667,
+   "imp_com": 16.093427929410886,
    "imp_fig8": 16.1
   },
   "Caatinga|EV": {
    "r2_ciclo": 63.3,
    "r_bruto": 0.8731496682066472,
    "r_anom": 0.9321340301879031,
-   "imp_sem": 49.64025266350811,
-   "imp_com": 42.44089884129577,
+   "imp_sem": 49.51619284646185,
+   "imp_com": 42.793955906003326,
    "imp_fig8": 42.8
   },
   "Caatinga|PRE": {
    "r2_ciclo": 31.5,
    "r_bruto": 0.2777115244014596,
    "r_anom": 0.1629059580991035,
-   "imp_sem": 23.656291985076773,
-   "imp_com": 10.021792623348842,
+   "imp_sem": 24.067955012965317,
+   "imp_com": 10.249812177619775,
    "imp_fig8": 10.2
   },
   "Caatinga|TST": {
    "r2_ciclo": 54.2,
    "r_bruto": -0.7372010377252803,
    "r_anom": -0.7653210887315416,
-   "imp_sem": 26.70345535141512,
-   "imp_com": 16.62029864748795,
+   "imp_sem": 26.415852140572838,
+   "imp_com": 15.155649541627897,
    "imp_fig8": 15.2
   },
   "Caatinga|SAZsin": {
@@ -1959,7 +2034,7 @@
    "r_bruto": null,
    "r_anom": null,
    "imp_sem": null,
-   "imp_com": 13.272997816857032,
+   "imp_com": 13.55561577456118,
    "imp_fig8": 13.6
   },
   "Caatinga|SAZcos": {
@@ -1967,7 +2042,7 @@
    "r_bruto": null,
    "r_anom": null,
    "imp_sem": null,
-   "imp_com": 17.6440120710104,
+   "imp_com": 18.244966600187816,
    "imp_fig8": 18.2
   }
  }

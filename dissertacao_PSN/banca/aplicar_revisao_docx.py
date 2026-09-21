@@ -349,15 +349,18 @@ resumo = (
     "por validação cruzada repetida, validação temporal e teste de Y-randomization. O modelo de grau 2 explicou "
     f"{r2('CE')}% (± {r2dp('CE')}) da variância da PSN no Cerrado, {r2('CA')}% (± {r2dp('CA')}) na Caatinga e "
     f"{r2('MA')}% (± {r2dp('MA')}) na Mata Atlântica. Em escala mensal e com agregação espacial por bioma, o RMSE de "
-    f"teste variou de {rmse('CA')} a {rmse('MA')} gC·m⁻²·mês⁻¹ e o MAE de {mae('CA')} a {mae('MA')} gC·m⁻²·mês⁻¹, com a "
-    f"multicolinearidade (VIF) atenuada pela regularização Ridge. Os "
-    "resultados evidenciaram regimes ecológicos distintos de controle da produtividade primária: limitação hídrica "
+    f"teste variou de {rmse('CA')} a {rmse('MA')} gC·m⁻²·mês⁻¹ e o MAE de {mae('CA')} a {mae('MA')} gC·m⁻²·mês⁻¹; a "
+    "instabilidade dos coeficientes associada à multicolinearidade (VIF elevado entre evapotranspiração e "
+    "disponibilidade hídrica no Cerrado) foi contida pela regularização Ridge. Os "
+    "resultados evidenciaram regimes ecológicos distintos de controle da PSN: limitação hídrica "
     "sazonal no Cerrado, resposta pulsada à precipitação na Caatinga e controle multifatorial na Mata Atlântica. A "
     "análise do El Niño–Oscilação Sul (ENSO), conduzida sobre anomalias mensais, indicou influência indireta e "
-    f"defasada sobre a produtividade: a La Niña elevou a PSN típica em cerca de {v(LN_LO,0)}% a {v(LN_HI,0)}% no Cerrado "
-    "e na Caatinga, mediada pela evapotranspiração, com persistência de vários meses no Cerrado; na Mata Atlântica, o "
-    f"El Niño não alterou a produtividade típica, mas elevou de {v(P10_MA[1],0)}% para {v(P10_MA[0],0)}% a frequência "
-    "de meses de produtividade extremamente baixa, mediado pelo aquecimento da superfície. Os resultados demonstram a viabilidade da regressão "
+    f"defasada sobre a PSN: nos meses de La Niña a PSN ficou cerca de {v(LN_LO,0)}% a {v(LN_HI,0)}% acima do normal "
+    "no Cerrado e na Caatinga, associada principalmente a anomalias positivas de evapotranspiração e com persistência "
+    "de vários meses no Cerrado; na Mata Atlântica, as medianas brutas foram semelhantes entre as fases, mas, após a "
+    f"remoção do ciclo sazonal, os meses de El Niño apresentaram redução média de {v(abs(t6('MA','PSN')['delta_EN']))}% "
+    f"na PSN e aumento da frequência de meses extremamente baixos (de {v(P10_MA[1],0)}% para {v(P10_MA[0],0)}%), "
+    "associados ao aquecimento da superfície. Os resultados indicam a viabilidade da regressão "
     "polinomial regularizada para representar relações ambientais complexas e reforçam a importância de abordagens "
     "diferenciadas para o monitoramento dos biomas baianos."
 )
@@ -374,15 +377,17 @@ abstract = (
     f"{r2('MA').replace(',', '.')}% (± {r2dp('MA').replace(',', '.')}) in the Atlantic Forest. At a monthly scale "
     f"and with spatial aggregation by biome, test RMSE ranged from {rmse('CA').replace(',', '.')} to "
     f"{rmse('MA').replace(',', '.')} gC·m⁻²·month⁻¹ and MAE from {mae('CA').replace(',', '.')} to "
-    f"{mae('MA').replace(',', '.')} gC·m⁻²·month⁻¹, with multicollinearity (VIF) mitigated by Ridge "
-    "regularization. The results revealed distinct ecological regimes of "
+    f"{mae('MA').replace(',', '.')} gC·m⁻²·month⁻¹; the coefficient instability associated with "
+    "multicollinearity (high VIF between evapotranspiration and water availability in the Cerrado) was contained by "
+    "Ridge regularization. The results revealed distinct ecological regimes of "
     "primary productivity control: seasonal water limitation in the Cerrado, pulsed response to rainfall in the "
     "Caatinga and multifactorial control in the Atlantic Forest. The analysis of the El Niño–Southern Oscillation "
-    "(ENSO), performed on monthly anomalies, indicated an indirect and lagged influence on productivity: La Niña "
-    f"raised typical PSN by about {v(LN_LO,0)}–{v(LN_HI,0)}% in the Cerrado and Caatinga, mediated by evapotranspiration, "
-    "with persistence of several months in the Cerrado; in the Atlantic Forest, El Niño did not change typical "
-    f"productivity but raised the frequency of months with extremely low productivity from {v(P10_MA[1],0)}% to "
-    f"{v(P10_MA[0],0)}%, mediated by surface warming. The results demonstrate the feasibility of regularized polynomial regression to represent "
+    "(ENSO), performed on monthly anomalies, indicated an indirect and lagged influence on PSN: in La Niña months PSN "
+    f"was about {v(LN_LO,0)}–{v(LN_HI,0)}% above normal in the Cerrado and Caatinga, associated mainly with positive "
+    "evapotranspiration anomalies and persisting for several months in the Cerrado; in the Atlantic Forest, raw medians "
+    "were similar across phases, but after removing the seasonal cycle El Niño months showed a mean PSN reduction of "
+    f"{v(abs(t6('MA','PSN')['delta_EN'])).replace(',', '.')}% and a higher frequency of extremely low months (from "
+    f"{v(P10_MA[1],0)}% to {v(P10_MA[0],0)}%), associated with surface warming. The results indicate the feasibility of regularized polynomial regression to represent "
     "complex environmental relationships and reinforce the importance of differentiated approaches for monitoring "
     "the biomes of Bahia."
 )
@@ -407,7 +412,15 @@ add_paras_after(ORIG[87], ORIG[87], ["ACF – Função de Autocorrelação (Auto
 # =============================================================================
 # 3. APRESENTAÇÃO E FUNDAMENTAÇÃO
 # =============================================================================
+set_text(ORIG[122], ORIG[122].text
+         .replace("respiração de manutenção de folhas e raízes finas.", "respiração de manutenção de folhas e raízes finas (Running et al., 2004; Running; Zhao, 2021).")
+         .replace("decorrentes de fatores climáticos e antrópicos.", "decorrentes de fatores climáticos e antrópicos (Nemani et al., 2003; Benfica et al., 2022).")
+         .replace("temperatura, precipitação e radiação solar.", "temperatura, precipitação e radiação solar (Nemani et al., 2003).")
+         .replace("é imperativa para a ciência ambiental", "é relevante para a ciência ambiental"))
 set_text(ORIG[123], ORIG[123].text
+         .replace("A região da Bahia apresenta um sistema ambiental de notável complexidade", "O estado da Bahia apresenta um sistema ambiental heterogêneo")
+         .replace("até os processos de degradação e desertificação na Caatinga.", "até os processos de degradação e desertificação na Caatinga (Ribeiro et al., 2009; Benfica et al., 2022; MapBiomas, 2025).")
+         .replace("representações distorcidas que subestimam", "representações incompletas que subestimam")
          .replace("A região da Bahia apresenta", "O estado da Bahia apresenta")
          .replace("a estratégias de gestão subótimas.", "a decisões de gestão ambiental menos eficazes do que poderiam ser."))
 set_text(ORIG[124], ORIG[124].text.replace(
@@ -459,18 +472,45 @@ set_text(ORIG[131], ORIG[131].text.rstrip() +
     f"(Figura 5, no Capítulo de Resultados). Na Mata Atlântica, por contraste, a evapotranspiração explica apenas "
     f"{ENSO['disp']['MA']['EV']}% da variância da PSN.")
 
+set_text(ORIG[132], ORIG[132].text
+         .replace("configurando respostas em platô ou em “U”.", "configurando respostas saturantes, com limiares ou mudanças de inclinação.")
+         .replace("Hao et al. (2019), em revisão sobre modelagem ecológica, mostram que modelos capazes de representar formas de resposta não lineares superam consistentemente abordagens estritamente lineares.",
+                  "Modelos capazes de representar formas de resposta não lineares tendem a descrever melhor essas relações do que abordagens estritamente lineares, como ilustram os estudos empíricos a seguir e o estudo de referência desta dissertação (Guimarães et al., 2024)."))
+set_text(ORIG[133],
+    "Além do controle climático, os ecossistemas estão submetidos a pressões antrópicas que atuam por mecanismos "
+    "distintos das forçantes climáticas: enquanto o clima modula a produtividade por vias fisiológicas (disponibilidade "
+    "hídrica, temperatura e radiação), as pressões humanas alteram diretamente a estrutura e a cobertura da vegetação, "
+    "introduzindo variabilidade que não é capturável apenas por preditores climáticos. Essas pressões, que incluem "
+    "desmatamento, expansão agropecuária, silvicultura, fragmentação da paisagem e degradação do solo, têm magnitudes "
+    "expressivas nos três biomas. No Cerrado, foram desmatados cerca de 40,5 milhões de hectares de vegetação nativa "
+    "entre 1985 e 2024 (redução de aproximadamente 28%), e em 2024 cerca de 47,9% do bioma correspondia a uso "
+    "antrópico, com a fronteira agrícola MATOPIBA, que inclui o oeste da Bahia, concentrando a maior parte dessa "
+    "conversão (MapBiomas, 2025).")
+set_text(ORIG[134],
+    "Na Mata Atlântica, a perda recente foi de cerca de 4,4 milhões de hectares entre 1985 e 2024 (MapBiomas, 2025), "
+    "mas o quadro mais crítico é estrutural: restam apenas cerca de 12% a 16% da cobertura florestal original, com mais "
+    "de 80% dos fragmentos menores que 50 ha e elevada distância média entre eles, o que intensifica os efeitos de "
+    "borda e compromete a conectividade (Ribeiro et al., 2009); na Bahia, a expansão da silvicultura de eucalipto e o "
+    "mosaico histórico com a cacauicultura-cabruca reconfiguram ainda mais a paisagem. Na Caatinga, a perda foi de cerca "
+    "de 9,2 milhões de hectares no mesmo período, com 37% do bioma sob uso agropecuário em 2024 (MapBiomas, 2025), e "
+    "parte do semiárido encontra-se em processo de degradação e desertificação, agravado pelas secas prolongadas "
+    "(Marengo et al., 2018). Esse contraste entre biomas foi documentado regionalmente por Benfica et al. (2022), que "
+    "mostraram, na Bahia, que a produtividade responde não apenas a variações de precipitação e temperatura, mas também "
+    "a mudanças no uso e cobertura da terra e à ocorrência de queimadas.")
+remove_para(ORIG[135])
 set_text(ORIG[136], ORIG[136].text.replace(
     "(Dionizio et al., 2020).",
     "(Dionizio et al., 2020). A redução ocorre porque as gramíneas das pastagens têm sistema radicular raso e perdem "
     "grande parte da área foliar na estação seca, enquanto a vegetação nativa, com raízes profundas, continua "
     "acessando a água do subsolo e transpirando ao longo do ano; assim, embora o pasto possa ter índice de área "
-    "foliar comparável no auge da estação chuvosa, sua evapotranspiração anual é menor, sobretudo nos meses secos."))
+    "foliar comparável no auge da estação chuvosa, sua evapotranspiração anual é menor, sobretudo nos meses secos "
+    "(Oliveira et al., 2005; D'Acunha et al., 2024)."))
 
 set_text(ORIG[138], ORIG[138].text.replace(
     "(ONI para temperatura/precipitação e destas para a PSN)",
-    "(do Índice Oceânico Niño, ONI, medida oficial da NOAA para o ENSO que corresponde à anomalia média de três "
-    "meses da temperatura da superfície do mar no Pacífico equatorial central, para a temperatura e a precipitação "
-    "regionais, e destas para a PSN)"))
+    "(do Índice Oceânico Niño, ONI, para a temperatura e a precipitação regionais, e destas para a PSN). O ONI é a "
+    "medida oficial da NOAA para o ENSO e corresponde à anomalia média de três meses da temperatura da superfície do "
+    "mar no Pacífico equatorial central (região Niño 3.4)"))
 
 set_text(ORIG[140], ORIG[140].text.replace(
     "originalmente aplicada à predição quantitativa estrutura-atividade (QSAR),",
@@ -492,11 +532,15 @@ set_text(ORIG[141],
 # =============================================================================
 set_text(ORIG[144], "QUESTÃO CENTRAL E HIPÓTESES")
 set_text(ORIG[145], ORIG[145].text.replace("a produtividade dos biomas na Bahia.",
-                                            "a produtividade primária, medida pela Fotossíntese Líquida, dos biomas na Bahia."))
-set_text(ORIG[149], "H1: A expansão polinomial não linear apresentará melhor desempenho preditivo em relação ao modelo "
-    "linear de grau 1, mantendo nível controlado de sobreajuste, com o grau ótimo definido, entre os graus 1 a 5, "
-    "como aquele que maximiza o R² de teste mantendo a diferença entre o R² de treino e o de teste abaixo de 10 "
-    "pontos percentuais.")
+                                            "a produtividade fotossintética, representada neste estudo pela Fotossíntese Líquida (PSN), dos biomas na Bahia."))
+set_text(ORIG[149], "H1: A inclusão de termos polinomiais de ordem superior a 1 aumentará o desempenho preditivo em "
+    "relação ao modelo linear de grau 1, sem aumento substancial do sobreajuste, avaliado pela diferença entre os "
+    "desempenhos de treino e de teste e pela estabilidade sob validação cronológica; o grau adotado será determinado "
+    "empiricamente pela comparação dos graus 1 a 5.")
+set_text(ORIG[151], "H3: O Índice Oceânico Niño (ONI) não atuará como preditor direto da PSN, mas exercerá influência "
+    "indireta por meio da modulação de variáveis climáticas e hídricas intermediárias (temperatura, precipitação, "
+    "evapotranspiração e disponibilidade hídrica), configurando um mecanismo de influência indireta transmitido pelo "
+    "clima regional.")
 set_text(ORIG[150], "H2: O conjunto de variáveis ambientais, associado aos componentes harmônicos de sazonalidade, "
     "explicará pelo menos 60% da variância mensal da PSN em cada bioma, com diferenças na composição do conjunto "
     "ótimo de preditores entre os biomas.")
@@ -509,7 +553,7 @@ p_obj2 = new_para_after(ORIG[156], ORIG[156], "Avaliar a robustez e a capacidade
     "sob validação que respeita a ordem cronológica dos dados.")
 set_text(ORIG[157], "Comparar o desempenho preditivo e os controles ambientais da PSN entre os três biomas.")
 set_text(ORIG[158], "Investigar a influência do El Niño–Oscilação Sul (ENSO) sobre a PSN e sobre as variáveis climáticas "
-    "intermediárias (EV, PRE e TST) nos três biomas.")
+    "intermediárias (EV, PRE, TST e WAI) nos três biomas.")
 
 # =============================================================================
 # 5. MATERIAL E MÉTODOS — fluxo no início do capítulo, área de estudo ampliada
@@ -573,7 +617,14 @@ set_text(ORIG[177],
     "foram então agregados em períodos mensais de quatro compostos consecutivos, em janelas fixas de dia do ano, "
     "reproduzindo a agregação empregada por Benfica et al. (2022): a PSN, a EV e a ETP foram somadas e a TST foi "
     "mediada em cada período; o WAI foi calculado como a razão EV/ETP e a área queimada como o número de pixels "
-    "queimados no mês multiplicado pela área do pixel (25 ha). Toda a série de 2001 a 2025 foi processada de forma "
+    "queimados no mês multiplicado pela área do pixel (25 ha). Cada janela abrange cerca de 32 dias e foi atribuída "
+    "ao mês civil que contém a maior parte dos seus dias (janeiro, por exemplo, reúne os compostos iniciados em 27 de "
+    "dezembro e em 1, 9 e 17 de janeiro), e é a esse mês de referência que se associam o ONI e as componentes de "
+    "sazonalidade; os períodos aqui denominados mensais são, portanto, janelas fixas de compostos, e não meses civis "
+    "estritos. Consideraram-se válidos os pixels dentro da faixa de valores válidos de cada produto; não se aplicou "
+    "filtro adicional pela banda de controle de qualidade, uma vez que as versões com preenchimento de falhas (GF) já "
+    "substituem as observações de baixa qualidade por valores interpolados (Running; Zhao, 2021), o que não elimina a "
+    "incerteza inerente a esses produtos. Toda a série de 2001 a 2025 foi processada de forma "
     "homogênea com essas coleções, em vez de se emendar a base original de 2001 a 2020 aos anos recentes; a "
     "reprodução da base de Benfica et al. (2022) por esse procedimento apresentou correlação superior a 0,97 com a "
     "série original para todas as variáveis, com erro mediano inferior a 3,5%. A base mensal consolidada está "
@@ -606,9 +657,8 @@ def _abl(b, sem):
     r = ABL[(ABL.bioma == nome[b]) & (ABL.conjunto.str.contains('sem') == sem)].iloc[0]; return r
 def _saz(b, var): return float(SAZ[(SAZ.bioma == nome[b]) & (SAZ.variavel == var)]['r2'].iloc[0])
 _com = {b: RG.loc[b, 'r2_teste_medio'] for b in ('MA', 'CE', 'CA')}; _sem = {b: _abl(b, True)['r2_teste'] for b in ('MA', 'CE', 'CA')}
-add_paras_after(ORIG[185], BODY_TPL, [
-    "Para verificar empiricamente essa propriedade, o modelo foi reajustado sem as componentes de sazonalidade, "
-    "mantendo as demais variáveis e o mesmo protocolo de validação (Tabela A3, Apêndice A). A remoção reduziu o R² "
+P_ABL = [
+    "A remoção das componentes harmônicas (Tabela A3, Apêndice A) reduziu o R² "
     f"de teste em {v(_com['MA'] - _sem['MA'])} pontos percentuais na Mata Atlântica (de {v(_com['MA'])}% para "
     f"{v(_sem['MA'])}%), {v(_com['CE'] - _sem['CE'])} pontos no Cerrado e {v(_com['CA'] - _sem['CA'])} pontos na "
     "Caatinga, uma queda muito mais acentuada do que se esperaria de um termo redundante, que a penalização L2 "
@@ -636,11 +686,18 @@ add_paras_after(ORIG[185], BODY_TPL, [
     f"{v(max(a4x(b,'EV')['r_anom'] for b in ('MA','CE','CA')),2)}): transpiração e assimilação de carbono ocorrem pelos "
     "mesmos estômatos, de modo que um mês em que a vegetação transpira mais que o normal para a época é um mês em que "
     "fotossintetiza mais que o normal. A temperatura permanece relevante na Mata Atlântica e na Caatinga como modulador "
-    f"negativo (correlação das anomalias de {v(a4x('MA','TST')['r_anom'],2)} e {v(a4x('CA','TST')['r_anom'],2)}), "
+    f"negativo (correlação das anomalias de {vm(a4x('MA','TST')['r_anom'],2)} e {vm(a4x('CA','TST')['r_anom'],2)}), "
     "expressão do estresse térmico e hídrico dos meses mais quentes que o usual. Em síntese, os harmônicos absorvem o "
     "ciclo anual determinístico da produtividade (fotoperíodo, radiação e fenologia foliar) e deixam às variáveis "
     "climáticas o papel de explicar os desvios em relação ao ano típico, que é justamente a informação relevante para a "
-    "análise interanual e para o ENSO, tratada adiante."])
+    "análise interanual e para o ENSO, tratada adiante."]
+add_paras_after(ORIG[185], BODY_TPL, [
+    "Para avaliar a contribuição das componentes harmônicas, realizou-se uma análise de ablação na qual o modelo foi "
+    "reajustado sem SAZsin e SAZcos, mantendo inalterados o conjunto de variáveis ambientais e os procedimentos de "
+    "treinamento e validação; complementarmente, calculou-se a proporção da variância de cada variável climática "
+    "explicada isoladamente pelo ciclo anual, a correlação de cada variável com a PSN nos valores brutos e nas "
+    "anomalias mensais, e o índice de contribuição relativa das variáveis com e sem os harmônicos. Os resultados são "
+    "apresentados na seção 6.2.1 e nas Tabelas A3 e A4 do Apêndice A."])
 set_text(ORIG[186],
     "Como a área queimada mensal concentra muitos valores nulos e alguns picos muito elevados, aplicou-se, antes da "
     "modelagem, a transformação logarítmica a seguir, procedimento usual para reduzir a influência desses valores "
@@ -654,7 +711,10 @@ set_text(ORIG[188],
     "meses de treino, isso afeta apenas os sete valores mais baixos. O percentil foi calculado exclusivamente a "
     "partir dos dados de treino de cada partição e aplicado apenas a eles; os valores de PSN dos conjuntos de teste "
     "foram mantidos em sua escala original, inclusive os extremos, garantindo que a avaliação preditiva fosse "
-    "realizada sobre observações não modificadas e evitando vazamento de informação entre treino e teste.")
+    "realizada sobre observações não modificadas e evitando vazamento de informação entre treino e teste. O percentil "
+    "3 foi adotado como compromisso entre proteger a estimação dos coeficientes dos poucos meses de produtividade "
+    "anormalmente baixa e preservar a distribuição da resposta; a sensibilidade do desempenho a essa escolha foi "
+    "verificada reajustando o modelo com winsorização em 0%, 1%, 3% e 5% (Tabela A6, Apêndice A).")
 add_paras_after(ORIG[189], BODY_TPL, [
     "Antes da modelagem, a matriz de correlação de Pearson entre as variáveis candidatas foi examinada para "
     "eliminar redundâncias, como no protocolo de Guimarães et al. (2024). A evapotranspiração potencial (ETP) foi "
@@ -672,8 +732,13 @@ set_text(ORIG[192],
     "o mesmo princípio de determinação empírica do grau adotado por Guimarães et al. (2024), que avaliaram graus até "
     "8, com o limite superior reduzido para 5 porque, com cerca de 300 observações e cinco preditores, graus "
     "superiores geram centenas de termos e sobreajuste severo; e (iii) ampliação do protocolo de validação, com "
-    "aplicação de validação cruzada RepeatedKFold, esquemas complementares de validação temporal (GroupKFold por ano "
-    "e TimeSeriesSplit com janela expansível) e teste de Y-randomization.")
+    "aplicação de validação cruzada RepeatedKFold, validação agrupada por ano (GroupKFold) e validação cronológica "
+    "(TimeSeriesSplit com janela expansível) e teste de Y-randomization. Em cada partição, o pipeline foi aplicado "
+    "nesta ordem: winsorização da resposta do treino, padronização das variáveis (StandardScaler ajustado no treino), "
+    "expansão polinomial (PolynomialFeatures, grau 2, sem termo de viés) e regressão Ridge, cujo parâmetro α foi "
+    "escolhido por GridSearchCV entre os valores 0,1; 1; 10; 50 e 100, com validação cruzada interna de cinco "
+    "partições e o R² como métrica; a busca de α foi repetida para cada conjunto avaliado, formado por três variáveis "
+    "ambientais e as duas componentes harmônicas.")
 add_paras_after(ORIG[196], BODY_TPL, [
     "Para o grau N = 2 e cinco preditores X₁ … X₅, a expansão gera 20 termos além do intercepto: "
     "Ŷ = β₀ + Σᵢ βᵢXᵢ + Σᵢ βᵢᵢXᵢ² + Σᵢ<ⱼ βᵢⱼXᵢXⱼ, com 5 termos lineares, 5 quadráticos e 10 interações entre "
@@ -719,6 +784,64 @@ set_text(ORIG[207], ORIG[207].text.replace(
     "cujos resultados (Figura 5) são apresentados e discutidos no Capítulo de Resultados."))
 set_text(ORIG[208], ORIG[208].text.replace("três métricas complementares,", "três métricas complementares (R², RMSE e MAE),"))
 
+set_text(ORIG[211], ORIG[211].text.replace("calculado a partir das variáveis preditoras originais, antes da expansão polinomial.",
+    "calculado a partir das cinco variáveis preditoras originais (três ambientais e duas harmônicas), antes da expansão polinomial, e não sobre os 20 termos gerados por ela."))
+set_text(ORIG[212], ORIG[212].text
+    .replace("Foram considerados como referência os limiares usuais: VIF < 5 (aceitável), 5 ≤ VIF < 10 (atenção) e VIF ≥ 10 (multicolinearidade elevada).",
+             "Foram considerados como referência os limiares usuais: VIF < 5 (aceitável), 5 ≤ VIF < 10 (atenção) e VIF ≥ 10 (multicolinearidade elevada), lembrando que tais limiares são regras práticas, e não critérios absolutos (O'Brien, 2007).")
+    .replace("Embora a Regressão Ridge ofereça robustez à multicolinearidade por meio da penalização L2,",
+             "Embora a regressão Ridge reduza a instabilidade dos coeficientes causada pela multicolinearidade por meio da penalização L2 (o VIF em si não se altera),"))
+from docx.shared import RGBColor
+def h3(anchor, texto):
+    h = new_para_after(anchor, HEAD2_TPL, texto); h.style = d.styles['Heading 3']
+    h.alignment = WD_ALIGN_PARAGRAPH.LEFT; h.paragraph_format.first_line_indent = Cm(0); h.paragraph_format.left_indent = Cm(0)
+    h.paragraph_format.space_before = Pt(12); h.paragraph_format.space_after = Pt(6); h.paragraph_format.keep_with_next = True
+    for r_ in h.runs:
+        r_.font.bold = True; r_.font.italic = False; r_.font.size = Pt(12); r_.font.color.rgb = RGBColor(0, 0, 0); r_.font.name = 'Times New Roman'
+        rpr = r_._r.get_or_add_rPr(); rf = rpr.find(qn('w:rFonts'))
+        if rf is None: rf = OxmlElement('w:rFonts'); rpr.insert(0, rf)
+        for a in ('w:ascii', 'w:hAnsi', 'w:cs', 'w:eastAsia'): rf.set(qn(a), 'Times New Roman')
+    return h
+_h541 = h3(ORIG[212], "5.4.1 Análise da influência do ENSO")
+_p541 = add_paras_after(_h541, BODY_TPL, [
+    "A fase ENSO de cada mês foi classificada pelo critério oficial da NOAA: ONI igual ou superior a +0,5 °C (El Niño) "
+    "ou igual ou inferior a −0,5 °C (La Niña) por pelo menos cinco trimestres móveis consecutivos, avaliados sobre a "
+    "série completa do índice desde 1950, de modo que episódios iniciados antes de 2001 fossem reconhecidos. Como os "
+    "episódios se concentram entre o fim e o início do ano, a comparação de valores brutos entre fases confundiria o "
+    "efeito do ENSO com o da estação; por isso a análise foi conduzida sobre anomalias mensais, definidas como o desvio "
+    "de cada valor em relação à média do respectivo mês do calendário em toda a série, expressas nas unidades originais "
+    "e, para as médias por fase, em porcentagem dessa média.",
+    "Para a PSN e para as variáveis climáticas de cada bioma, três propriedades da distribuição das anomalias foram "
+    "comparadas entre fases: a posição central (teste de Kruskal-Wallis entre as três fases e teste de Mann-Whitney de "
+    "cada fase ativa contra a neutra), a dispersão (teste de Fligner-Killeen) e a frequência de meses extremos, definida "
+    "como a proporção de meses abaixo do décimo percentil ou acima do nonagésimo percentil da série de anomalias (teste "
+    "de qui-quadrado). O tamanho de efeito das fases foi expresso pelo ε² de Kruskal-Wallis. Como esse conjunto envolve "
+    "muitos testes, os valores-p foram submetidos à correção de Benjamini-Hochberg para taxa de falsas descobertas de "
+    "5%, aplicada separadamente a cada família de testes, e os resultados que permanecem significativos após a "
+    "correção são identificados na Tabela 6.",
+    "Para estimar quanto da resposta da PSN pode ser reproduzido pelas variáveis intermediárias, realizou-se um "
+    "experimento de perturbação baseado no modelo, sem pretensão de inferência causal: o MRMP-N ajustado à série "
+    "completa foi usado para prever a PSN com os preditores em sua climatologia mensal e, alternativamente, com cada "
+    "preditor (ou todos) deslocado pela anomalia média observada em cada fase; a diferença entre as duas predições, em "
+    "porcentagem da PSN climatológica, é a parcela da resposta atribuível a cada canal no modelo. A persistência da "
+    "resposta foi examinada de forma exploratória pela correlação de Spearman entre o ONI de um mês e a anomalia de "
+    "PSN dos 0 a 12 meses seguintes, e por compósitos da anomalia média de PSN nas mesmas defasagens após meses de El "
+    "Niño e de La Niña, com intervalos de confiança de 95% por bootstrap (2.000 reamostragens) e teste de Mann-Whitney "
+    "contra os meses neutros; por serem fortemente correlacionadas entre si, as defasagens não foram submetidas a "
+    "correção para múltiplas comparações e devem ser lidas como descrição do padrão temporal, não como testes "
+    "independentes. Por fim, para os episódios com pelo menos cinco meses consecutivos na mesma fase, calculou-se a "
+    "anomalia média de PSN durante o episódio e nos três meses seguintes."])
+_h542 = h3(_p541, "5.4.2 Variabilidade interanual")
+add_paras_after(_h542, BODY_TPL, [
+    "Para examinar a produtividade na escala anual, a PSN mensal de cada bioma foi somada por ano nos 24 anos completos "
+    "(2001 a 2024); como os meses da base são janelas fixas de compostos, a soma anual aproxima o ano civil com "
+    "diferença de um composto nas bordas. O ano de 2025, com dados apenas até setembro, foi excluído da tendência e "
+    "apresentado como valor parcial. A variabilidade entre anos foi medida pelo coeficiente de variação (CV) e a "
+    "tendência monotônica pelo estimador de inclinação de Sen, com significância pelo teste de Mann-Kendall. A soma "
+    "anual foi comparada, por correlação de Pearson, com o NPP anual do produto MOD17A3HGF (Coleção 6.1) para as mesmas "
+    "máscaras de bioma, como verificação de consistência entre dois produtos da mesma família MOD17. A fase ENSO "
+    "dominante de cada ano foi definida como a fase com pelo menos seis meses no ano, apenas como referência gráfica."])
+
 # =============================================================================
 # 9. VALIDAÇÃO
 # =============================================================================
@@ -731,8 +854,8 @@ set_text(ORIG[215],
     "teste fixo, e as métricas reportadas são médias (e desvios-padrão) sobre as 150 partições. Esse protocolo "
     "fornece a estimativa principal do desempenho ao reduzir a variabilidade decorrente de partições únicas dos "
     "dados. Reconhece-se, contudo, que em séries mensais observações temporalmente próximas podem compartilhar "
-    "estrutura sazonal e autocorrelação; por isso o desempenho foi adicionalmente examinado por esquemas de "
-    "validação que respeitam a ordem cronológica, descritos adiante. Adicionalmente, foi reportado o intervalo "
+    "estrutura sazonal e autocorrelação; por isso o desempenho foi adicionalmente examinado por um esquema agrupado "
+    "por ano e por um esquema cronológico, descritos adiante. Adicionalmente, foi reportado o intervalo "
     "empírico de 95% da distribuição dos escores de R² obtidos nas partições, definido pelos percentis 2,5 e 97,5 "
     "dos valores observados. Ressalta-se que, por decorrerem de partições parcialmente sobrepostas do RepeatedKFold, "
     "esses escores não constituem observações independentes, motivo pelo qual se adota a expressão \"intervalo "
@@ -757,19 +880,20 @@ set_text(ORIG[218],
     "pelos procedimentos de validação cruzada, nos quais a winsorização foi aplicada exclusivamente à resposta do "
     "conjunto de treino de cada partição.")
 set_text(ORIG[220],
-    "Adotaram-se dois critérios complementares de validação. O primeiro, seguindo a lógica de Guimarães et al. "
-    "(2024), compara o R² de validação cruzada do modelo original com a média dos R² dos 100 modelos permutados; "
-    "neste estudo exigiu-se diferença mínima de 60 pontos percentuais entre os dois. O segundo consiste em um "
-    "p-valor empírico unilateral, definido como a proporção de permutações cujo R² iguala ou supera o do modelo "
-    "original, adotando-se como significativo p inferior a 0,05.")
+    "Adotaram-se dois indicadores complementares. O primeiro, seguindo a lógica de Guimarães et al. (2024), é a "
+    "distância entre o R² de validação cruzada do modelo original e a média dos R² dos 100 modelos permutados, que "
+    "expressa quanto o desempenho excede o que se obteria por associações arbitrárias; essa distância é reportada de "
+    "forma descritiva, sem limiar fixo. O segundo é um p-valor empírico unilateral, definido como a proporção de "
+    "permutações cujo R² iguala ou supera o do modelo original, adotando-se como significativo p inferior a 0,05.")
 set_text(ORIG[223], ORIG[223].text.replace("Shapiro-Wilk e Kruskal-Wallis", "Shapiro-Wilk, Kruskal-Wallis, Mann-Whitney, Fligner-Killeen e qui-quadrado, e para a correlação de Spearman"))
 set_text(ORIG[224],
-    "A reprodutibilidade dos resultados foi assegurada pela fixação de semente aleatória (random_state = 42) nos "
-    "procedimentos que envolvem aleatoriedade, bem como pela organização sistemática dos resultados e pela "
-    "disponibilização do código-fonte comentado, permitindo transparência e replicabilidade das etapas de "
-    "modelagem. O valor da semente é arbitrário (42 é uma convenção difundida na comunidade Python); qualquer valor "
-    "fixo garante que as partições e permutações sejam reproduzidas exatamente, e o resultado não depende do valor "
-    "escolhido.")
+    "A semente aleatória foi fixada em random_state = 42 em todos os procedimentos que envolvem aleatoriedade "
+    "(partições, permutações e reamostragens), para permitir a reprodução exata dos resultados. A robustez do "
+    "desempenho não decorre do valor específico da semente, mas do uso de validação repetida (150 partições) e dos "
+    "esquemas complementares de validação, que reduzem a sensibilidade a uma partição particular. As análises foram "
+    "executadas em Python 3.11, com numpy 2.4, pandas 3.0, scikit-learn 1.9, scipy 1.17 e statsmodels 0.15; o código, "
+    "a base de dados e os scripts de extração estão disponíveis em repositório público "
+    "(https://github.com/heroslore/Controle-Gas, pastas dissertacao_PSN e npp_modis).")
 
 # =============================================================================
 # 10. RESULTADOS — desempenho
@@ -890,13 +1014,42 @@ replace_image(ORIG[254], os.path.join(FIG, 'fig05_importancia.png'))
 ce_wai_vs_tst = sv['CE'].iloc[0]['r2_teste'] - sv['CE'][sv['CE'].variaveis == 'EV + PRE + TST']['r2_teste'].iloc[0]
 set_text(ORIG[255], ORIG[255].text.replace(
     "(da ordem de 0,3 ponto percentual no R² de teste)", f"(de {v(ce_wai_vs_tst)} ponto percentual no R² de teste)"))
+set_text(ORIG[250],
+    "A escolha do grau 2 deve ser lida de forma restrita: dentro do conjunto de variáveis e do intervalo de graus "
+    "avaliados, os termos de segunda ordem (quadráticos e de interação entre pares de variáveis) foram suficientes para "
+    "obter o melhor compromisso entre desempenho de teste e complexidade do modelo, e graus superiores não "
+    "acrescentaram estrutura preditiva que compensasse o aumento do número de termos e do sobreajuste.")
 set_text(ORIG[257],
     "A presença das componentes harmônicas de sazonalidade em todos os modelos (mantidas fixas por construção) e o "
     "peso que elas recebem nos três biomas reforçam que a PSN na Bahia possui padrão sazonal marcado e regular, "
     "associado ao ciclo anual de precipitação e radiação. A evapotranspiração (EV) aparece como preditor central em "
     "todos os biomas, e as variáveis hídricas (PRE ou WAI) integram o conjunto ótimo de cada um, confirmando que o "
-    "balanço hídrico é o controlador primário da produtividade ecossistêmica na região.")
-set_text(ORIG[258], re.sub(r"Já a ausência do\s+no conjunto ótimo", "Já a ausência da área queimada (BURNlog) no conjunto ótimo", ORIG[258].text))
+    "balanço hídrico é o principal controle preditivo da PSN na região. Cabe lembrar que a importância mostrada na "
+    "Figura 8 é um índice de contribuição relativa baseado nos coeficientes padronizados do modelo (soma dos valores "
+    "absolutos dos coeficientes dos termos que envolvem cada variável), e não uma medida causal; no Cerrado, em que EV "
+    "e WAI apresentam VIF elevado (Tabela 5), a contribuição individual desses dois preditores deve ser interpretada com "
+    "cautela, pois parte da informação é compartilhada entre eles.")
+set_text(ORIG[258],
+    "A ausência da área queimada (BURNlog) no conjunto selecionado de qualquer bioma, apesar de sua inclusão como "
+    "candidata, indica que, na escala mensal e espacial adotada, essa variável não acrescentou poder preditivo "
+    "suficiente em relação aos demais preditores. Esse resultado não implica ausência de efeito ecológico do fogo, "
+    "documentado na Bahia por Benfica et al. (2022) e em savanas tropicais por Navarro-Rosales et al. (2025), e pode "
+    "refletir, entre outros fatores, a heterogeneidade espacial das queimadas dentro de cada bioma, respostas defasadas "
+    "da produtividade e informação compartilhada com os preditores hídricos.")
+# 6.2.1 — contribuição das componentes harmônicas (resultados que estavam em Métodos)
+P_ABL = [t_.replace("possivelmente fotoperíodo ou fenologia foliar, não inteiramente mediado pelas variáveis climáticas medidas.",
+                    "possivelmente fotoperíodo ou fenologia foliar (Borchert; Rivera, 2001; Wu et al., 2016), não inteiramente representado pelas variáveis climáticas medidas.")
+          .replace("transpiração e assimilação de carbono ocorrem pelos "
+    "mesmos estômatos", "transpiração e assimilação de carbono ocorrem pelos mesmos estômatos")
+          for t_ in P_ABL]
+P_ABL = [t_.replace("transpiração e assimilação de carbono ocorrem pelos mesmos estômatos, de modo que",
+                    "transpiração e assimilação de carbono ocorrem pelos mesmos estômatos (Lawson; Vialet-Chabrand, 2019), de modo que")
+          .replace("Em síntese, os harmônicos absorvem o ciclo anual determinístico da produtividade (fotoperíodo, radiação e fenologia foliar)",
+                   "Em síntese, os harmônicos absorvem o ciclo anual determinístico da produtividade, associado ao fotoperíodo, à radiação e à fenologia foliar (Alberton et al., 2019; Wu et al., 2016),")
+          .replace("A comparação entre os ajustes com e sem as componentes harmônicas também esclarece", "A comparação entre os ajustes com e sem as componentes harmônicas esclarece")
+          for t_ in P_ABL]
+_h621 = h3(ORIG[258], "6.2.1 Contribuição da representação harmônica da sazonalidade")
+add_paras_after(_h621, BODY_TPL, P_ABL)
 set_text(ORIG[261], ORIG[261].text.replace(
     "Definido como a razão entre a evapotranspiração real e a evapotranspiração potencial (ETR/ETP), o índice expressa",
     "Conforme definido na seção Dados e Pré-processamento (razão ETR/ETP), o índice expressa"))
@@ -948,8 +1101,9 @@ set_text(ORIG[283],
     f"{v(NUM['CA']['yr_perm_media'])}% na Caatinga), ou seja, previram pior do que a simples média, enquanto os "
     f"modelos reais alcançaram {v(NUM['MA']['yr_orig'])}%, {v(NUM['CE']['yr_orig'])}% e {v(NUM['CA']['yr_orig'])}%. "
     f"A diferença (Δ = {yr_delta('MA')}, {yr_delta('CE')} e {yr_delta('CA')} pontos percentuais, respectivamente) "
-    "supera com folga o mínimo de 60 adotado, e nenhuma das 100 permutações igualou o modelo real (p empírico = "
-    "0,0099 nos três biomas). Conclui-se que o desempenho reflete relação genuína entre clima e PSN, e não "
+    "é ampla, e nenhuma das 100 permutações igualou o modelo real (p empírico = "
+    "0,0099 nos três biomas). Isso indica que o desempenho observado dificilmente decorre de associações arbitrárias "
+    "que também seriam obtidas após permutação da variável resposta, e não "
     "coincidência numérica ou sobreajuste (Figura 10).")
 set_text(ORIG[284],
     "A menor margem de separação da Mata Atlântica é consistente com a elevada variabilidade ecológica intrínseca "
@@ -997,48 +1151,40 @@ _nf_lo = min(min(JA['fase_nov_fev'][f]) for f in ('El Niño', 'La Niña')); _nf_
 _mj_lo = min(min(JA['fase_mai_jul'][f]) for f in ('El Niño', 'La Niña')); _mj_hi = max(max(JA['fase_mai_jul'][f]) for f in ('El Niño', 'La Niña'))
 _pre_ce = JA['bruto']['Cerrado|PRE']
 set_text(ORIG[289],
-    "A fase ENSO de cada mês foi classificada pelo critério oficial da NOAA (ONI igual ou superior a +0,5 °C, ou "
-    "igual ou inferior a −0,5 °C, por pelo menos cinco trimestres móveis consecutivos, avaliados sobre a série completa "
-    "do índice desde 1950, de modo que episódios iniciados antes de 2001 são reconhecidos), o que resultou em "
-    f"{NF['Neutro']} meses neutros, {NF['El Niño']} de El Niño e {NF['La Niña']} de La Niña. Como os episódios de ENSO "
-    "atingem o máximo entre o fim e o início do ano, as fases não se distribuem uniformemente pelo calendário: de "
-    f"{v(_nf_lo,0)}% a {v(_nf_hi,0)}% dos meses de El Niño e de La Niña ocorrem em cada um dos meses de novembro a "
-    f"fevereiro, contra {v(_mj_lo,0)}% a {v(_mj_hi,0)}% em maio, junho e julho, enquanto os meses neutros mostram o "
-    "padrão inverso. A comparação direta de valores brutos entre fases confunde, portanto, o efeito do ENSO com o da "
-    f"estação do ano: a precipitação média do Cerrado, por exemplo, é de {v(_pre_ce['media_LN'],0)} mm nos meses de "
-    f"La Niña e de {v(_pre_ce['media_N'],0)} mm nos neutros, mas essa diferença cai para "
-    f"{v(t6('CE','PRE')['media_abs_LN'],0)} mm quando se retira o ciclo anual. Por essa razão, a análise foi conduzida "
-    "sobre anomalias mensais, definidas como o desvio de cada valor em relação à média do respectivo mês do calendário "
-    "em toda a série (Tabela 6). Para cada variável, três propriedades da distribuição foram comparadas entre fases: a "
-    "posição central (teste de Kruskal-Wallis entre as três fases e teste de Mann-Whitney de cada fase ativa contra a "
-    "neutra), a dispersão (teste de Fligner-Killeen) e a frequência de meses extremos, definida como a proporção de "
-    "meses abaixo do décimo percentil ou acima do nonagésimo percentil da série de anomalias (teste de qui-quadrado). "
-    "As Figuras 11 a 13 apresentam as distribuições brutas por fase; os valores exatos de cada diagrama de caixa "
-    "(mínimo, quartis, mediana, média, máximo e número de meses) constam da Tabela A5 do Apêndice A.")
+    f"A classificação oficial da NOAA (seção 5.4.1) resultou em {NF['Neutro']} meses neutros, {NF['El Niño']} de El "
+    f"Niño e {NF['La Niña']} de La Niña. As fases ativas concentram-se entre novembro e fevereiro (de {v(_nf_lo,0)}% a "
+    f"{v(_nf_hi,0)}% dos seus meses em cada um desses meses, contra {v(_mj_lo,0)}% a {v(_mj_hi,0)}% em maio, junho e "
+    "julho), e é isso que torna enganosa a comparação de valores brutos: a precipitação média do Cerrado, por exemplo, "
+    f"é de {v(_pre_ce['media_LN'],0)} mm nos meses de La Niña e de {v(_pre_ce['media_N'],0)} mm nos neutros, mas a "
+    f"diferença cai para {v(t6('CE','PRE')['media_abs_LN'],0)} mm quando se retira o ciclo anual. A Tabela 6 resume, "
+    "por bioma e variável, as anomalias médias em cada fase e os testes de posição, dispersão e extremos; as Figuras 11 "
+    "a 13 mostram as distribuições brutas, cujos valores exatos estão na Tabela A5 do Apêndice A.")
 # ---- Tabela 6
 cap6 = new_para_after(ORIG[289], TABCAP_TPL,
     "Tabela 6 - Anomalias médias (%) das variáveis nos meses de El Niño e de La Niña em relação aos meses neutros "
-    "(* p < 0,05 no teste de Mann-Whitney) e valores-p dos testes de posição central (Kruskal-Wallis), dispersão "
-    "(Fligner-Killeen) e frequência de meses extremos (qui-quadrado), com a proporção de meses abaixo do décimo "
-    "percentil por fase, 2001–2025.", bold=True)
+    "e valores-p dos testes de posição central (Kruskal-Wallis), dispersão (Fligner-Killeen) e frequência de meses "
+    "extremos (qui-quadrado), com a proporção de meses abaixo do décimo percentil por fase, 2001–2025.", bold=True)
 cap6.alignment = WD_ALIGN_PARAGRAPH.CENTER
 t = table_after(cap6, len(T6) + 1, 8); t.alignment = 1
 set_widths(t, [2.1, 1.4, 2.1, 2.1, 1.5, 1.7, 1.7, 3.4])
 for j, hname in enumerate(['Bioma', 'Variável', 'Δ El Niño\n(%)', 'Δ La Niña\n(%)', 'p\nposição', 'p\ndispersão', 'p\nextremos', '% de meses abaixo do P10\n(EN / N / LN)']):
     set_cell(t.rows[0].cells[j], hname, bold=True, size=8); t.rows[0].cells[j].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
+def _mk(pval, bh_):
+    return ('*' if pval < 0.05 else '') + ('‡' if bh_ else '')
 _prev = None
 for i, r in enumerate(T6.itertuples(), start=1):
     vals = [r.bioma if r.bioma != _prev else '', r.variavel,
-            sgn(r.delta_EN, 1) + ('*' if r.p_mw_EN < 0.05 else ''), sgn(r.delta_LN, 1) + ('*' if r.p_mw_LN < 0.05 else ''),
-            pv3(r.p_kw), pv3(r.p_fligner), pv3(r.p_chi2),
+            sgn(r.delta_EN, 1) + _mk(r.p_mw_EN, r.bh_mw_EN), sgn(r.delta_LN, 1) + _mk(r.p_mw_LN, r.bh_mw_LN),
+            pv3(r.p_kw) + ('‡' if r.bh_kw else ''), pv3(r.p_fligner) + ('‡' if r.bh_fligner else ''), pv3(r.p_chi2) + ('‡' if r.bh_chi2 else ''),
             f"{r.pct_abaixo_P10_EN:.0f} / {r.pct_abaixo_P10_N:.0f} / {r.pct_abaixo_P10_LN:.0f}"]
     _prev = r.bioma
     for j, sval in enumerate(vals): set_cell(t.rows[i].cells[j], sval, size=8)
 nota6 = new_para_after(t.rows[-1].cells[0].paragraphs[0], BODY_TPL,
     "EN = El Niño; N = Neutro; LN = La Niña. Anomalia = desvio em relação à média do mês do calendário em toda a série; "
-    "as colunas Δ expressam a anomalia média em porcentagem dessa média, e os testes foram aplicados às anomalias nas "
-    "unidades originais de cada variável (P10 = décimo percentil da série de anomalias). Sob ausência de efeito, "
-    "esperam-se 10% dos meses abaixo do P10 em cada fase.")
+    "as colunas Δ expressam a anomalia média em porcentagem dessa média (* p < 0,05 no teste de Mann-Whitney contra os "
+    "meses neutros), e os testes foram aplicados às anomalias nas unidades originais de cada variável (P10 = décimo "
+    "percentil da série de anomalias). ‡ = permanece significativo a 5% após a correção de Benjamini-Hochberg aplicada "
+    "a cada família de testes. Sob ausência de efeito, esperam-se 10% dos meses abaixo do P10 em cada fase.")
 nota6._p.getparent().remove(nota6._p); t._tbl.addnext(nota6._p)
 nota6.paragraph_format.first_line_indent = Cm(0); nota6.paragraph_format.space_before = Pt(2)
 for r_ in nota6.runs: r_.font.size = Pt(9)
@@ -1051,23 +1197,21 @@ set_text(ORIG[290],
     f"da época ({pj(_ma['TST']['p_mw_EN'])}), e {v(_ma['TST']['pct_acima_P90_EN'],0)}% desses meses situaram-se no decil "
     f"mais quente da série, contra {v(_ma['TST']['pct_acima_P90_N'],0)}% dos meses neutros (Figura 11). A "
     f"evapotranspiração e a precipitação não diferiram na posição central ({pj(_ma['EV']['p_kw'])} e "
-    f"{pj(_ma['PRE']['p_kw'])}), mas ambas apresentaram maior dispersão nas fases ativas (Fligner-Killeen, "
-    f"{pj(_ma['EV']['p_fligner'])} e {pj(_ma['PRE']['p_fligner'])}). A PSN mostrou comportamento análogo ao dessas "
-    f"variáveis hídricas: sua mediana quase não muda entre fases ({v(_m5['El Niño']['mediana'])}, "
-    f"{v(_m5['Neutro']['mediana'])} e {v(_m5['La Niña']['mediana'])} gC·m⁻²·mês⁻¹ em El Niño, neutro e La Niña; "
-    f"Tabela A5), mas nos meses de El Niño a anomalia média foi de {sgn(_ma['PSN']['delta_EN'])}% "
-    f"({pj(_ma['PSN']['p_mw_EN'])}), a dispersão aumentou ({pj(_ma['PSN']['p_fligner'])}) e a frequência de meses com "
-    f"produtividade extremamente baixa, abaixo do décimo percentil, chegou a {v(P10_MA[0],0)}%, contra "
-    f"{v(P10_MA[1],0)}% nos meses neutros e {v(P10_MA[2],0)}% nos de La Niña ({pj(_ma['PSN']['p_chi2'])}); o mínimo "
-    f"observado sob El Niño ({v(_m5['El Niño']['minimo'])} gC·m⁻²·mês⁻¹) é {v(_m5['Neutro']['minimo'] - _m5['El Niño']['minimo'],0)} "
-    f"unidades inferior ao mínimo dos meses neutros ({v(_m5['Neutro']['minimo'])}). O El Niño, portanto, não reduz a "
-    "produtividade típica do bioma úmido, mas multiplica a frequência de meses de produtividade muito baixa, o que "
-    "explica por que o teste de posição central isolado, aplicado aos valores brutos, não detectava efeito. A La Niña "
-    "não produziu resposta na Mata Atlântica em nenhuma das três propriedades. Vale distinguir que a sensibilidade da "
-    "TST às fases do ENSO e a importância da TST como preditora da PSN são propriedades distintas: a primeira descreve "
-    "como o fenômeno modula a temperatura, enquanto a segunda (Figura 8) reflete o peso da temperatura no controle "
-    "direto da produtividade; a TST atua, assim, como elo entre a variabilidade climática de larga escala e a resposta "
-    "produtiva local da vegetação.")
+    f"{pj(_ma['PRE']['p_kw'])}), mas apresentaram maior dispersão nas fases ativas (Fligner-Killeen, "
+    f"{pj(_ma['EV']['p_fligner'])} e {pj(_ma['PRE']['p_fligner'])}).",
+)
+add_paras_after(ORIG[290], BODY_TPL, [
+    "Na PSN da Mata Atlântica, as medianas brutas foram semelhantes entre as fases "
+    f"({v(_m5['El Niño']['mediana'])}, {v(_m5['Neutro']['mediana'])} e {v(_m5['La Niña']['mediana'])} gC·m⁻²·mês⁻¹ em "
+    "El Niño, neutro e La Niña; Tabela A5). Após a remoção do ciclo sazonal, porém, os meses de El Niño apresentaram um "
+    f"deslocamento negativo modesto, com anomalia média de {sgn(_ma['PSN']['delta_EN'])}% ({pj(_ma['PSN']['p_mw_EN'])}), "
+    f"maior dispersão ({pj(_ma['PSN']['p_fligner'])}) e um aumento forte dos extremos baixos: {v(P10_MA[0],0)}% desses "
+    f"meses ficaram abaixo do décimo percentil, contra {v(P10_MA[1],0)}% dos meses neutros e {v(P10_MA[2],0)}% dos de La "
+    f"Niña ({pj(_ma['PSN']['p_chi2'])}); o mínimo observado sob El Niño ({v(_m5['El Niño']['minimo'])} gC·m⁻²·mês⁻¹) é "
+    f"{v(_m5['Neutro']['minimo'] - _m5['El Niño']['minimo'],0)} unidades inferior ao mínimo dos meses neutros "
+    f"({v(_m5['Neutro']['minimo'])}). O El Niño age, portanto, mais sobre a cauda inferior da distribuição do que sobre "
+    "o seu centro, o que explica por que o teste de posição central aplicado aos valores brutos não detectava efeito. "
+    "A La Niña não produziu resposta na Mata Atlântica em nenhuma das três propriedades."])
 replace_image(ORIG[291], os.path.join(FIG, 'fig08_enso_MA.png'))
 set_caption_after_image(ORIG[291], "Figura 11 - Distribuição das variáveis ambientais por fase ENSO na Mata Atlântica.")
 # ---- Cerrado
@@ -1075,20 +1219,20 @@ _ce = {var: t6('CE', var) for var in ('PSN', 'EV', 'PRE', 'TST', 'WAI')}
 _c5 = {f: a5('CE', 'PSN', f) for f in ('El Niño', 'Neutro', 'La Niña')}
 set_text(ORIG[293],
     f"No Cerrado, retirado o ciclo anual, a precipitação mensal não diferiu entre fases na posição central "
-    f"({pj(_ce['PRE']['p_kw'])}), embora sua dispersão tenha aumentado ({pj(_ce['PRE']['p_fligner'])}); o sinal do ENSO "
-    "manifestou-se nas variáveis que integram o balanço hídrico: nos meses de La Niña a evapotranspiração ficou "
+    f"({pj(_ce['PRE']['p_kw'])}), embora sua dispersão tenha aumentado ({pj(_ce['PRE']['p_fligner'])}). O sinal do ENSO "
+    "apareceu nas variáveis que integram o balanço hídrico: nos meses de La Niña a evapotranspiração ficou "
     f"{v(_ce['EV']['delta_LN'])}% acima do normal da época e o WAI {v(_ce['WAI']['delta_LN'])}% (ambos "
-    f"{pj(max(_ce['EV']['p_mw_LN'], _ce['WAI']['p_mw_LN']))}), e nos de El Niño {v(_ce['EV']['delta_EN'])}% e "
-    f"{v(_ce['WAI']['delta_EN'])}% ({pj(_ce['EV']['p_mw_EN'])} e {pj(_ce['WAI']['p_mw_EN'])}) (Figura 12). A PSN "
-    f"respondeu no mesmo sentido, com anomalia média de {sgn(_ce['PSN']['delta_LN'])}% nos meses de La Niña "
+    f"{pj(max(_ce['EV']['p_mw_LN'], _ce['WAI']['p_mw_LN']))}), enquanto nos meses de El Niño as anomalias de EV "
+    f"({v(_ce['EV']['delta_EN'])}%) e de WAI ({v(_ce['WAI']['delta_EN'])}%) não foram significativas (Figura 12). A PSN "
+    f"respondeu no mesmo sentido: anomalia média de {sgn(_ce['PSN']['delta_LN'])}% nos meses de La Niña "
     f"({pj(_ce['PSN']['p_mw_LN'])}; mediana de {v(_c5['La Niña']['mediana'])} contra {v(_c5['Neutro']['mediana'])} "
     f"gC·m⁻²·mês⁻¹ nos meses neutros) e de {sgn(_ce['PSN']['delta_EN'])}% nos de El Niño ({pj(_ce['PSN']['p_mw_EN'])}). "
-    "O efeito da La Niña desloca a distribuição inteira, e não apenas os extremos: o primeiro quartil sobe de "
-    f"{v(_c5['Neutro']['Q1'])} para {v(_c5['La Niña']['Q1'])} gC·m⁻²·mês⁻¹ e a proporção de meses no decil mais baixo "
-    f"cai de {v(_ce['PSN']['pct_abaixo_P10_N'],0)}% para {v(_ce['PSN']['pct_abaixo_P10_LN'],0)}%. Esse resultado é "
-    "consistente com a literatura que documenta chuvas acima do normal no Brasil Central durante a La Niña e evidencia "
-    "que, no Cerrado, o que transmite o sinal do ENSO à produtividade não é a chuva do próprio mês, e sim a água "
-    "efetivamente disponível e utilizada pela vegetação, integrada ao longo de semanas.")
+    f"O efeito da La Niña desloca a distribuição inteira: o primeiro quartil sobe de {v(_c5['Neutro']['Q1'])} para "
+    f"{v(_c5['La Niña']['Q1'])} gC·m⁻²·mês⁻¹ e a proporção de meses no decil mais baixo cai de "
+    f"{v(_ce['PSN']['pct_abaixo_P10_N'],0)}% para {v(_ce['PSN']['pct_abaixo_P10_LN'],0)}%. O resultado é consistente "
+    "com as chuvas acima do normal no Brasil Central durante a La Niña (Cai et al., 2020) e sugere que, no Cerrado, o "
+    "que transmite o sinal do ENSO à produtividade não é a chuva do próprio mês, e sim a água efetivamente disponível e "
+    "utilizada pela vegetação, integrada ao longo de semanas.")
 replace_image(ORIG[294], os.path.join(FIG, 'fig09_enso_CE.png'))
 set_caption_after_image(ORIG[294], "Figura 12 - Distribuição das variáveis ambientais por fase ENSO no Cerrado.")
 # ---- Caatinga
@@ -1099,32 +1243,32 @@ set_text(ORIG[296],
     f"acima do normal ({pj(_ca['EV']['p_mw_LN'])}), a temperatura {v(abs(_ca['TST']['delta_LN']))}% abaixo "
     f"({pj(_ca['TST']['p_mw_LN'])}) e a PSN {v(_ca['PSN']['delta_LN'])}% acima ({pj(_ca['PSN']['p_mw_LN'])}; mediana de "
     f"{v(_a5c['La Niña']['mediana'])} contra {v(_a5c['Neutro']['mediana'])} gC·m⁻²·mês⁻¹), sem diferença de posição "
-    f"central na precipitação ({pj(_ca['PRE']['p_kw'])}), cuja dispersão, contudo, aumentou nas fases ativas "
+    f"central na precipitação ({pj(_ca['PRE']['p_kw'])}), cuja dispersão aumentou nas fases ativas "
     f"({pj(_ca['PRE']['p_fligner'])}) (Figura 13). Nos meses de El Niño a PSN ficou {v(abs(_ca['PSN']['delta_EN']))}% "
     f"abaixo do normal, diferença não significativa ({pj(_ca['PSN']['p_mw_EN'])}), ainda que "
     f"{v(_ca['PSN']['pct_abaixo_P10_EN'],0)}% desses meses tenham caído no decil mais baixo, contra "
     f"{v(_ca['PSN']['pct_abaixo_P10_N'],0)}% dos neutros e {v(_ca['PSN']['pct_abaixo_P10_LN'],0)}% dos de La Niña. Esse "
-    "comportamento é coerente com o regime pulsado do bioma semiárido, no qual a produtividade responde de forma quase "
-    "imediata à disponibilidade de água, e com os achados de Silva et al. (2026), que associam anos de El Niño a "
-    "reduções da produtividade na Caatinga.")
+    "comportamento é compatível com a dinâmica de pulsos de recursos dos ecossistemas semiáridos, em que a atividade "
+    "biológica responde rapidamente aos eventos de disponibilidade de água (Schwinning; Sala, 2004), com as medições de "
+    "fluxo de CO₂ na Caatinga, que acompanham a magnitude e a distribuição da chuva (Mendes et al., 2020, 2025), e com "
+    "os achados de Silva et al. (2026), que associam anos de El Niño a reduções da produtividade no bioma.")
 replace_image(ORIG[297], os.path.join(FIG, 'fig10_enso_CA.png'))
 set_caption_after_image(ORIG[297], "Figura 13 - Distribuição das variáveis ambientais por fase ENSO na Caatinga.")
-# ---- mediação e defasagem (parágrafos novos + Figura 14), após a Figura 13
+# ---- experimento de perturbação (sensibilidade) e defasagem
 _fr = {b: 100 * med(b, f)['efeito'] / med(b, f)['observado'] for b, f in (('CE', 'La Niña'), ('CA', 'La Niña'), ('MA', 'El Niño'))}
 _fr_lo, _fr_hi = sorted([_fr['CE'], _fr['CA']])
-P_MED = ("Para quantificar quanto da resposta da PSN é explicado pelas variáveis intermediárias, o modelo ajustado à "
-    "série completa foi utilizado como instrumento de mediação: prevendo-se a PSN com os preditores em sua climatologia "
-    "mensal e, alternativamente, com cada preditor deslocado pela anomalia média observada na fase, obtém-se a mudança "
-    f"de PSN atribuível a cada canal. Nos meses de La Niña, o modelo reproduz {sgn(med('CE','La Niña')['efeito'])}% de "
-    f"PSN no Cerrado (observado {sgn(med('CE','La Niña')['observado'])}%) e {sgn(med('CA','La Niña')['efeito'])}% na "
-    f"Caatinga (observado {sgn(med('CA','La Niña')['observado'])}%), quase inteiramente pela via da evapotranspiração "
-    f"({sgn(med('CE','La Niña','EV')['efeito'])}% e {sgn(med('CA','La Niña','EV')['efeito'])}% quando só ela é deslocada); "
-    f"nos meses de El Niño na Mata Atlântica, o modelo reproduz {sgn(med('MA','El Niño')['efeito'])}% (observado "
-    f"{sgn(med('MA','El Niño')['observado'])}%), sobretudo pela via da temperatura ({sgn(med('MA','El Niño','TST')['efeito'])}%). "
-    f"Assim, de {v(_fr_lo,0)}% a {v(_fr_hi,0)}% da resposta da PSN ao ENSO nos biomas sazonais é mediada pela água "
-    f"efetivamente utilizada pela vegetação, e cerca de {v(_fr['MA'],0)}% da resposta no bioma úmido é mediada pelo "
-    "aquecimento da superfície, restando nesse caso uma parcela não explicada pelos preditores do mês, possivelmente "
-    "associada à radiação e à defasagem da resposta.")
+P_SENS = ("O experimento de perturbação baseado no modelo (seção 5.4.1) indica quanto dessas respostas pode ser reproduzido "
+    "pelas variáveis intermediárias. Nos meses de La Niña, deslocar os preditores pelas suas anomalias médias faz o "
+    f"modelo prever PSN {sgn(med('CE','La Niña')['efeito'])}% no Cerrado (observado {sgn(med('CE','La Niña')['observado'])}%) "
+    f"e {sgn(med('CA','La Niña')['efeito'])}% na Caatinga (observado {sgn(med('CA','La Niña')['observado'])}%); deslocar "
+    f"apenas a evapotranspiração já produz {sgn(med('CE','La Niña','EV')['efeito'])}% no Cerrado e "
+    f"{sgn(med('CA','La Niña','EV')['efeito'])}% na Caatinga. Nos meses de El Niño na Mata Atlântica, o modelo prevê "
+    f"{sgn(med('MA','El Niño')['efeito'])}% (observado {sgn(med('MA','El Niño')['observado'])}%), e a temperatura sozinha "
+    f"responde por {sgn(med('MA','El Niño','TST')['efeito'])}%. Assim, o experimento reproduziu de {v(_fr_lo,0)}% a "
+    f"{v(_fr_hi,0)}% da magnitude observada nos biomas sazonais, quase inteiramente pela via da evapotranspiração, e cerca "
+    f"de {v(_fr['MA'],0)}% no bioma úmido, sobretudo pela via da temperatura; a parcela restante não é explicada pelos "
+    "preditores do mesmo mês e pode envolver radiação e defasagem da resposta. Trata-se de uma decomposição baseada no "
+    "modelo, e não de uma análise causal.")
 ld = {b: _lagdesc(b) for b in ('MA', 'CE', 'CA')}
 def _c(b, f, L, nd=0): return sgn(cmp_(b, f, L)['media'], nd)
 def _prim_ns_comp(b, f):
@@ -1133,46 +1277,64 @@ def _prim_ns_comp(b, f):
     return None
 _sigCE = [x['lag'] for x in JA['lag']['Cerrado'] if x['p'] < 0.05]
 _ma_en = [abs(cmp_('MA', 'El Niño', L)['media']) for L in (0, 1, 2, 3, 4, 6)]
-_ev = {e['inicio']: e for e in JA['eventos']}
-_en16 = max([e for e in JA['eventos'] if e['fase'] == 'El Niño'], key=lambda e: e['oni_pico'])
-_ln11 = _ev.get('2010-06'); _ln23 = _ev.get('2021-09')
 _ma_ln_sig = _ult_lag_sig('MA', 'La Niña')
-P_LAG = ("A resposta não se restringe ao mês em fase ENSO. A correlação de Spearman entre o ONI de um mês e a anomalia "
-    "de PSN dos meses seguintes é negativa nos três biomas (El Niño reduz e La Niña eleva a PSN) e decai em ritmos "
-    f"distintos: na Caatinga o efeito é máximo no próprio mês (ρ = {vm(ld['CA']['rhomax'],2)}) e deixa de ser "
-    f"significativo após {EXTENSO[ld['CA']['prim_ns'] - 1]} meses; na Mata Atlântica é máximo com "
-    f"{EXTENSO[ld['MA']['lagmax']]} meses de atraso (ρ = {vm(ld['MA']['rhomax'],2)}) e persiste por cerca de "
-    f"{EXTENSO[ld['MA']['ult_sig']]} meses; no Cerrado é fraco no mês corrente (ρ = {vm(ld['CE']['rho0'],2)}, "
-    f"{'não significativo' if ld['CE']['p0'] >= 0.05 else 'significativo'}), mas significativo de "
-    f"{EXTENSO[min(_sigCE)]} a {EXTENSO[max(_sigCE)]} meses depois, com máximo aos {EXTENSO[ld['CE']['lagmax']]} meses "
-    f"(ρ = {vm(ld['CE']['rhomax'],2)}). Os compósitos por fase (Figura 14) confirmam essa distinção. Após meses de La "
-    f"Niña, a anomalia média de PSN na Caatinga é de {faixa(_c('CA','La Niña',0), _c('CA','La Niña',1))}% nos três "
-    f"primeiros meses, cai para {faixa(_c('CA','La Niña',4), _c('CA','La Niña',3))}% no terceiro e no quarto mês e deixa "
-    f"de ser significativa aos {EXTENSO[_prim_ns_comp('CA','La Niña')]} meses, uma resposta pulsada e curta, típica da "
-    f"vegetação caducifólia do semiárido; no Cerrado, o ganho de {faixa(_c('CE','La Niña',2), _c('CE','La Niña',1))}% dos "
-    f"primeiros meses não decai, mantendo-se em {_c('CE','La Niña',6)}% aos seis e {_c('CE','La Niña',9)}% aos nove "
-    f"meses (p < 0,05 em todas as defasagens até {EXTENSO[_ult_lag_sig('CE','La Niña')]} meses), o que sugere que o "
-    "excedente hídrico da estação chuvosa em La Niña, armazenado em solos profundos e explorado por sistemas "
-    "radiculares extensos, sustenta a produtividade da estação seca subsequente. Pelo mesmo mecanismo, o El Niño quase "
-    f"não aparece no Cerrado no mês corrente ({_c('CE','El Niño',0)}%) e só se manifesta tardiamente "
-    f"({_c('CE','El Niño',3)}% aos três e {_c('CE','El Niño',4)}% aos quatro meses e {_c('CE','El Niño',12)}% aos doze "
-    "meses), sem atingir significância estatística, como um déficit de recarga cobrado na estação seguinte. Na Mata "
-    f"Atlântica, o El Niño reduz a PSN em {v(min(_ma_en),0)}% a {v(max(_ma_en),0)}% de forma significativa do mês "
-    f"corrente até o sexto mês, com resíduo significativo até {EXTENSO[_ult_lag_sig('MA','El Niño')]} meses, enquanto a "
-    f"La Niña não produz ganho significativo em {'nenhuma defasagem' if _ma_ln_sig is None else 'quase nenhuma defasagem'}, "
-    "uma assimetria coerente com o canal térmico: o bioma úmido não é limitado por água em condições médias, de modo "
-    "que água adicional não o beneficia, mas calor adicional o prejudica. Os eventos mais intensos ilustram o padrão: "
-    f"durante o El Niño de {_en16['inicio'][:4]}–{_en16['fim'][:4]} (ONI máximo de {v(_en16['oni_pico'])} °C), a PSN "
-    f"ficou {v(abs(_en16['durante_MA']),0)}%, {v(abs(_en16['durante_CE']),0)}% e {v(abs(_en16['durante_CA']),0)}% abaixo "
-    f"do normal na Mata Atlântica, no Cerrado e na Caatinga, e {v(abs(_en16['depois3m_MA']),0)}%, "
-    f"{v(abs(_en16['depois3m_CE']),0)}% e {v(abs(_en16['depois3m_CA']),0)}% abaixo nos três meses seguintes; durante a "
-    f"La Niña de {_ln11['inicio'][:4]}–{_ln11['fim'][:4]}, ficou {v(_ln11['durante_CE'],0)}% e {v(_ln11['durante_CA'],0)}% "
-    f"acima no Cerrado e na Caatinga, e durante a La Niña prolongada de {_ln23['inicio'][:4]}–{_ln23['fim'][:4]}, "
-    f"{v(_ln23['durante_CE'],0)}% e {v(_ln23['durante_CA'],0)}%.")
-_last = add_paras_after(ORIG[297], BODY_TPL, [P_MED, P_LAG])
-add_figure_after(_last, "Figura 14 - Anomalia média da PSN (%) durante e após meses de El Niño e de La Niña, por defasagem de 0 a "
+P_LAG0 = ("A resposta da PSN não se restringe ao mês em fase ENSO. A correlação de Spearman entre o ONI de um mês e a "
+    "anomalia de PSN dos meses seguintes é negativa nos três biomas (El Niño reduz e La Niña eleva a PSN), mas com "
+    "persistência diferente em cada um, como mostram os compósitos por fase da Figura 14. Como descrito na seção 5.4.1, "
+    "essa análise é exploratória, e as defasagens não são testes independentes.")
+P_LAG_CA = (f"Na Caatinga a resposta é imediata e curta: a correlação é máxima no próprio mês (ρ = {vm(ld['CA']['rhomax'],2)}) "
+    f"e deixa de ser significativa após {EXTENSO[ld['CA']['prim_ns'] - 1]} meses. Após meses de La Niña, a anomalia média "
+    f"de PSN é de cerca de {_c('CA','La Niña',0)}% no mês da fase e nos dois meses seguintes, cai para "
+    f"{faixa(_c('CA','La Niña',4), _c('CA','La Niña',3))}% no terceiro e no quarto mês após a fase e deixa de ser "
+    f"significativa aos {EXTENSO[_prim_ns_comp('CA','La Niña')]} meses, padrão compatível com a resposta pulsada da "
+    "vegetação caducifólia do semiárido (Schwinning; Sala, 2004; Mendes et al., 2020).")
+P_LAG_CE = (f"No Cerrado a resposta é mais lenta e persistente: a correlação é fraca no mês corrente (ρ = {vm(ld['CE']['rho0'],2)}, "
+    f"{'não significativa' if ld['CE']['p0'] >= 0.05 else 'significativa'}), mas significativa de {EXTENSO[min(_sigCE)]} a "
+    f"{EXTENSO[max(_sigCE)]} meses depois, com máximo aos {EXTENSO[ld['CE']['lagmax']]} meses (ρ = {vm(ld['CE']['rhomax'],2)}). "
+    f"Após meses de La Niña, o ganho de {faixa(_c('CE','La Niña',2), _c('CE','La Niña',1))}% dos primeiros meses não decai, "
+    f"mantendo-se em {_c('CE','La Niña',6)}% aos seis e {_c('CE','La Niña',9)}% aos nove meses (p < 0,05 em todas as "
+    f"defasagens até {EXTENSO[_ult_lag_sig('CE','La Niña')]} meses); o El Niño quase não aparece no mês corrente "
+    f"({_c('CE','El Niño',0)}%) e só se manifesta tardiamente ({_c('CE','El Niño',3)}% aos três, {_c('CE','El Niño',4)}% "
+    f"aos quatro e {_c('CE','El Niño',12)}% aos doze meses), sem atingir significância. Esse padrão é compatível com o "
+    "armazenamento de água em solos profundos, explorado por sistemas radiculares extensos, que sustenta a vegetação do "
+    "Cerrado na estação seca (Oliveira et al., 2005; Fan et al., 2017): um excedente hídrico na estação chuvosa de La "
+    "Niña seria consumido ao longo dos meses seguintes, e um déficit de El Niño seria cobrado na estação seguinte.")
+P_LAG_MA = (f"Na Mata Atlântica a resposta é intermediária e assimétrica: a correlação é máxima com {EXTENSO[ld['MA']['lagmax']]} "
+    f"meses de atraso (ρ = {vm(ld['MA']['rhomax'],2)}) e persiste por cerca de {EXTENSO[ld['MA']['ult_sig']]} meses. O El "
+    f"Niño reduz a PSN em {v(min(_ma_en),0)}% a {v(max(_ma_en),0)}% de forma significativa do mês corrente até o sexto "
+    f"mês, com resíduo significativo até {EXTENSO[_ult_lag_sig('MA','El Niño')]} meses, enquanto a La Niña não produz "
+    f"ganho significativo em {'nenhuma defasagem' if _ma_ln_sig is None else 'quase nenhuma defasagem'}. A assimetria é "
+    "coerente com o canal térmico identificado acima: o bioma úmido não é limitado por água em condições médias, de modo "
+    "que água adicional não o beneficia, mas calor adicional o prejudica.")
+_last = add_paras_after(ORIG[297], BODY_TPL, [P_SENS, P_LAG0, P_LAG_CA, P_LAG_CE, P_LAG_MA])
+_pic14 = add_figure_after(_last, "Figura 14 - Anomalia média da PSN (%) durante e após meses de El Niño e de La Niña, por defasagem de 0 a "
                  "12 meses, com intervalo de confiança de 95% (bootstrap), nos três biomas; símbolos cheios indicam diferença "
                  "significativa em relação aos meses neutros (Mann-Whitney, p < 0,05).", os.path.join(FIG, 'fig14_compositos_enso.png'), width_cm=13.0)
+# ---- Tabela 7: episódios mais intensos
+_evs = sorted(JA['eventos'], key=lambda e: -e['oni_pico'])
+_sel = [e for e in JA['eventos'] if e['inicio'] in ('2014-10', '2010-06', '2021-09', '2023-06', '2015-10')]
+_sel = sorted([e for e in JA['eventos'] if e['fase'] == 'El Niño'], key=lambda e: -e['oni_pico'])[:2] + sorted([e for e in JA['eventos'] if e['fase'] == 'La Niña'], key=lambda e: -e['meses'])[:2]
+_p7 = new_para_after(_pic14, BODY_TPL,
+    "Os episódios mais intensos e mais longos ilustram o padrão (Tabela 7): durante os El Niños de 2014–2016, o mais "
+    "forte da série, e de 2023–2024, a PSN ficou abaixo do normal nos três biomas, e no primeiro caso a redução se "
+    "aprofundou nos três meses seguintes, sobretudo no Cerrado; durante as La Niñas prolongadas de 2010–2011 e 2021–2023, "
+    "a PSN ficou acima do normal no Cerrado e na Caatinga, mas não na Mata Atlântica. Os anos de 2015 e 2016 coincidem com o período de seca extrema documentado no "
+    "Nordeste e no Sudeste do Brasil (Marengo et al., 2018; Cunha et al., 2019).")
+cap7 = new_para_after(_p7, TABCAP_TPL, "Tabela 7 - Anomalia média da PSN (%) durante os dois episódios de El Niño mais intensos e "
+                      "as duas La Niñas mais longas da série (2001–2025) e nos três meses seguintes, por bioma.", bold=True)
+cap7.alignment = WD_ALIGN_PARAGRAPH.CENTER
+t = table_after(cap7, len(_sel) + 1, 8); t.alignment = 1
+set_widths(t, [1.6, 2.7, 1.2, 1.4, 2.1, 2.1, 2.1, 2.8])
+for j, hname in enumerate(['Fase', 'Período', 'Meses', 'ONI máx.\n(°C)', 'Mata Atlântica\ndurante / após', 'Cerrado\ndurante / após', 'Caatinga\ndurante / após', 'Contexto']):
+    set_cell(t.rows[0].cells[j], hname, bold=True, size=8); t.rows[0].cells[j].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
+_ctx = {'2014-10': 'El Niño forte; seca no Nordeste e no Sudeste (Marengo et al., 2018)',
+        '2023-06': 'El Niño de 2023–2024', '2010-06': 'La Niña de 2010–2011', '2021-09': 'La Niña prolongada de 2021–2023'}
+for i, e in enumerate(_sel, start=1):
+    def _s0(x): return '0' if abs(round(x)) < 0.5 else sgn(x, 0)
+    def _da(b): return f"{_s0(e[f'durante_{b}'])}% / {_s0(e[f'depois3m_{b}'])}%"
+    vals = [e['fase'], f"{e['inicio'].replace('-', '/')} a {e['fim'].replace('-', '/')}", str(e['meses']), v(e['oni_pico'], 1), _da('MA'), _da('CE'), _da('CA'), _ctx.get(e['inicio'], '')]
+    for j, sval in enumerate(vals): set_cell(t.rows[i].cells[j], sval, size=8)
+_fim7 = new_para_after(t.rows[-1].cells[0].paragraphs[0], BODY_TPL, ""); _fim7._p.getparent().remove(_fim7._p); t._tbl.addnext(_fim7._p)
 _d_lo = min(abs(t6(b, 'PSN')[k]) for b, k in (('MA', 'delta_EN'), ('CE', 'delta_LN'), ('CA', 'delta_LN')))
 _d_hi = max(abs(t6(b, 'PSN')[k]) for b, k in (('MA', 'delta_EN'), ('CE', 'delta_LN'), ('CA', 'delta_LN')))
 set_text(ORIG[299],
@@ -1189,16 +1351,22 @@ set_text(ORIG[299],
 set_text(ORIG[300],
     "A interpretação conjunta desses resultados sustenta um padrão de influência indireta, na qual o ENSO atua como "
     "forçante de larga escala que modula variáveis intermediárias, com canais distintos por bioma: a evapotranspiração "
-    "e o WAI, expressões da água efetivamente disponível, no Cerrado e na Caatinga, onde a La Niña eleva a produtividade "
-    f"típica em cerca de {v(LN_LO,0)}% a {v(LN_HI,0)}%; e a temperatura da superfície na Mata Atlântica, onde o El Niño "
-    "não altera a produtividade típica, mas aumenta a frequência de meses de produtividade muito baixa.")
+    "e o WAI, expressões da água efetivamente disponível, no Cerrado e na Caatinga, onde a PSN dos meses de La Niña fica "
+    f"cerca de {v(LN_LO,0)}% a {v(LN_HI,0)}% acima do normal; e a temperatura da superfície na Mata Atlântica, onde os "
+    "meses de El Niño apresentam redução modesta da PSN típica e aumento acentuado da frequência de meses de "
+    "produtividade muito baixa.")
 set_text(ORIG[301],
-    "A ausência de deslocamento da produtividade típica da Mata Atlântica, apesar da resposta significativa da "
+    "O deslocamento apenas modesto da produtividade típica da Mata Atlântica, apesar da resposta significativa da "
     "temperatura, sugere que esse ecossistema apresenta capacidade parcial de amortecimento frente às oscilações "
     "climáticas de larga escala, decorrente de sua maior reserva hídrica e da menor amplitude de seu ciclo anual; esse "
     "amortecimento, contudo, falha nos meses mais quentes, quando a produtividade cai de forma abrupta. No Cerrado e na "
     "Caatinga, onde a produtividade é governada pelo balanço hídrico, o amortecimento é menor e o sinal do ENSO chega à "
     "PSN de forma sistemática, com persistência de vários meses no Cerrado.")
+
+set_text(ORIG[302], ORIG[302].text
+    .replace("Sob cenários de intensificação dos eventos ENSO particularmente episódios de El Niño mais frequentes e severos, projetados para o século XXI a magnitude",
+             "Sob cenários de intensificação dos eventos ENSO, com episódios de El Niño mais frequentes e severos projetados para o século XXI (Cai et al., 2021), a magnitude")
+    .replace("mostrou-se metodologicamente adequada para capturar os efeitos indiretos do ENSO", "mostrou-se adequada, neste conjunto de dados, para representar os efeitos indiretos do ENSO"))
 
 # =============================================================================
 # 13b. 6.6 VARIABILIDADE INTERANUAL (nova subseção; "Implicações" passa a 6.7)
@@ -1213,20 +1381,15 @@ def _p2025(b):
     x = ji(b)['dif_2025_pct']; return f"{v(abs(x), 0)}% {'acima' if x > 0 else 'abaixo'}"
 _p66 = add_paras_after(_h66, BODY_TPL, [
     "A extensão da série para 25 anos permite examinar a produtividade também na escala anual, dimensão que a análise "
-    "mensal não cobre. Para cada bioma, a PSN mensal foi somada por ano nos 24 anos completos (2001 a 2024); como os "
-    "meses da base seguem janelas fixas de compostos de oito dias, a soma anual aproxima o ano civil com diferença de "
-    f"um composto nas bordas. O ano de 2025 dispõe apenas de janeiro a {_mes25} e foi excluído da tendência, aparecendo "
-    "na Figura 15 como valor parcial. A variabilidade entre anos foi medida pelo coeficiente de variação (CV), a "
-    "tendência monotônica pelo estimador de inclinação de Sen com o teste de Mann-Kendall, e a soma anual foi "
-    "comparada com o NPP anual do produto MOD17A3HGF (Coleção 6.1), obtido de forma independente para as mesmas "
-    "máscaras de bioma (Tabela 7). A fase ENSO dominante de cada ano (pelo menos seis meses na mesma fase) é indicada "
-    "na figura apenas como referência, pois a mistura de meses de fases distintas dentro do ano torna a comparação "
+    "mensal não cobre (métodos na seção 5.4.2). A Figura 15 mostra a soma anual da PSN de cada bioma nos 24 anos "
+    f"completos (2001 a 2024), com o valor parcial de 2025 (janeiro a {_mes25}) e a fase ENSO dominante de cada ano, "
+    "indicada apenas como referência, já que a mistura de meses de fases distintas dentro do ano torna a comparação "
     "anual menos nítida do que a análise mensal em anomalias da seção 6.5, que permanece a base da conclusão sobre o "
-    "ENSO.",
+    "ENSO; a Tabela 8 resume as estatísticas.",
     f"A soma anual da PSN correlacionou-se em {v(min(ji(b)['r_npp'] for b in ('MA','CE','CA')), 2)} a "
-    f"{v(max(ji(b)['r_npp'] for b in ('MA','CE','CA')), 2)} com o NPP anual do MOD17A3HGF nos três biomas, o que valida a "
-    "série mensal por um produto independente (o NPP é sistematicamente menor porque desconta ainda a respiração de "
-    f"manutenção do lenho e a de crescimento). A produtividade anual média foi de {v(_ma['media'], 0)} g C·m⁻²·ano⁻¹ na "
+    f"{v(max(ji(b)['r_npp'] for b in ('MA','CE','CA')), 2)} com o NPP anual do MOD17A3HGF nos três biomas, o que mostra "
+    "elevada consistência entre os dois produtos da família MOD17 (o NPP é sistematicamente menor porque desconta ainda "
+    f"a respiração de manutenção do lenho e a de crescimento). A produtividade anual média foi de {v(_ma['media'], 0)} g C·m⁻²·ano⁻¹ na "
     f"Mata Atlântica, {v(_ce['media'], 0)} no Cerrado e {v(_ca['media'], 0)} na Caatinga, mas a variabilidade entre anos "
     f"foi cerca de três vezes maior nos biomas sazonais (CV de {v(_cv['CE'])}% no Cerrado e {v(_cv['CA'])}% na Caatinga) "
     f"do que na Mata Atlântica ({v(_cv['MA'])}%), o que quantifica, na escala anual, a tipologia da Tabela 4: onde a "
@@ -1236,9 +1399,10 @@ _p66 = add_paras_after(_h66, BODY_TPL, [
     f"{_ma['min_ano']} ({v(_ma['min_val'], 0)} g C·m⁻²·ano⁻¹) durante o El Niño forte; e {_anos(_ce['piores'])} no Cerrado, "
     f"cujo mínimo ({_ce['min_ano']}, {v(_ce['min_val'], 0)} g C·m⁻²·ano⁻¹) reflete a produtividade mais baixa do início da "
     "série.",
-    f"A Mata Atlântica foi o único bioma com tendência de queda ao longo do período ({_tend('MA')}), de cerca de "
-    f"{v(abs(_ma['sen_pct_periodo']), 0)}% em 24 anos, marginalmente significativa e puxada em parte pelos anos de "
-    f"2015 e 2016; no Cerrado ({_tend('CE')}) e na Caatinga ({_tend('CA')}) não houve tendência significativa. Esse "
+    f"A Mata Atlântica foi o único bioma com tendência negativa ao longo do período ({_tend('MA')}), de cerca de "
+    f"{v(abs(_ma['sen_pct_periodo']), 0)}% em 24 anos: não significativa ao nível de 5%, embora com sinal sugestivo de "
+    "declínio, e com valores particularmente baixos em 2015 e 2016; no Cerrado "
+    f"({_tend('CE')}) e na Caatinga ({_tend('CA')}) não houve tendência significativa. Esse "
     "resultado é compatível com a hipótese, discutida na seção 6.3, de que fatores de paisagem, como a fragmentação e a "
     "expansão da silvicultura, reduzam a produtividade do bioma mais alterado do estado, mas não a comprova: sem "
     "variáveis de uso do solo no modelo, a queda não pode ser separada do aquecimento da superfície, que a seção 6.5 "
@@ -1248,11 +1412,11 @@ _p66 = add_paras_after(_h66, BODY_TPL, [
 _pic15 = add_figure_after(_p66, "Figura 15 - Soma anual da PSN por bioma (2001–2024), tendência de Sen, ano parcial de 2025 e "
                           "anos com fase ENSO dominante (pelo menos seis meses na fase); os três piores anos de cada bioma "
                           "estão identificados.", os.path.join(FIG, 'fig15_interanual.png'), width_cm=15.0)
-cap7 = new_para_after(_pic15, TABCAP_TPL, "Tabela 7 - Variabilidade interanual da PSN por bioma nos anos completos (2001–2024): média e "
+cap8 = new_para_after(_pic15, TABCAP_TPL, "Tabela 8 - Variabilidade interanual da PSN por bioma nos anos completos (2001–2024): média e "
                       "coeficiente de variação da soma anual, tendência de Sen (variação percentual acumulada no período e valor-p "
                       "de Mann-Kendall), piores e melhores anos e correlação com o NPP anual do MOD17A3HGF.", bold=True)
-cap7.alignment = WD_ALIGN_PARAGRAPH.CENTER
-t = table_after(cap7, len(T7) + 1, 7); t.alignment = 1
+cap8.alignment = WD_ALIGN_PARAGRAPH.CENTER
+t = table_after(cap8, len(T7) + 1, 7); t.alignment = 1
 set_widths(t, [2.6, 2.3, 1.6, 3.0, 2.3, 2.3, 1.9])
 for j, hname in enumerate(['Bioma', 'PSN anual média\n(g C·m⁻²·ano⁻¹)', 'CV (%)', 'Tendência de Sen\n2001–2024', 'Piores anos', 'Melhores anos', 'r com NPP anual']):
     set_cell(t.rows[0].cells[j], hname, bold=True, size=8); t.rows[0].cells[j].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
@@ -1273,11 +1437,29 @@ set_text(ORIG[305],
     f"Para a Mata Atlântica, o menor poder preditivo do modelo climático (R² = {r2('MA')}%) é compatível com a "
     "hipótese de que fatores de paisagem, como a expansão da monocultura de eucalipto e a fragmentação, expliquem "
     "parte da variância não capturada pelo clima; testar essa hipótese exigiria incluir variáveis de uso do solo no "
-    "modelo, o que se recomenda para trabalhos futuros. Se confirmada, ela indica que políticas de restauração "
-    "florestal e controle do desmatamento têm potencial direto de reduzir a variabilidade da PSN e elevar a "
-    "produtividade ecossistêmica, ampliando os serviços de sequestro de carbono e regulação hídrica prestados pelo "
-    "bioma.")
-set_text(ORIG[308], ORIG[308].text.replace("(R² = 94,0%)", f"(R² = {r2('CA')}%)"))
+    "modelo, o que se recomenda para trabalhos futuros. A literatura sobre fragmentação e degradação de borda (Lima et "
+    "al., 2020; Broggio et al., 2024) sugere que políticas de restauração florestal e de controle do desmatamento podem "
+    "contribuir para reduzir a variabilidade da PSN e elevar a produtividade ecossistêmica, implicação que este estudo "
+    "apoia, mas não demonstra por si só.")
+set_text(ORIG[306], ORIG[306].text
+    .replace("um dos eixos prioritários da conservação no país.", "um dos eixos prioritários da conservação no país [REF: fonte oficial do Corredor Central].")
+    .replace("reforçam a urgência de estratégias de conectividade entre fragmentos florestais como condição para a resiliência ecossistêmica",
+             "reforçam, em conjunto com a literatura sobre fragmentação (Ribeiro et al., 2009; Lima et al., 2020), a relevância de estratégias de conectividade entre fragmentos florestais para a resiliência ecossistêmica"))
+set_text(ORIG[307], ORIG[307].text
+    .replace("aponta que a conservação da disponibilidade hídrica por meio da proteção de nascentes, manutenção da cobertura vegetal nativa e controle das queimadas constitui a intervenção de maior impacto para a manutenção da produtividade e dos serviços ecossistêmicos do bioma.",
+             "reforça a relevância da disponibilidade hídrica como variável a ser considerada no monitoramento e no planejamento do bioma, o que dá sustentação a medidas como a proteção de nascentes, a manutenção da cobertura vegetal nativa e o controle das queimadas.")
+    .replace("a proteção hídrica torna-se uma prioridade estratégica", "a proteção hídrica tende a ganhar prioridade"))
+set_text(ORIG[308],
+    f"Para a Caatinga, o alto desempenho preditivo do modelo (R² = {r2('CA')}%) indica que a PSN responde de forma "
+    "previsível às condições climáticas do mês. O modelo pode, assim, fornecer uma base quantitativa para sistemas de "
+    "monitoramento da produtividade por sensoriamento remoto e, quando acoplado a previsões meteorológicas ou "
+    "climáticas das variáveis ambientais ou a dados quase em tempo real, para o desenvolvimento futuro de sistemas de "
+    "alerta, com aplicação no acompanhamento da segurança alimentar e hídrica das populações rurais, especialmente em "
+    "anos de El Niño.")
+set_text(ORIG[309], ORIG[309].text
+    .replace("alinhada aos objetivos do Zoneamento Ecológico-Econômico da Bahia e às metas de restauração florestal do Plano Nacional de Recuperação da Vegetação Nativa (PLANAVEG).",
+             "alinhada aos objetivos do Zoneamento Ecológico-Econômico da Bahia [REF: documento oficial do ZEE-BA] e às metas de restauração florestal do Plano Nacional de Recuperação da Vegetação Nativa (PLANAVEG; Brasil, 2017).")
+    .replace("ao demonstrar que os controles ecológicos", "ao indicar que os controles ecológicos"))
 set_text(ORIG[312],
     "Os principais resultados confirmaram a viabilidade do modelo nos três biomas analisados. O MRMP-N de grau 2 "
     f"apresentou elevado desempenho preditivo no Cerrado (R² = {r2('CE')}%) e na Caatinga (R² = {r2('CA')}%), além "
@@ -1291,32 +1473,32 @@ set_text(ORIG[312],
     "marginalmente significativa), e os piores anos coincidiram com as secas de 2012–2013 e com o El Niño de "
     "2015–2016.")
 set_text(ORIG[313],
-    "Retomando as hipóteses formuladas: a H1 confirmou-se, com uma ressalva. O grau 2 superou o modelo linear nos "
+    "Retomando as hipóteses formuladas: a H1 confirmou-se. O grau 2 superou o modelo linear nos "
     f"três biomas ({v(g['MA'][2]-g['MA'][1])}, {v(g['CE'][2]-g['CE'][1])} e {v(g['CA'][2]-g['CA'][1])} pontos "
-    "percentuais de R² de teste na Mata Atlântica, no Cerrado e na Caatinga), mantendo a diferença treino–teste "
-    "abaixo de 10 pontos; na Caatinga, porém, o ganho foi marginal. A H2 confirmou-se: o conjunto de variáveis "
+    "percentuais de R² de teste na Mata Atlântica, no Cerrado e na Caatinga), sem aumento substancial do sobreajuste: a "
+    f"diferença treino–teste ficou em no máximo {v(max(gp[b][2] for b in ('MA','CE','CA')))} pp e a queda no "
+    f"TimeSeriesSplit em no máximo {v(max(RG.loc[b, 'queda_timeseries_pp'] for b in ('MA','CE','CA')))} pp, enquanto os "
+    "graus 4 e 5 degradaram o desempenho de teste. Na Mata Atlântica o grau 3 alcançou R² de teste "
+    f"{v(g3['MA']-g['MA'][2])} ponto acima do grau 2, com diferença treino–teste {v(gp['MA'][3]-gp['MA'][2])} pp maior; "
+    "optou-se pelo grau 2 como grau comum aos três biomas por parcimônia (20 termos contra 55) e por ser superior ao "
+    "grau 3 no Cerrado e na Caatinga. A H2 confirmou-se: o conjunto de variáveis "
     f"climáticas associado às componentes de sazonalidade explicou entre {r2('MA')}% e {r2('CE')}% da variância da "
-    "PSN, acima do limiar de 60% estabelecido, e a composição do conjunto ótimo diferiu entre os biomas: "
+    "PSN, acima do limiar de 60% estabelecido, e a composição do conjunto selecionado diferiu entre os biomas: "
     f"{conj('CA').replace(' + SAZsin + SAZcos','')} na Caatinga, {conj('CE').replace(' + SAZsin + SAZcos','')} no "
-    f"Cerrado e {conj('MA').replace(' + SAZsin + SAZcos','')} na Mata Atlântica, confirmando a maior relevância do "
+    f"Cerrado e {conj('MA').replace(' + SAZsin + SAZcos','')} na Mata Atlântica, o que aponta a maior relevância do "
     "Índice de Disponibilidade Hídrica (WAI) em sistemas com forte sazonalidade hídrica e, na Mata Atlântica, a "
-    "importância das interações entre variáveis."
-    + (f" Ressalva-se ainda que, pelo critério estrito de H1, o grau 3 atenderia tecnicamente à definição de "
-       f"otimalidade na Mata Atlântica (R² de teste de {v(g3['MA'])}%, {v(g3['MA']-g['MA'][2])} ponto acima do grau 2, "
-       f"com diferença treino–teste de {v(gp['MA'][3])} pp, ainda dentro do limite de 10 pontos). Optou-se, contudo, "
-       f"pelo grau 2 como grau comum aos três biomas, tanto por parcimônia, com 20 termos contra 55, mais que o dobro, "
-       f"para um ganho marginal, quanto por ele ser inequivocamente superior ao grau 3 no Cerrado e na Caatinga, em R² "
-       f"de teste e em diferença treino–teste, o que reforça sua adequação como escolha comum de comparação entre os "
-       f"três biomas." if g3['MA'] > g['MA'][2] else ""))
+    "importância das interações entre variáveis.")
 set_text(ORIG[314],
     "A H3 confirmou-se em sua essência: o ONI explicou no máximo 3% da variância das variáveis climáticas e não atua "
     "de forma linear e direta sobre a PSN. A análise em anomalias mensais, porém, revelou um efeito sistemático e "
-    f"mediado: a La Niña elevou a PSN típica em cerca de {v(LN_LO,0)}% a {v(LN_HI,0)}% no Cerrado e na Caatinga, por "
-    "meio da evapotranspiração e do WAI, com resposta imediata e curta na Caatinga e persistente por vários meses no "
-    f"Cerrado; na Mata Atlântica, o El Niño não alterou a produtividade típica, mas elevou de {v(P10_MA[1],0)}% para "
-    f"{v(P10_MA[0],0)}% a frequência de meses de produtividade extremamente baixa, por meio do aquecimento da "
-    "superfície. O padrão é, portanto, o de uma influência indireta, defasada e assimétrica entre fases, transmitida "
-    "pela água efetivamente utilizada pela vegetação nos biomas sazonais e pela temperatura no bioma úmido.")
+    f"consistente: nos meses de La Niña a PSN ficou cerca de {v(LN_LO,0)}% a {v(LN_HI,0)}% acima do normal no Cerrado e "
+    "na Caatinga, em associação com anomalias de evapotranspiração e de WAI, com resposta imediata e curta na Caatinga "
+    "e persistente por vários meses no "
+    f"Cerrado; na Mata Atlântica, os meses de El Niño apresentaram redução modesta da PSN típica "
+    f"({sgn(t6('MA','PSN')['delta_EN'])}%) e aumento da frequência de meses de produtividade extremamente baixa (de "
+    f"{v(P10_MA[1],0)}% para {v(P10_MA[0],0)}%), associados ao aquecimento da superfície. O padrão é, portanto, o de uma "
+    "influência indireta, defasada e assimétrica entre fases, associada à água efetivamente utilizada pela vegetação "
+    "nos biomas sazonais e à temperatura no bioma úmido.")
 set_text(ORIG[316], ORIG[316].text.replace(
     "sem efeito linear direto significativo sobre a PSN.",
     "transmitida pela evapotranspiração no Cerrado e na Caatinga e pela temperatura na Mata Atlântica, com respostas da "
@@ -1325,8 +1507,12 @@ set_text(ORIG[317], ORIG[317].text.rstrip() +
     " Cabe ainda registrar que o MRMP-N é um modelo explicativo-preditivo contemporâneo: ele estima a PSN de um mês "
     "a partir das variáveis ambientais desse mesmo mês e, portanto, não gera previsões autônomas do futuro; para "
     "projetar a PSN de meses vindouros, seria necessário alimentá-lo com valores observados ou previstos de EV, "
-    "PRE, TST e WAI. Por fim, a autocorrelação residual detectada nos três biomas indica que parte da memória "
-    "temporal do sistema não é capturada por preditores do mesmo mês.")
+    "PRE, TST e WAI. A autocorrelação residual detectada nos três biomas indica que parte da memória "
+    "temporal do sistema não é capturada por preditores do mesmo mês. Por fim, a seleção do conjunto de variáveis "
+    "ambientais foi feita sobre as mesmas partições de validação usadas para reportar o desempenho, e não em um "
+    "esquema totalmente aninhado; isso pode introduzir algum otimismo de seleção, atenuado pelas validações agrupada "
+    "por ano e cronológica, de modo que o desempenho deve ser lido como consistente nos esquemas avaliados, e não como "
+    "definitivamente validado.")
 set_text(ORIG[320],
     "Como perspectivas para trabalhos futuros, sugere-se a incorporação explícita da dependência temporal, por "
     "meio de preditores defasados ou termos autorregressivos, para absorver a autocorrelação residual identificada; "
@@ -1450,6 +1636,21 @@ for i, r in enumerate(A5.itertuples(), start=1):
             v(r.minimo, nd), v(r.Q1, nd), v(r.mediana, nd), v(r.media, nd), v(r.Q3, nd), v(r.maximo, nd), str(int(r.outliers))]
     _pb, _pv = r.bioma, r.variavel
     for j, sval in enumerate(vals): set_cell(t.rows[i].cells[j], sval, size=8)
+mid = new_para_after(t.rows[-1].cells[0].paragraphs[0], BODY_TPL, ""); mid._p.getparent().remove(mid._p); t._tbl.addnext(mid._p)
+# Tabela A6 — sensibilidade ao percentil de winsorização
+SW = pd.read_csv(os.path.join(RES, 'sensibilidade_winsor.csv'))
+cap = new_para_after(mid, TABCAP_TPL, "Tabela A6 - Sensibilidade do desempenho do MRMP-N (grau 2, RepeatedKFold 5 × 30) ao percentil de "
+                     "winsorização inferior da PSN no conjunto de treino (0% = sem winsorização; 3% = valor adotado).", bold=True)
+cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
+t = table_after(cap, len(SW) + 1, 6); t.alignment = 1
+set_widths(t, [3.4, 2.6, 3.0, 3.0, 4.2, 2.6])
+for j, hname in enumerate(['Bioma', 'Percentil (%)', 'R² treino (%)', 'R² teste (%)', 'Dif. treino–teste (pp)', 'RMSE']):
+    set_cell(t.rows[0].cells[j], hname, bold=True, size=9)
+_prev = None
+for i, r in enumerate(SW.itertuples(), start=1):
+    for j, sval in enumerate([r.bioma if r.bioma != _prev else '', str(int(r.percentil)), v(r.r2_treino, 1), v(r.r2_teste, 1), v(r.gap_pp, 1), v(r.rmse, 2)]):
+        set_cell(t.rows[i].cells[j], sval, size=9)
+    _prev = r.bioma
 fim = new_para_after(t.rows[-1].cells[0].paragraphs[0], BODY_TPL, ""); fim._p.getparent().remove(fim._p); t._tbl.addnext(fim._p)
 sect_break(fim, landscape=True)
 
@@ -1458,6 +1659,46 @@ sect_break(fim, landscape=True)
 REF_TPL = ORIG[338]
 def add_ref_after(anchor, texto):
     return new_para_after(anchor, REF_TPL, texto)
+add_ref_after(ORIG[337], "ALBERTON, B.; ALMEIDA, J.; HENRIQUES, R.; TORRES, R. S.; MENGHINI, R.; MORELLATO, L. P. C. Leafing patterns and "
+              "drivers across seasonally dry tropical communities. Remote Sensing, v. 11, n. 19, 2267, 2019. DOI: 10.3390/rs11192267.")
+_bo = add_ref_after(ORIG[341], "BORCHERT, R.; RIVERA, G. Photoperiodic control of seasonal development and dormancy in tropical stem-succulent "
+              "trees. Tree Physiology, v. 21, n. 4, p. 213-221, 2001. DOI: 10.1093/treephys/21.4.213.")
+add_ref_after(_bo, "BRASIL. Ministério do Meio Ambiente. Plano Nacional de Recuperação da Vegetação Nativa (PLANAVEG). Brasília: "
+              "MMA, 2017. [REF: conferir edição e URL oficial]")
+_ca = add_ref_after(ORIG[343], "CAI, W.; MCPHADEN, M. J.; GRIMM, A. M.; RODRIGUES, R. R.; TASCHETTO, A. S.; GARREAUD, R. D. et al. Climate "
+              "impacts of the El Niño–Southern Oscillation on South America. Nature Reviews Earth & Environment, v. 1, p. 215-231, "
+              "2020. DOI: 10.1038/s43017-020-0040-3.")
+_ca = add_ref_after(_ca, "CAI, W.; SANTOSO, A.; COLLINS, M.; DEWITTE, B.; KARAMPERIDOU, C.; KUG, J.-S. et al. Changing El Niño–Southern "
+              "Oscillation in a warming climate. Nature Reviews Earth & Environment, v. 2, p. 628-644, 2021. DOI: 10.1038/s43017-021-00199-z.")
+_ca = add_ref_after(_ca, "CUNHA, A. P. M. A.; ZERI, M.; DEUSDARÁ LEAL, K.; COSTA, L.; CUARTAS, L. A.; MARENGO, J. A. et al. Extreme drought "
+              "events over Brazil from 2011 to 2019. Atmosphere, v. 10, n. 11, 642, 2019. DOI: 10.3390/atmos10110642.")
+add_ref_after(_ca, "D'ACUNHA, B.; DALMAGRO, H. J.; ARRUDA, P. H. Z. de; BIUDES, M. S.; LATHUILLIÈRE, M. J.; URIBE, M.; COUTO, E. G.; "
+              "BRANDO, P. M.; VOURLITIS, G.; JOHNSON, M. S. Changes in evapotranspiration, transpiration and evaporation across natural "
+              "and managed landscapes in the Amazon, Cerrado and Pantanal biomes. Agricultural and Forest Meteorology, v. 346, 109875, "
+              "2024. DOI: 10.1016/j.agrformet.2023.109875.")
+add_ref_after(ORIG[344], "FAN, Y.; MIGUEZ-MACHO, G.; JOBBÁGY, E. G.; JACKSON, R. B.; OTERO-CASAL, C. Hydrologic regulation of plant rooting "
+              "depth. Proceedings of the National Academy of Sciences, v. 114, n. 40, p. 10572-10577, 2017. DOI: 10.1073/pnas.1712381114.")
+add_ref_after(ORIG[351], "LAWSON, T.; VIALET-CHABRAND, S. Speedy stomata, photosynthesis and plant water use efficiency. New Phytologist, "
+              "v. 221, n. 1, p. 93-98, 2019. DOI: 10.1111/nph.15330.")
+_ma = add_ref_after(ORIG[355], "MARENGO, J. A.; ALVES, L. M.; ALVALA, R. C. S.; CUNHA, A. P.; BRITO, S.; MORAES, O. L. L. Climatic characteristics "
+              "of the 2010-2016 drought in the semiarid Northeast Brazil region. Anais da Academia Brasileira de Ciências, v. 90, n. 2, "
+              "p. 1973-1985, 2018. DOI: 10.1590/0001-3765201720170206.")
+_ma = add_ref_after(_ma, "MENDES, K. R.; CAMPOS, S.; SILVA, L. L.; MUTTI, P. R.; FERREIRA, R. R.; MEDEIROS, S. S. et al. Seasonal variation in "
+              "net ecosystem CO2 exchange of a Brazilian seasonally dry tropical forest. Scientific Reports, v. 10, 9454, 2020. "
+              "DOI: 10.1038/s41598-020-66415-w.")
+add_ref_after(_ma, "MENDES, K. R.; MENEZES, R. S. C.; OLIVEIRA, P. E. S.; LIMA, J. R. S.; MOURA, M. S. B.; SOUZA, E. S. et al. The caatinga "
+              "dry tropical forest: a highly efficient carbon sink in South America. Agricultural and Forest Meteorology, v. 369, 110573, "
+              "2025. DOI: 10.1016/j.agrformet.2025.110573.")
+_ob = add_ref_after(ORIG[359], "O'BRIEN, R. M. A caution regarding rules of thumb for variance inflation factors. Quality & Quantity, v. 41, "
+              "p. 673-690, 2007. DOI: 10.1007/s11135-006-9018-6.")
+add_ref_after(_ob, "OLIVEIRA, R. S.; BEZERRA, L.; DAVIDSON, E. A.; PINTO, F.; KLINK, C. A.; NEPSTAD, D. C.; MOREIRA, A. Deep root function "
+              "in soil water dynamics in cerrado savannas of central Brazil. Functional Ecology, v. 19, n. 4, p. 574-581, 2005. "
+              "DOI: 10.1111/j.1365-2435.2005.01003.x.")
+add_ref_after(ORIG[360], "RODRIGUES, R. R.; MCPHADEN, M. J. Why did the 2011-2012 La Niña cause a severe drought in the Brazilian Northeast? "
+              "Geophysical Research Letters, v. 41, n. 3, p. 1012-1018, 2014. DOI: 10.1002/2013GL058703.")
+add_ref_after(ORIG[362], "SCHWINNING, S.; SALA, O. E. Hierarchy of responses to resource pulses in arid and semi-arid ecosystems. Oecologia, "
+              "v. 141, n. 2, p. 211-220, 2004. DOI: 10.1007/s00442-004-1520-8.")
+remove_para(ORIG[347])   # HAO et al. (2019) não é mais citado
 _g = add_ref_after(ORIG[345], "GIGLIO, L.; BOSCHETTI, L.; ROY, D. P.; HUMBER, M. L.; JUSTICE, C. O. The Collection 6 MODIS burned area mapping "
                    "algorithm and product. Remote Sensing of Environment, v. 217, p. 72-85, 2018. DOI: 10.1016/j.rse.2018.08.005.")
 add_ref_after(_g, "GORELICK, N.; HANCHER, M.; DIXON, M.; ILYUSHCHENKO, S.; THAU, D.; MOORE, R. Google Earth Engine: planetary-scale "
@@ -1472,8 +1713,11 @@ add_ref_after(ORIG[358], "NATIONAL AERONAUTICS AND SPACE ADMINISTRATION (NASA). 
 add_ref_after(ORIG[361], "RUNNING, S. W.; MU, Q.; ZHAO, M.; MORENO, A. User's guide: MODIS global terrestrial evapotranspiration (ET) product "
               "(MOD16A2/A3 and year-end gap-filled MOD16A2GF/A3GF), Collection 6.1. Missoula: Numerical Terradynamic Simulation Group, "
               "University of Montana, 2021.")
-add_ref_after(ORIG[364], "WAN, Z.; HOOK, S.; HULLEY, G. MODIS/Terra Land Surface Temperature/Emissivity 8-Day L3 Global 1 km SIN Grid V061 "
+_wan = add_ref_after(ORIG[364], "WAN, Z.; HOOK, S.; HULLEY, G. MODIS/Terra Land Surface Temperature/Emissivity 8-Day L3 Global 1 km SIN Grid V061 "
               "(MOD11A2). Sioux Falls: NASA EOSDIS Land Processes DAAC, 2021. DOI: 10.5067/MODIS/MOD11A2.061.")
+add_ref_after(_wan, "WU, J.; ALBERT, L. P.; LOPES, A. P.; RESTREPO-COUPE, N.; HAYEK, M.; WIEDEMANN, K. T. et al. Leaf development and "
+              "demography explain photosynthetic seasonality in Amazon evergreen forests. Science, v. 351, n. 6276, p. 972-976, 2016. "
+              "DOI: 10.1126/science.aad5068.")
 
 # =============================================================================
 # 17. LISTAS DE FIGURAS E TABELAS (sem bordas; páginas preenchidas depois)
@@ -1499,12 +1743,14 @@ TABS = ["Variáveis para predição da Fotossíntese Líquida (PSN)",
         "Tipologia ecológica dos regimes de produtividade primária na Bahia",
         "Fator de Inflação da Variância (VIF) das variáveis preditoras por bioma",
         "Anomalias médias das variáveis por fase ENSO e testes de posição, dispersão e extremos",
-        "Variabilidade interanual da PSN por bioma (2001–2024): média, CV, tendência de Sen e correlação com o NPP anual",
+        "Anomalia média da PSN durante e após os episódios de ENSO mais intensos e mais longos",
+        "Variabilidade interanual da PSN por bioma (2001–2024): média, CV, tendência de Sen e consistência com o NPP anual",
         "Base de dados mensal dos três biomas (2001–2025) [A1]",
         "Desempenho das 10 combinações de variáveis ambientais por bioma [A2]",
         "Efeito da remoção das componentes de sazonalidade harmônica no desempenho do MRMP-N [A3]",
         "Ciclo anual, correlação com a PSN e importância das variáveis com e sem harmônicos [A4]",
-        "Valores dos diagramas de caixa das Figuras 11 a 13 por fase ENSO [A5]"]
+        "Valores dos diagramas de caixa das Figuras 11 a 13 por fase ENSO [A5]",
+        "Sensibilidade do desempenho ao percentil de winsorização da PSN [A6]"]
 PAGES = json.load(open(os.path.join(BASE, 'banca', 'paginas.json'))) if os.path.exists(os.path.join(BASE, 'banca', 'paginas.json')) else {}
 
 def rebuild_list(tbl, prefix, items):
@@ -1664,6 +1910,48 @@ for p in d.paragraphs:
     if p._p.xpath('.//w:drawing'):
         p.paragraph_format.first_line_indent = Cm(0); p.paragraph_format.left_indent = Cm(0)
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+# ---- ajustes pontuais de redação (pente-fino)
+_SUBS = [
+    (r"a previsibilidade estatística de um ecossistema é diretamente proporcional ao grau em que ele é governado por uma única forçante ambiental dominante\. Quanto mais multifatorial o controle ecológico, menos previsível o sistema, e maior a necessidade de abordagens analíticas integradas\.",
+     "neste estudo, a maior predominância de controles climáticos coincidiu com maior previsibilidade estatística, e o controle mais multifatorial, com menor previsibilidade e maior necessidade de abordagens analíticas integradas."),
+    (r"marcada pela intensa fragmentação da paisagem e pela forte pressão antrópica na Bahia, que introduzem componentes adicionais de variabilidade na PSN não integralmente representad[a-z]+ pelos preditores climáticos",
+     "como discutido na seção 6.1, na qual fatores de paisagem introduzem variabilidade na PSN não representada pelos preditores climáticos"),
+    (r"coerente com secas severas ou queimadas de grande escala, capazes de gerar reduções abruptas da produtividade primária não plenamente capturadas pelos preditores climáticos médios",
+     "compatível com eventos ambientais extremos não plenamente representados pelos preditores mensais"),
+    (r"o que o torna o quinto maior estado do país e a unidade da federação que faz divisa com o maior número de estados\.",
+     "o que o torna o quinto maior estado do país e a unidade da federação que faz divisa com o maior número de estados [REF: IBGE]."),
+    (r"de cerca de 1\.188 km,", "de cerca de 1.188 km [REF: IBGE],"),
+    (r"(Pataxó, Pataxó Hã-Hã-Hãe, Tupinambá, Kiriri, Tuxá, Pankararé, Truká e Kaimbé, entre outras)", r"\1 [REF: FUNAI/IBGE]"),
+    (r"apresenta desempenho robusto e estatisticamente validado nos três biomas", "apresenta desempenho consistente nos esquemas de validação avaliados nos três biomas"),
+    (r"Os resultados obtidos demonstram que o MRMP-N", "Os resultados obtidos indicam que o MRMP-N"),
+    (r"garantindo\s+robustez estatística e capacidade de generalização", "o que favorece a robustez estatística e a capacidade de generalização"),
+    (r"potencial para o desenvolvimento de sistemas de alerta precoce de declínio de produtividade",
+     "potencial para o desenvolvimento futuro de sistemas de alerta de declínio de produtividade, quando o modelo for acoplado a previsões das variáveis ambientais"),
+    (r"Zoneamento Ecológico-Econômico da Bahia e o Plano Nacional de Recuperação da Vegetação Nativa \(PLANAVEG\) ao identificar",
+     "Zoneamento Ecológico-Econômico da Bahia [REF: ZEE-BA] e o Plano Nacional de Recuperação da Vegetação Nativa (PLANAVEG; Brasil, 2017) ao identificar"),
+    (r"e a influência da fragmentação apontam a restauração florestal", "e a hipótese da influência da fragmentação apontam a restauração florestal"),
+    (r"\s*\(Hao et al\., 2019\)", ""),
+    (r";\s*Hao et al\., 2019", ""),
+    (r"para as quais abordagens flexíveis superam consistentemente as estritamente lineares\.", "para as quais abordagens flexíveis tendem a superar as estritamente lineares (Guimarães et al., 2024)."),
+    (r"forçante climática indireta, mediada principalmente pelas variáveis de temperatura e precipitação, transmitida pela evapotranspiração no Cerrado e na Caatinga e pela temperatura na Mata Atlântica,",
+     "forçante climática indireta, associada principalmente à evapotranspiração no Cerrado e na Caatinga e à temperatura na Mata Atlântica,"),
+    (r"forçante climática indireta, mediada principalmente pelas variáveis de temperatura e precipitação,", "forçante climática indireta, associada principalmente à evapotranspiração no Cerrado e na Caatinga e à temperatura na Mata Atlântica,"),
+    (r"esquemas complementares de validação temporal \(GroupKFold por ano e TimeSeriesSplit com janela expansível\)", "validação agrupada por ano (GroupKFold) e cronológica (TimeSeriesSplit com janela expansível)"),
+    (r"esquemas de validação temporal \(GroupKFold por ano e", "validação agrupada por ano (GroupKFold) e cronológica ("),
+    (r"validação cruzada repetida, validação temporal e teste de Y-randomization", "validação cruzada repetida, validação agrupada por ano e cronológica, e teste de Y-randomization"),
+    (r"repeated cross-validation, temporal validation and a Y-randomization test", "repeated cross-validation, year-grouped and chronological validation, and a Y-randomization test"),
+    (r"validação temporal", "validação cronológica"),
+    (r"\boverfitting\b", "sobreajuste"),
+    (r"estimado por Regressão Ridge", "estimado por regressão Ridge"),
+    (r"(?<!Polinomial; )(?<!; )\bRegressão Ridge\b(?! Polinomial)", "regressão Ridge"),
+    (r"El Niño-Oscilação Sul", "El Niño–Oscilação Sul"),
+    (r"controle da produtividade primária na região", "controle da PSN na região"),
+    (r"gradiente regional de previsibilidade climática da produtividade primária", "gradiente regional de previsibilidade climática da PSN"),
+]
+for p in d.paragraphs:
+    if p.style.name.startswith('toc') or p._p.xpath('.//w:drawing'): continue
+    for pat, repl in _SUBS:
+        if re.search(pat, p.text): regex_replace_para(p, pat, repl)
 # rodapés do modelo original contêm um "." solto que aparece no pé de todas as páginas
 for rel in d.part.rels.values():
     if 'footer' in rel.reltype:

@@ -209,3 +209,35 @@ Aplicadas na fonte (scripts), não no XML, e o documento foi regenerado:
 - `Modelo_PSN.py`: toggles por variável de ambiente e saídas com nomes fixos; `coletar_resultados.py`
   substitui o consolidador antigo (que dependia de um log fora do repositório); `reproduzir_tudo.sh`
   roda a cadeia inteira. Rodada completa refeita: reproduz as Tabelas 2 e 3 com diferença zero.
+
+## 8. Versão 9 (22/09/2026): pente-fino de escrita, métodos e citações
+
+Aplicado o parecer "Pente-fino da dissertação" (todos os itens, com as decisões delegadas resolvidas):
+
+- **Métodos separados de Resultados**: ablação/importância dos harmônicos saíram da 5.2 para a nova 6.2.1;
+  classificação ENSO, anomalias, testes, FDR (Benjamini-Hochberg por família), experimento de perturbação,
+  defasagens e compósitos foram para a nova 5.4.1; CV, Sen/Mann-Kendall e agregação anual para a 5.4.2.
+- **H1 reformulada** (sem regra prévia de grau ótimo; grau determinado empiricamente); **H3 e objetivo 4**
+  incluem evapotranspiração e disponibilidade hídrica; retomada da H1 nas conclusões sem a ressalva longa.
+- **"Mediação" → "experimento de perturbação baseado no modelo"** em todo o texto; Mata Atlântica reescrita
+  (medianas brutas semelhantes, deslocamento negativo modesto após retirar a sazonalidade, extremos baixos).
+- **6.5 reescrita em parágrafos curtos**: números sempre junto do bioma; defasagem em um parágrafo por bioma;
+  episódios extremos em tabela (Tabela 7, nova); Tabela 6 com marca ‡ para significância após FDR; erro
+  "terceiro mês" corrigido; citações inseridas (Cai et al. 2020; Rodrigues & McPhaden 2014; Marengo et al. 2018;
+  Cunha et al. 2019; Schwinning & Sala 2004; Mendes et al. 2020, 2025; Oliveira et al. 2005; Fan et al. 2017;
+  Lawson & Vialet-Chabrand 2019; D'Acunha et al. 2024; Borchert & Rivera 2001; Alberton et al. 2019; Wu et al. 2016;
+  Cai et al. 2021 para as projeções do ENSO; O'Brien 2007 para os limiares de VIF; BRASIL/MMA 2017 para o PLANAVEG).
+- **Validação**: "GroupKFold" passa a validação agrupada por ano; "temporal/cronológica" só para o
+  TimeSeriesSplit; limiar de 60 pp retirado como critério formal; seleção não aninhada registrada como limitação;
+  random_state reescrito; versões das bibliotecas e URL do repositório em 5.6.
+- **Dados e modelo**: janelas de ~32 dias explicadas; critério de pixel válido e ausência de filtro por QC declarados;
+  ordem do pipeline, grade de α e métrica do GridSearchCV; VIF sobre os cinco preditores originais; percentil 3
+  justificado e análise de sensibilidade (0, 1, 3, 5%) na nova Tabela A6 (`Sensibilidade_Winsor_PSN.py`).
+- **Tabela A4** recalculada com o mesmo procedimento da Figura 8 (Ridge com alfa médio na série completa), o que
+  elimina as diferenças entre texto, figura e apêndice.
+- **Redação**: BURN, grau 2, generalizações ecológicas, alerta precoce, "maior impacto", NPP "independente",
+  p = 0,07 e "puxada" reescritos como sugerido; Hao et al. (2019) removido; pressões antrópicas condensadas
+  (~20%); "overfitting" → sobreajuste; "Regressão Ridge" → regressão Ridge; "El Niño–Oscilação Sul" padronizado;
+  "produtividade primária" restrita ao sentido genérico; citações acrescentadas na Apresentação.
+- **[REF] para o autor** (7 marcas): IBGE (área e litoral), FUNAI/IBGE (etnias), Corredor Central, ZEE-BA e a
+  edição/URL do PLANAVEG.
