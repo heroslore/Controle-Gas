@@ -29,3 +29,9 @@ Para atualizar o sistema, basta substituir o `index.html` e enviar para o `main`
 A pasta `automacao/` tem o script que lê o Gerenciador de Anúncios da Meta e publica
 o acompanhamento diário e o relatório semanal na lista YGOR do Trello dos sócios.
 Como configurar e rodar: [automacao/README.md](automacao/README.md).
+
+## CRM de tráfego (espaço separado)
+
+A pasta `crm/` é um projeto à parte: painel de tráfego pago por loja, campanhas, público e
+leads, com coleta automática do Meta Ads todo dia. Fica publicado em
+https://heroslore.github.io/Controle-Gas/crm/ e está documentado em [crm/README.md](crm/README.md).
