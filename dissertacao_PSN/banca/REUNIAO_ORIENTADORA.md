@@ -24,91 +24,73 @@ avaliadores anotaram.
 
 ---
 
-## 2. Os dados: de onde vieram e o que mudou
+## 2. Os dados: de onde vieram e o que mudou (atualizado em 21/09 com a branch `claude/vigilant-goodall-0zmvla`)
 
 ### 2.1 Base antiga (qualificação)
 
-- Planilha da coorientadora (`Dados_Benfica_.xlsx`), organizada para
-  Benfica et al. (2022): 2001 a 2020, 240 meses por bioma.
-- Já vinha com a coluna de fase ENSO pronta e a Tabela 1 citava como fonte
-  "MOD17A2H / MOD16 / MOD11A2 / MCD64A1 / CHIRPS / Benfica et al. (2022)".
-- **Essa planilha não está no repositório.** Se ela puder enviar o arquivo,
-  eu comparo mês a mês os 240 meses em comum e digo exatamente onde os valores
-  diferem (ver item 2.4).
+- Planilha da coorientadora (`Dados_Benfica_original.xlsx`, guardada em
+  `npp_modis/modelo/` na outra branch), organizada para Benfica et al. (2022):
+  2001 a 2020, 240 meses por bioma, fluxo manual Earthdata → MRT → ArcGIS.
+- Fontes reais (confirmadas pela reprodução no GEE): MOD17A2H (PSN), MOD16A2
+  (ET e PET), MOD11A2 diurno (TST), MCD64A1 (área queimada), todos da
+  **Coleção 6**, e precipitação **GPM IMERG Final mensal V06**. A precipitação
+  **nunca foi CHIRPS**; a sigla estava errada na dissertação desde a qualificação.
+- Agregação: cada mês é a soma de 4 compostos de 8 dias em janelas fixas de
+  dia do ano (janeiro = DOY 361 do ano anterior + 1, 9, 17), TST como média;
+  WAI = ET/PET; área queimada = pixels × 25 ha.
 
 ### 2.2 Base nova (`base_final_2001_2025_plan1_excel_ptbr.csv`)
 
-- 300 linhas (janeiro/2001 a dezembro/2025), separador `;`, decimal vírgula.
-  Colunas por bioma: PSN, Evap, PET, IDA (= WAI), Temp, Precip, ÁreaQueimada,
-  mais `ano`, `mes` e `ONI`.
-- Os três últimos meses de 2025 (out–dez) não têm precipitação e foram
-  removidos → **297 meses**. Os scripts fazem isso automaticamente.
-- O ONI da planilha é **idêntico** ao da tabela oficial da NOAA nos 300 meses
-  (conferido contra `oni_noaa_cpc.txt`).
-- A fase ENSO não vinha pronta: foi calculada pelo critério **oficial** da
-  NOAA/CPC (ONI ≥ |0,5| por pelo menos 5 trimestres móveis consecutivos), no
-  módulo `enso_noaa.py`. Em relação ao limiar simples, só outubro/2016 mudou
-  (La Niña → Neutro). Distribuição: 149 Neutro, 76 El Niño, 72 La Niña.
-- A PET veio na planilha, mas foi **excluída dos preditores** por correlação
-  de 0,73–0,80 com a temperatura (p. 24 da dissertação).
-- **O que o repositório não registra:** de qual plataforma (AppEEARS, Google
-  Earth Engine, Earthdata) e de qual coleção MODIS a base nova foi extraída, e
-  qual produto de precipitação foi usado. O texto da dissertação diz CHIRPS
-  (Tabela 1, p. 22), mas o handoff diz que os meses recentes de chuva "ainda
-  não foram publicados pela NASA", o que aponta para um produto NASA
-  (por exemplo GPM/IMERG). **Pergunta objetiva para a reunião: qual é a fonte
-  da precipitação, e as séries MODIS vieram da Coleção 6.1?**
+- Gerada pelo script `npp_modis/npp_modis_gee.py` no Google Earth Engine, com
+  a mesma máscara (IBGE 1:250.000 recortado pela Bahia) e a mesma regra de
+  agregação, para toda a série 2001–2025: MODIS **Coleção 6.1** com produtos
+  gap-filled (MOD17A2HGF, MOD16A2GF), MOD11A2, MCD64A1 e **IMERG V07**.
+- 300 linhas (jan/2001 a dez/2025); out–dez/2025 sem precipitação porque a
+  NASA encerrou o IMERG V07 Final em setembro de 2025 e a V08 só sai no fim
+  de 2026 → 297 meses.
+- ONI idêntico à tabela da NOAA; fase ENSO pelo critério oficial (`enso_noaa.py`).
 
-### 2.3 Diferenças entre as duas bases (o que dá para afirmar)
+### 2.3 Validação da base nova contra a planilha antiga (720 pares, 2001–2020)
 
-| | Base antiga | Base nova |
-|---|---|---|
-| Período | jan/2001 – dez/2020 | jan/2001 – set/2025 |
-| n por bioma | 240 | 297 |
-| Fase ENSO | coluna pronta na planilha | calculada pela regra oficial da NOAA |
-| PET | ? | presente na planilha, excluída do modelo |
-| Coleção MODIS | provavelmente 6 (v006), vigente até 2022 | necessariamente 6.1 (v061), única distribuída desde ago/2023 |
-| Reprodutibilidade | planilha manual | CSV bruto → xlsx gerado pelos scripts, tudo versionado |
+| Variável | r de Pearson | Erro mediano | Causa do resíduo |
+|---|---|---|---|
+| PSN | 0,995 (1,000 sem um ponto atípico) | 0,0 % | Coleção 6 → 6.1 |
+| EV | 0,993 | −3,4 % | gap-filling da 6.1 |
+| WAI | 0,998 | +1,7 % | confirma WAI = ET/PET |
+| TST | 0,978 | −0,5 °C (−1,1 °C na MA) | máscara de nuvem |
+| Precipitação | 0,996 contra V06; 0,985 contra V07 | +0,2 % | V06 → V07 reprocessou tudo |
+| Área queimada | 0,995 | +0,8 % | só valores pequenos divergem |
 
-### 2.4 A "mudança na publicação da NASA": Coleção 6 → Coleção 6.1
+Sete células da planilha antiga estavam digitadas errado. A mais importante:
+**PSN da Mata Atlântica em out/2004 = 51,3 na planilha, 142,6 no produto**.
+Esse valor era o "evento extremo" que deixava os resíduos da MA não normais na
+qualificação; com a base nova os resíduos da MA são normais (p = 0,63).
 
-Este é o ponto que explica por que valores de 2001–2020 podem não bater
-exatamente entre a planilha antiga e a nova, mesmo sendo o mesmo produto.
+### 2.4 A "mudança na publicação da NASA": duas versões novas, não uma
 
-- A NASA reprocessou **todo o arquivo MODIS** (desde 2000) na Coleção 6.1
-  (Version 061). Os produtos da Coleção 6 (v006) tiveram o processamento
-  encerrado no fim de 2022 e a **distribuição desativada em 31/07/2023**.
-  Qualquer download feito em 2025 é, portanto, da Coleção 6.1.
-- O que mudou na 6.1, segundo a documentação do MOD17A2H v061: recalibração
-  do nível 1B (nova abordagem de resposta versus ângulo de varredura para
-  Terra e Aqua), correção do *crosstalk* óptico nas bandas infravermelhas do
-  Terra, correção da tabela de consulta do Terra para 2012–2017, correção de
-  polarização nas bandas solares, e uso de climatologia de LAI/FPAR como
-  reserva quando o LAI/FPAR operacional falha. Como GPP/PSN, ET, LST e área
-  queimada são todos derivados dessas radiâncias, **as séries inteiras mudam
-  um pouco, não só os anos novos**.
-- Consequência prática: não é correto "colar" 2021–2025 da coleção nova na
-  planilha antiga da coleção 6. A decisão de rodar tudo de novo com a base
-  única 2001–2025 é a forma correta de lidar com isso.
-- Um segundo fator, independente da coleção: o satélite Terra fez a última
-  manobra de correção de órbita em fevereiro de 2020 e vem **derivando** desde
-  então (horário de passagem saindo das 10h30 para cerca de 9h em dezembro de
-  2025, e altitude reduzida para 694 km). A NASA mantém os produtos como
-  "qualidade científica", mas com sombras maiores e cobertura levemente
-  reduzida nos anos finais. Vale uma frase de limitação na dissertação.
-- A missão Terra MODIS estava programada para gerar produtos até
-  **dezembro de 2025**, e a Aqua até agosto de 2026; a série MOD17 não terá
-  continuidade além disso. A continuidade oficial é o produto VNP17 (sensor
-  VIIRS). Isso justifica setembro/2025 como fim da série e é um bom argumento
-  para "perspectivas futuras".
+1. **MODIS Coleção 6 → 6.1.** A NASA reprocessou o arquivo inteiro desde 2000
+   (recalibração do nível 1B, correção de *crosstalk* nas bandas
+   infravermelhas do Terra, correção de polarização, climatologia de LAI/FPAR
+   como reserva). A Coleção 6 teve o processamento encerrado no fim de 2022 e a
+   distribuição desativada em 31/07/2023: qualquer download atual é 6.1.
+2. **IMERG V06 → V07.** A versão 07 reprocessou a série inteira desde 1998 e
+   difere da V06 mês a mês (até ~50 % em alguns meses secos). A V07 Final
+   terminou em set/2025 e a V08 está prevista para o fim de 2026.
 
-Fontes: [MOD17A2H v061 (NASA Earthdata)](https://www.earthdata.nasa.gov/data/catalog/lpcloud-mod17a2h-061);
-[MODIS v6 land data processing ends late 2022](https://www.earthdata.nasa.gov/data/alerts-outages/modis-version-6-land-data-processing-ends-late-2022);
-[MODIS v6.0 land products decommissioned July 31 2023](https://www.earthdata.nasa.gov/data/alerts-outages/final-notice-modis-version-6-0-land-data-products-decommissioned-july-31-2023);
-[MODIS to VIIRS transition (LAADS DAAC)](https://ladsweb.modaps.eosdis.nasa.gov/learn/modis-to-viirs-transition);
-[Terra MODIS acquisition plan through December 2025](https://www.earthdata.nasa.gov/data/alerts-outages/terra-modis-acquisition-plan-through-december-2025);
-[Terra/Aqua orbit changes (NSIDC)](https://nsidc.org/data/user-resources/data-announcements/ongoing-changes-terra-and-aqua-orbits-impacting-modis-snow-and-sea-ice-products);
-[Endsley et al. 2023, continuidade MOD17/VIIRS](https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2023JG007457).
+Consequência: emendar 2021–2025 na planilha antiga misturaria duas coleções e
+duas versões de chuva. Por isso a série inteira foi recalculada de forma
+homogênea, e é isso que a seção 5.2 da versão 6 da dissertação descreve.
+Fatores adicionais: o Terra deriva de órbita desde fev/2020 (passagem saindo
+das 10h30 para ~9h em dez/2025) e a missão Terra MODIS estava programada até
+dezembro de 2025; a continuidade é o VNP17 (VIIRS).
+
+Fontes: [MOD17A2H v061](https://www.earthdata.nasa.gov/data/catalog/lpcloud-mod17a2h-061);
+[fim do processamento v6](https://www.earthdata.nasa.gov/data/alerts-outages/modis-version-6-land-data-processing-ends-late-2022);
+[desativação v6.0 em 31/07/2023](https://www.earthdata.nasa.gov/data/alerts-outages/final-notice-modis-version-6-0-land-data-products-decommissioned-july-31-2023);
+[transição MODIS → VIIRS](https://ladsweb.modaps.eosdis.nasa.gov/learn/modis-to-viirs-transition);
+[plano de aquisição Terra até dez/2025](https://www.earthdata.nasa.gov/data/alerts-outages/terra-modis-acquisition-plan-through-december-2025);
+[IMERG V08](https://gpm.nasa.gov/data/news/imerg-v08-transition-schedule);
+`npp_modis/RELATORIO_METODOLOGIA.md` e `npp_modis/resultados/referencia/validacao_resumo.csv` (outra branch).
 
 ---
 
@@ -265,11 +247,9 @@ não aplicado.
 
 ## 5. O que ainda depende de você ou da orientação
 
-1. Fonte da precipitação (CHIRPS ou produto NASA?) e coleção MODIS da base nova.
-2. Como a PSN foi agregada (compostos de 8 dias → mês: soma ou média? pixels →
-   bioma: média? qual máscara?). O texto hoje diz "seguindo Benfica et al.
-   (2022)".
-3. Enviar a planilha antiga (`Dados_Benfica_.xlsx`) para comparação mês a mês.
+1. ~~Fonte da precipitação~~ resolvido: IMERG V06 (antiga) e V07 (nova).
+2. ~~Agregação da PSN~~ resolvido: soma de 4 compostos em janelas fixas de DOY.
+3. ~~Planilha antiga~~ está em `npp_modis/modelo/Dados_Benfica_original.xlsx`.
 4. Referências para os valores de chuva da área de estudo (MB-35).
 5. Números do MapBiomas por bioma dentro da Bahia (MB-24).
 6. Critério exato de Y-randomization em Guimarães et al. (2024) (F27).
