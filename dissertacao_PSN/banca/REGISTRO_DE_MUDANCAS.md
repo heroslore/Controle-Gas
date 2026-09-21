@@ -284,3 +284,30 @@ Aplicado o parecer "Pente-fino da dissertação" (todos os itens, com as decisõ
   2023) em vez de Guimarães et al. (2024), que trata de QSAR e continua citado apenas nesse contexto.
 - Pendentes de decisão do autor: folha de rosto ("Projeto de dissertação ... qualificação" vs. dissertação
   final/defesa) e eventual repositório exclusivo para a dissertação (o link atual permanece).
+
+## 11. Versão 12 (22/09/2026): formatação ABNT e acabamento visual (sem alteração de conteúdo)
+
+Bloco 17 de `aplicar_revisao_docx.py`; conferência página a página sobre a renderização do LibreOffice
+(`render_e_paginas.sh`, duas passagens), com verificação automática de Sumário, listas e ordem de citação.
+
+- **Página**: A4, margens 3/2/3/2 cm (já corretas); Times New Roman 12, 1,5, recuo 1,25 cm, justificado (já corretos).
+- **Seções primárias em página nova** (NBR 14724): capítulos 1 a 7; REFERÊNCIAS sem numeração, centralizada;
+  Lista de Figuras, Lista de Tabelas e Sumário em páginas próprias (o Sumário estava iniciando no fim da página anterior).
+- **Ordem pós-textual corrigida**: REFERÊNCIAS antes do APÊNDICE A (estava invertida); seções de página
+  (retrato/paisagem) reorganizadas; entrada do apêndice acrescentada ao Sumário, "8" retirado de REFERÊNCIAS.
+- **Sumário** em espaçamento simples para caber em uma página; página de cada entrada conferida contra o PDF.
+- **"Fonte:" abaixo de todas as figuras e tabelas** (fonte 10, espaçamento simples): "elaborada pelo autor (2026)";
+  Figura 1 com base em Running e Zhao (2021); Figura 2 a partir da malha do IBGE (2019); Tabela A1 a partir dos
+  produtos da seção 5.2.
+- **Legendas e tabelas em espaçamento simples** (o texto das células herdava 1,5): apêndice caiu de 19 para 10
+  páginas; Tabela A2 inteira em duas páginas com cabeçalho repetido; A3 e A4 deixaram de ocupar páginas isoladas.
+- **Páginas quase vazias eliminadas**: Figura 2 e Figura 3 na mesma página (14 e 14 cm); Figura 4 a 13,5 cm;
+  Figura 14 a 11,5 cm (cabe com o texto seguinte); Figura 15 (12,5 cm) movida para antes do parágrafo que discute
+  a tendência; parágrafo que introduz a Tabela 2 movido para antes da Figura 5 (página inteira). Nenhum capítulo
+  termina com 2–3 linhas isoladas; as únicas páginas com menos de 60% são fins de capítulo e de listas.
+- Controle de viúvas/órfãs no estilo Normal; legendas com "manter com o próximo"; estilo estranho ("font-claude-
+  response-body") da Figura 3 substituído por Normal; referências alinhadas à esquerda (v10).
+- Numeração e ordem de figuras/tabelas conferidas (todas citadas antes de aparecer; nenhuma sem citação).
+- Resultado: 81 páginas (eram 89). Observação: a paginação foi conferida no LibreOffice; o Word pode deslocar
+  uma ou outra linha, mas as regras de quebra (título com o próximo, legenda com a figura, viúvas/órfãs) são do
+  próprio arquivo.

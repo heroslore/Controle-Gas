@@ -1317,7 +1317,7 @@ P_LAG_MA = (f"Na Mata Atlântica a resposta é intermediária e assimétrica: a 
 _last = add_paras_after(ORIG[297], BODY_TPL, [P_SENS, P_LAG0, P_LAG_CA, P_LAG_CE, P_LAG_MA])
 _pic14 = add_figure_after(_last, "Figura 14 - Anomalia média da PSN (%) durante e após meses de El Niño e de La Niña, por defasagem de 0 a "
                  "12 meses, com intervalo de confiança de 95% (bootstrap), nos três biomas; símbolos cheios indicam diferença "
-                 "significativa em relação aos meses neutros (Mann-Whitney, p < 0,05).", os.path.join(FIG, 'fig14_compositos_enso.png'), width_cm=13.0)
+                 "significativa em relação aos meses neutros (Mann-Whitney, p < 0,05).", os.path.join(FIG, 'fig14_compositos_enso.png'), width_cm=11.5)
 # ---- Tabela 7: episódios mais intensos
 _evs = sorted(JA['eventos'], key=lambda e: -e['oni_pico'])
 _sel = [e for e in JA['eventos'] if e['inicio'] in ('2014-10', '2010-06', '2021-09', '2023-06', '2015-10')]
@@ -1422,7 +1422,7 @@ _p66 = add_paras_after(_h66, BODY_TPL, [
     f"{_p2025('CA')} na Caatinga, valores que só poderão ser interpretados quando o ano estiver completo."])
 _pic15 = add_figure_after(_p66, "Figura 15 - Soma anual da PSN por bioma (2001–2024), tendência de Sen, ano parcial de 2025 e "
                           "anos com fase ENSO dominante (pelo menos seis meses na fase); os três piores anos de cada bioma "
-                          "estão identificados.", os.path.join(FIG, 'fig15_interanual.png'), width_cm=15.0)
+                          "estão identificados.", os.path.join(FIG, 'fig15_interanual.png'), width_cm=12.5)
 cap8 = new_para_after(_pic15, TABCAP_TPL, "Tabela 8 - Variabilidade interanual da PSN por bioma nos anos completos (2001–2024): média e "
                       "coeficiente de variação da soma anual, tendência de Sen (variação percentual acumulada no período e valor-p "
                       "de Mann-Kendall), piores e melhores anos e correlação com o NPP anual do MOD17A3HGF.", bold=True)
@@ -2016,6 +2016,162 @@ for rel in d.part.rels.values():
         for t_el in rel.target_part.element.xpath('.//w:t'):
             if t_el.text and t_el.text.strip() == '.':
                 t_el.text = ''
+
+# =============================================================================
+# 17. FORMATAÇÃO ABNT / ACABAMENTO VISUAL (não altera conteúdo)
+# =============================================================================
+def _txt(el):
+    return ''.join(t.text or '' for t in el.iter(qn('w:t')))
+_PPR_ORDER = ['pStyle', 'keepNext', 'keepLines', 'pageBreakBefore', 'framePr', 'widowControl', 'numPr', 'suppressLineNumbers', 'pBdr',
+              'shd', 'tabs', 'suppressAutoHyphens', 'kinsoku', 'wordWrap', 'overflowPunct', 'topLinePunct', 'autoSpaceDE', 'autoSpaceDN',
+              'bidi', 'adjustRightInd', 'snapToGrid', 'spacing', 'ind', 'contextualSpacing', 'mirrorIndents', 'suppressOverlap', 'jc',
+              'textDirection', 'textAlignment', 'textboxTightWrap', 'outlineLvl', 'divId', 'cnfStyle', 'rPr', 'sectPr', 'pPrChange']
+def _ppr_insert(ppr, el):
+    """Insere el em w:pPr respeitando a ordem do esquema OOXML."""
+    tag = el.tag.split('}')[1]; pos = _PPR_ORDER.index(tag)
+    for child in ppr:
+        ctag = child.tag.split('}')[1]
+        if ctag in _PPR_ORDER and _PPR_ORDER.index(ctag) > pos:
+            child.addprevious(el); return el
+    ppr.append(el); return el
+def _is_empty_par(el):
+    if el.tag != qn('w:p'): return False
+    if el.xpath('.//w:drawing') or el.xpath('.//w:sectPr') or el.xpath('.//w:br'): return False
+    return not _txt(el).strip()
+def _find_par(pred):
+    for p in d.paragraphs:
+        if pred(p.text): return p
+    raise KeyError(pred)
+# 17.1 seções primárias (capítulos) em página nova; REFERÊNCIAS sem numeração e centralizada (NBR 14724)
+for p in d.paragraphs:
+    if p.style.name != 'Heading 1': continue
+    t = p.text.strip()
+    if t.startswith('APÊNDICE') or t.startswith('REFERÊNCIAS'):
+        continue                                   # já começam em página nova pela quebra de seção
+    p.paragraph_format.page_break_before = True
+_ref = _find_par(lambda t: t.strip().startswith('REFERÊNCIAS'))
+_np = OxmlElement('w:numPr'); _il = OxmlElement('w:ilvl'); _il.set(qn('w:val'), '0'); _ni = OxmlElement('w:numId'); _ni.set(qn('w:val'), '0')
+_np.append(_il); _np.append(_ni)
+_ppr = _ref._p.get_or_add_pPr(); _ps = _ppr.find(qn('w:pStyle'))
+(_ps.addnext(_np) if _ps is not None else _ppr.insert(0, _np))
+_ref.alignment = WD_ALIGN_PARAGRAPH.CENTER
+_ref.paragraph_format.left_indent = Cm(0); _ref.paragraph_format.first_line_indent = Cm(0)
+# 17.2 listas pré-textuais e Sumário em página própria
+for p in d.paragraphs:
+    if p.text.strip() in ('LISTA DE FIGURAS', 'LISTA DE TABELAS'): p.paragraph_format.page_break_before = True
+for el in d.element.body.iter(qn('w:p')):
+    if _txt(el).strip() == 'SUMÁRIO':
+        ppr = el.find(qn('w:pPr'))
+        if ppr is None: ppr = OxmlElement('w:pPr'); el.insert(0, ppr)
+        if ppr.find(qn('w:pageBreakBefore')) is None:
+            _ppr_insert(ppr, OxmlElement('w:pageBreakBefore'))
+# 17.3 controle de viúvas/órfãs no estilo base
+d.styles['Normal'].paragraph_format.widow_control = True
+# 17.4 Figura 3: estilo herdado de colagem → Normal
+for p in d.paragraphs:
+    if p.style.name == 'font-claude-response-body': p.style = d.styles['Normal']
+# 17.5 reposicionamentos para evitar páginas quase vazias (o texto que cita cada elemento continua antes dele)
+def _scale_img(par, width_cm):
+    for ext in par._p.xpath('.//wp:extent') + par._p.xpath('.//a:ext'):
+        if ext.get('cx') is None or ext.get('cy') is None: continue      # a:ext de extLst não tem dimensões
+        cx, cy = int(ext.get('cx')), int(ext.get('cy'))
+        if cx <= 0: continue
+        ncx = int(width_cm * 360000); ext.set('cx', str(ncx)); ext.set('cy', str(int(cy * ncx / cx)))
+for _fig, _w in (('Figura 2 - ', 14.0), ('Figura 3 - ', 14.0), ('Figura 4 - ', 13.5)):
+    _c = _find_par(lambda t, f=_fig: t.startswith(f)); _i = [i for i, q in enumerate(d.paragraphs) if q._p is _c._p][0]
+    _scale_img(d.paragraphs[_i + 1], _w)
+for p in d.paragraphs:                                   # legendas: espaçamento simples (NBR 14724)
+    if re.match(r'^(Figura|Tabela) (A?\d+) [-–]', p.text):
+        p.paragraph_format.line_spacing = 1.0; p.paragraph_format.space_before = Pt(12); p.paragraph_format.space_after = Pt(3)
+for t in d.tables:                                       # células: espaçamento simples
+    if t.rows[0].cells[0].text.strip() == 'N°': continue  # listas pré-textuais
+    for row in t.rows:
+        for c in row.cells:
+            for par in c.paragraphs: par.paragraph_format.line_spacing = 1.0
+_cap5 = _find_par(lambda t: t.startswith('Figura 5 - ')); _i5 = [i for i, q in enumerate(d.paragraphs) if q._p is _cap5._p][0]
+_img5 = d.paragraphs[_i5 + 1]; _nxt5 = d.paragraphs[_i5 + 2]
+assert _nxt5.text.startswith('Os resultados obtidos indicam'), _nxt5.text[:60]
+_nxt5._p.addnext(_img5._p); _nxt5._p.addnext(_cap5._p); _nxt5.paragraph_format.space_before = Pt(0)
+_cap15 = _find_par(lambda t: t.startswith('Figura 15 - ')); _i15 = [i for i, q in enumerate(d.paragraphs) if q._p is _cap15._p][0]
+_img15 = d.paragraphs[_i15 + 1]
+_tend_p = _find_par(lambda t: t.startswith('A Mata Atlântica foi o único bioma com tendência negativa'))
+_tend_p._p.addprevious(_cap15._p); _tend_p._p.addprevious(_img15._p)   # Figura 15 antes do parágrafo que discute a tendência
+# 17.5b ordem pós-textual (NBR 14724): referências, depois apêndice
+_body = d.element.body
+_hap = _find_par(lambda t: t.strip().startswith('APÊNDICE A'))
+_els = list(_body); _iap = _els.index(_hap._p); _iref = _els.index(_ref._p)
+_fim_ap = next(e for e in _els[_iap:_iref] if e.tag == qn('w:p') and e.find(qn('w:pPr')) is not None and e.find(qn('w:pPr')).find(qn('w:sectPr')) is not None)
+_ifim = _els.index(_fim_ap)
+_apx = _els[_iap:_ifim + 1]                      # bloco do apêndice (termina no parágrafo com sectPr paisagem)
+_refs = [e for e in _els[_iref:] if e.tag != qn('w:sectPr')]
+_sect_land = _fim_ap.find(qn('w:pPr')).find(qn('w:sectPr'))
+_fim_ap.find(qn('w:pPr')).remove(_sect_land)        # o apêndice passa a ser a última seção: usa o sectPr do corpo
+_final = _body.find(qn('w:sectPr'))
+_final.getparent().replace(_final, _sect_land)
+_last_ref = d.paragraphs[[i for i, q in enumerate(d.paragraphs) if q._p is _refs[-1]][0]] if _refs[-1].tag == qn('w:p') else None
+for e in _refs: _hap._p.addprevious(e)            # referências vão para antes do apêndice
+if _last_ref is not None: sect_break(_last_ref, landscape=False)   # fecha a seção retrato das referências
+_ref.paragraph_format.page_break_before = False
+for sdt in d.element.body.findall(qn('w:sdt')):
+    for par in sdt.findall('.//' + qn('w:p')):
+        hl = par.find('.//' + qn('w:hyperlink'))
+        if hl is None or not _anc2head.get(hl.get(qn('w:anchor')), '').startswith('REFERÊNCIAS'): continue
+        ts = [t_ for t_ in hl.findall('.//' + qn('w:t')) if t_.text]
+        for t_ in ts:
+            if re.match(r'^\d+$', t_.text.strip()) and t_ is not ts[-1]: t_.text = ''      # remove o "8"
+        for tab in hl.findall('.//' + qn('w:tab')):                                          # tab entre número e título
+            tab.getparent().remove(tab); break
+        pgr = PAGES.get('H:REFERÊNCIAS')
+        if pgr and ts[-1].text.strip().isdigit(): ts[-1].text = str(pgr)
+        _BMAP = '_Toc900000077'
+        _bs2 = OxmlElement('w:bookmarkStart'); _bs2.set(qn('w:id'), '9077'); _bs2.set(qn('w:name'), _BMAP)
+        _be2 = OxmlElement('w:bookmarkEnd'); _be2.set(qn('w:id'), '9077')
+        _hap._p.insert(1 if _hap._p.pPr is not None else 0, _bs2); _hap._p.append(_be2)
+        novo = copy.deepcopy(par); par.addnext(novo)
+        nhl = novo.find('.//' + qn('w:hyperlink')); nhl.set(qn('w:anchor'), _BMAP)
+        for it in novo.findall('.//' + qn('w:instrText')):
+            if it.text and 'PAGEREF' in it.text: it.text = re.sub(r'_Toc\d+', _BMAP, it.text)
+        nts = [t_ for t_ in nhl.findall('.//' + qn('w:t')) if t_.text]
+        tit = [t_ for t_ in nts if not re.match(r'^\d+$', t_.text.strip())]
+        if tit:
+            tit[0].text = 'APÊNDICE A – BASE DE DADOS MENSAL E RESULTADOS DA SELEÇÃO DE VARIÁVEIS'
+            for extra in tit[1:]: extra.text = ''
+        pga = PAGES.get('H:APÊNDICE A – BASE DE DADOS MENSAL E RESULTADOS DA SELEÇÃO DE VARIÁVEIS')
+        if pga and nts[-1].text.strip().isdigit(): nts[-1].text = str(pga)
+        break
+for sdt in d.element.body.findall(qn('w:sdt')):          # Sumário em espaçamento simples (cabe em uma página)
+    for par in sdt.findall('.//' + qn('w:p')):
+        ppr = par.find(qn('w:pPr'))
+        if ppr is None or ppr.find(qn('w:pStyle')) is None or not ppr.find(qn('w:pStyle')).get(qn('w:val')).startswith('Sumrio'): continue
+        spc = ppr.find(qn('w:spacing'))
+        if spc is None:
+            spc = _ppr_insert(ppr, OxmlElement('w:spacing'))
+        spc.set(qn('w:line'), '240'); spc.set(qn('w:lineRule'), 'auto'); spc.set(qn('w:before'), '0'); spc.set(qn('w:after'), '120')
+# 17.6 "Fonte:" abaixo de todas as figuras e tabelas (NBR 14724), fonte 10, espaçamento simples
+def _fonte_apos(el, texto):
+    q = new_para_after(d.paragraphs[0], CAPTION_TPL, texto)      # cria e depois move para depois de el
+    el.addnext(q._p)
+    q.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    pf = q.paragraph_format; pf.first_line_indent = Cm(0); pf.left_indent = Cm(0); pf.right_indent = Cm(0)
+    pf.space_before = Pt(0); pf.space_after = Pt(12); pf.line_spacing = 1.0; pf.keep_with_next = False
+    for r in q.runs: r.font.bold = False; r.font.size = Pt(10)
+    nx = q._p.getnext()
+    if nx is not None and _is_empty_par(nx): nx.getparent().remove(nx)
+    return q
+_FONTE = "Fonte: elaborada pelo autor (2026)."
+_FONTE_ESP = {'Figura 1': "Fonte: elaborada pelo autor (2026), com base em Running e Zhao (2021).",
+              'Figura 2': "Fonte: elaborada pelo autor (2026), a partir da malha de biomas do IBGE (2019).",
+              'Tabela A1': "Fonte: elaborada pelo autor (2026), a partir dos produtos descritos na seção 5.2."}
+_body = d.element.body
+_prev_cap = None
+for el in list(_body):
+    if el.tag == qn('w:p'):
+        m = re.match(r'(Figura|Tabela) (A?\d+) [-–]', _txt(el))
+        if m: _prev_cap = f"{m.group(1)} {m.group(2)}"
+        if el.xpath('.//w:drawing') and _prev_cap and _prev_cap.startswith('Figura'):
+            _fonte_apos(el, _FONTE_ESP.get(_prev_cap, _FONTE)); _prev_cap = None
+    elif el.tag == qn('w:tbl') and _prev_cap and _prev_cap.startswith('Tabela'):
+        _fonte_apos(el, _FONTE_ESP.get(_prev_cap, _FONTE)); _prev_cap = None
 uf = OxmlElement('w:updateFields'); uf.set(qn('w:val'), 'true')
 _st = d.settings.element
 _dep = [c for c in _st if c.tag.split('}')[1] in ('hdrShapeDefaults', 'footnotePr', 'endnotePr', 'compat', 'docVars', 'rsids', 'mathPr',
