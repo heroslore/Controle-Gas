@@ -174,3 +174,130 @@ grau × bioma, nos VIF, nos alfas médios, no R² fora da amostra e nas importâ
 (única diferença: `vif_max` do Cerrado gravado com 2 casas, 36,99 contra 36,990854).
 Ou seja: a cadeia CSV bruto → `Modelo_PSN.py` → `coletar_resultados.py` → Word regenera a
 dissertação sem nenhum número digitado à mão.
+
+## 12. Robustez da seleção, importância por permutação e nulos temporais (`Robustez_Selecao_PSN.py`)
+
+Rodado em 22/09/2026 em resposta à revisão do artigo (JSAES). Mesmo pipeline e semente do modelo.
+Saídas em `robustez/`; Tabelas A7–A10 da dissertação.
+
+**Grau polinomial por esquema (R² de teste, %)**
+
+| bioma | grau | GroupKFold | TimeSeriesSplit |
+|---|---|---|---|
+| Caatinga | 1 | 92.78 | 91.49 |
+| Caatinga | 2 | 93.81 | 91.2 |
+| Caatinga | 3 | 92.76 | 90.4 |
+| Caatinga | 4 | 91.32 | 86.99 |
+| Caatinga | 5 | 85.16 | 86.66 |
+| Cerrado | 1 | 89.99 | 88.46 |
+| Cerrado | 2 | 96.38 | 95.73 |
+| Cerrado | 3 | 96.17 | 93.68 |
+| Cerrado | 4 | 96.14 | 93.39 |
+| Cerrado | 5 | 95.77 | 92.24 |
+| Mata Atlântica | 1 | 65.45 | 58.7 |
+| Mata Atlântica | 2 | 73.73 | 66.98 |
+| Mata Atlântica | 3 | 74.51 | 60.97 |
+| Mata Atlântica | 4 | 67.38 | 56.32 |
+| Mata Atlântica | 5 | 67.19 | 53.9 |
+
+Só duas exceções ao grau 2: grau 3 na Mata Atlântica sob GroupKFold (+0,8 pp) e grau 1 na Caatinga sob TimeSeriesSplit (+0,3 pp).
+
+**Combinações: duas melhores por esquema**
+
+| bioma | esquema | rank | variaveis | r2_teste |
+|---|---|---|---|---|
+| Caatinga | GroupKFold | 1 | EV + PRE + TST | 93.81 |
+| Caatinga | GroupKFold | 2 | EV + PRE + WAI | 93.75 |
+| Caatinga | RepeatedKFold | 1 | EV + PRE + TST | 94.16 |
+| Caatinga | RepeatedKFold | 2 | EV + PRE + WAI | 94.01 |
+| Caatinga | TimeSeriesSplit | 1 | EV + PRE + WAI | 91.92 |
+| Caatinga | TimeSeriesSplit | 2 | EV + PRE + TST | 91.2 |
+| Cerrado | GroupKFold | 1 | EV + PRE + WAI | 96.38 |
+| Cerrado | GroupKFold | 2 | EV + PRE + TST | 95.95 |
+| Cerrado | RepeatedKFold | 1 | EV + PRE + WAI | 96.66 |
+| Cerrado | RepeatedKFold | 2 | EV + PRE + TST | 96.27 |
+| Cerrado | TimeSeriesSplit | 1 | EV + PRE + WAI | 95.73 |
+| Cerrado | TimeSeriesSplit | 2 | EV + PRE + TST | 95.07 |
+| Mata Atlântica | GroupKFold | 1 | EV + TST + WAI | 73.73 |
+| Mata Atlântica | GroupKFold | 2 | EV + PRE + TST | 70.54 |
+| Mata Atlântica | RepeatedKFold | 1 | EV + TST + WAI | 73.65 |
+| Mata Atlântica | RepeatedKFold | 2 | EV + PRE + TST | 70.96 |
+| Mata Atlântica | TimeSeriesSplit | 1 | EV + TST + WAI | 66.98 |
+| Mata Atlântica | TimeSeriesSplit | 2 | EV + PRE + TST | 63.47 |
+
+**Estabilidade partição a partição (RepeatedKFold): frequência com que cada combinação foi a melhor**
+
+| bioma | variaveis | r2_teste | freq_melhor_pct |
+|---|---|---|---|
+| Mata Atlântica | EV + TST + WAI | 73.6 | 66.0 |
+| Mata Atlântica | EV + PRE + TST | 71.0 | 19.3 |
+| Mata Atlântica | EV + PRE + WAI | 69.0 | 12.0 |
+| Mata Atlântica | EV + WAI + BURNlog | 66.4 | 0.7 |
+| Mata Atlântica | EV + PRE + BURNlog | 66.0 | 1.3 |
+| Mata Atlântica | EV + TST + BURNlog | 58.4 | 0.7 |
+| Mata Atlântica | PRE + TST + WAI | 55.7 | 0.0 |
+| Mata Atlântica | PRE + TST + BURNlog | 47.7 | 0.0 |
+| Mata Atlântica | PRE + WAI + BURNlog | 47.6 | 0.0 |
+| Mata Atlântica | TST + WAI + BURNlog | 41.4 | 0.0 |
+| Cerrado | EV + PRE + WAI | 96.7 | 82.7 |
+| Cerrado | EV + PRE + TST | 96.3 | 14.0 |
+| Cerrado | EV + PRE + BURNlog | 95.8 | 2.7 |
+| Cerrado | EV + TST + WAI | 95.2 | 0.7 |
+| Cerrado | EV + WAI + BURNlog | 94.2 | 0.0 |
+| Cerrado | PRE + TST + WAI | 93.8 | 0.0 |
+| Cerrado | EV + TST + BURNlog | 93.3 | 0.0 |
+| Cerrado | PRE + WAI + BURNlog | 92.6 | 0.0 |
+| Cerrado | TST + WAI + BURNlog | 88.8 | 0.0 |
+| Cerrado | PRE + TST + BURNlog | 71.3 | 0.0 |
+| Caatinga | EV + PRE + TST | 94.2 | 36.0 |
+| Caatinga | EV + PRE + WAI | 94.0 | 22.0 |
+| Caatinga | PRE + TST + WAI | 93.9 | 28.7 |
+| Caatinga | EV + PRE + BURNlog | 93.7 | 4.7 |
+| Caatinga | EV + TST + WAI | 93.0 | 4.0 |
+| Caatinga | PRE + WAI + BURNlog | 92.8 | 2.0 |
+| Caatinga | EV + WAI + BURNlog | 92.6 | 1.3 |
+| Caatinga | EV + TST + BURNlog | 92.5 | 0.7 |
+| Caatinga | TST + WAI + BURNlog | 89.7 | 0.7 |
+| Caatinga | PRE + TST + BURNlog | 77.9 | 0.0 |
+
+**Diferença pareada 1ª − 2ª (150 partições)**
+
+| bioma | primeira | segunda | dif_media_pp | ic95_inf | ic95_sup | prop_particoes_primeira_maior | p_wilcoxon |
+|---|---|---|---|---|---|---|---|
+| Mata Atlântica | EV + TST + WAI | EV + PRE + TST | 2.6885 | 2.0986 | 3.2956 | 74.0 | 0.0 |
+| Cerrado | EV + PRE + WAI | EV + PRE + TST | 0.3903 | 0.3339 | 0.4484 | 86.0 | 0.0 |
+| Caatinga | EV + PRE + TST | EV + PRE + WAI | 0.1486 | 0.0529 | 0.2443 | 62.0 | 0.0023 |
+
+**Importância por permutação: parcela de cada variável na queda total do R² (%)**
+
+| bioma | variavel | GroupKFold | TimeSeriesSplit |
+|---|---|---|---|
+| Caatinga | EV | 80.4 | 76.9 |
+| Caatinga | PRE | 2.4 | 3.8 |
+| Caatinga | SAZcos | 8.9 | 4.7 |
+| Caatinga | SAZsin | 4.6 | 3.2 |
+| Caatinga | TST | 3.7 | 11.4 |
+| Cerrado | EV | 85.3 | 77.7 |
+| Cerrado | PRE | 4.1 | 3.7 |
+| Cerrado | SAZcos | 4.4 | 6.1 |
+| Cerrado | SAZsin | 3.6 | 5.0 |
+| Cerrado | WAI | 2.6 | 7.5 |
+| Mata Atlântica | EV | 41.9 | 38.2 |
+| Mata Atlântica | SAZcos | 16.6 | 16.7 |
+| Mata Atlântica | SAZsin | 11.0 | 15.2 |
+| Mata Atlântica | TST | 9.4 | 10.0 |
+| Mata Atlântica | WAI | 21.1 | 19.9 |
+
+**Nulos que preservam a estrutura temporal (R² de validação cruzada, %)**
+
+| bioma | teste | n | r2_original | r2_nulo_media | r2_nulo_dp | r2_nulo_max | p_empirico |
+|---|---|---|---|---|---|---|---|
+| Mata Atlântica | Deslocamento circular (todos os 296) | 296 | 73.81 | -2.978 | 6.114 | 52.435 | 0.003 |
+| Mata Atlântica | Deslocamento circular múltiplo de 12 meses (calendário preservado) | 24 | 73.81 | -3.233 | 5.03 | 7.28 | 0.04 |
+| Mata Atlântica | Permutação de anos inteiros (calendário preservado) | 100 | 73.81 | 4.428 | 2.748 | 11.518 | 0.01 |
+| Cerrado | Deslocamento circular (todos os 296) | 296 | 96.659 | 36.295 | 12.864 | 81.772 | 0.003 |
+| Cerrado | Deslocamento circular múltiplo de 12 meses (calendário preservado) | 24 | 96.659 | 35.479 | 10.977 | 58.714 | 0.04 |
+| Cerrado | Permutação de anos inteiros (calendário preservado) | 100 | 96.659 | 62.379 | 1.444 | 67.001 | 0.01 |
+| Caatinga | Deslocamento circular (todos os 296) | 296 | 94.162 | 23.915 | 8.879 | 72.523 | 0.003 |
+| Caatinga | Deslocamento circular múltiplo de 12 meses (calendário preservado) | 24 | 94.162 | 22.464 | 7.45 | 36.472 | 0.04 |
+| Caatinga | Permutação de anos inteiros (calendário preservado) | 100 | 94.162 | 40.205 | 2.323 | 44.739 | 0.01 |

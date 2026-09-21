@@ -311,3 +311,31 @@ Bloco 17 de `aplicar_revisao_docx.py`; conferência página a página sobre a re
 - Resultado: 81 páginas (eram 89). Observação: a paginação foi conferida no LibreOffice; o Word pode deslocar
   uma ou outra linha, mas as regras de quebra (título com o próximo, legenda com a figura, viúvas/órfãs) são do
   próprio arquivo.
+
+## 12. Versão 13 (22/09/2026): consistência com a revisão do artigo (JSAES)
+
+Novo script `Robustez_Selecao_PSN.py` (saídas em `resultados_2001_2025/robustez/`), mesmo pipeline e semente do modelo:
+
+- **Seleção sob validação temporal** (ponto 1 da revisão): graus 1–5 e as 10 combinações de variáveis reavaliados sob
+  GroupKFold por ano e TimeSeriesSplit (Tabelas A7 e A8); estabilidade partição a partição no RepeatedKFold
+  (frequência de vitória, diferença pareada 1ª–2ª com IC bootstrap e Wilcoxon). Texto em 5.5 e 6.2.
+- **"WAI substituiu a temperatura" → "WAI foi selecionado em lugar da TST"** (ponto 6), com a magnitude pequena da
+  diferença (0,4 pp) e sua consistência entre partições quantificadas.
+- **Importância por permutação fora da amostra por bloco temporal** (ponto 4; Breiman, 2001): Tabela A9 e parágrafo em
+  6.2 contrastando com o índice de coeficientes da Figura 8 (EV dominante em ambos; WAI do Cerrado recebe parcela pequena
+  sob permutação por partilhar informação com a EV).
+- **Nulos que preservam a estrutura temporal** (ponto 7): deslocamento circular da PSN (296 deslocamentos; múltiplos de
+  12 preservam o calendário) e permutação de anos inteiros (100); Tabela A10 e parágrafo em 6.4.
+- **Dependência algorítmica PSN–EV** (ponto 5): parágrafo em 6.3 (MOD17 e MOD16 partilham FPAR/LAI do MOD15, cobertura
+  do MCD12Q1 e meteorologia GMAO/MERRA-2), limitação no Capítulo 7 e validação futura com covariância de vórtices.
+- **MOD11A2 e QC_Day** (ponto 3): 5.2 corrigida (a justificativa do preenchimento de falhas vale só para MOD17/MOD16;
+  o MOD11A2 omite pixels sem céu claro, mas QC_Day não foi usada como filtro); registrada como limitação e perspectiva.
+  A reextração da TST com filtro exige o Google Earth Engine e fica pendente.
+- **Períodos de 32 dias** (ponto 2): 5.2 explicita que os "meses" são janelas fixas de 32 dias com mês civil de
+  referência (usado por SAZsin/SAZcos), iguais às de Benfica et al. (2022); limitação no Capítulo 7.
+- **Expressões causais** (ponto 10): "regimes de controle" → "regimes de associação entre o clima e a PSN"; "controles
+  climáticos" → "preditores/fatores climáticos"; "governada por" → "associada predominantemente a"; "em substituição à
+  TST" → "selecionado em lugar da TST"; cabeçalho da Tabela 4 "Controlador dominante" → "Preditor dominante"; abstract
+  alinhado.
+- Referência nova: Breiman (2001). Lista de tabelas, sumário e apêndice atualizados; `reproduzir_tudo.sh` e README
+  incluem o novo script.

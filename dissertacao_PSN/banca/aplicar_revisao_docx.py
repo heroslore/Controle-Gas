@@ -33,6 +33,13 @@ VIF = pd.read_csv(os.path.join(RES, 'vif_por_bioma.csv'))
 SG  = pd.read_csv(os.path.join(RES, 'selecao_grau.csv'))
 SV  = pd.read_csv(os.path.join(RES, 'selecao_variaveis.csv'))
 NUM = json.load(open(os.path.join(RES, 'numeros_extra.json'), encoding='utf-8'))
+ROB = os.path.join(RES, 'robustez'); RJ = json.load(open(os.path.join(ROB, 'robustez.json'), encoding='utf-8'))
+GT = pd.read_csv(os.path.join(ROB, 'grau_temporal.csv')); CT = pd.read_csv(os.path.join(ROB, 'combos_temporal.csv'))
+ES = pd.read_csv(os.path.join(ROB, 'estabilidade_selecao.csv')); PI = pd.read_csv(os.path.join(ROB, 'permutation_importance.csv'))
+NT = pd.read_csv(os.path.join(ROB, 'nulos_temporais.csv'))
+def _ord(n): return f"{n}º"
+_ORDF = {1: 'primeira', 2: 'segunda', 3: 'terceira', 4: 'quarta', 5: 'quinta', 6: 'sexta', 7: 'sétima', 8: 'oitava', 9: 'nona', 10: 'décima'}
+def _vm(x, nd=1): return v(x, nd).replace('-', '−')
 ENSO = json.load(open(os.path.join(RES, 'enso_resumo.json'), encoding='utf-8'))
 ABL = pd.read_csv(os.path.join(RES, 'ablacao_sazonalidade.csv'))
 SAZ = pd.read_csv(os.path.join(RES, 'sazonalidade_variaveis.csv'))
@@ -380,7 +387,7 @@ abstract = (
     f"{mae('MA').replace(',', '.')} gC·m⁻²·month⁻¹; the coefficient instability associated with "
     "multicollinearity (high VIF between evapotranspiration and water availability in the Cerrado) was contained by "
     "Ridge regularization. The results revealed distinct ecological regimes of "
-    "PSN control: seasonal water limitation in the Cerrado, pulsed response to rainfall in the "
+    "climate–PSN association: seasonal water limitation in the Cerrado, pulsed response to rainfall in the "
     "Caatinga and multifactorial control in the Atlantic Forest. The analysis of the El Niño–Southern Oscillation "
     "(ENSO), performed on monthly anomalies, indicated an indirect and lagged influence on PSN: in La Niña months PSN "
     f"was about {v(LN_LO,0)}–{v(LN_HI,0)}% above normal in the Cerrado and Caatinga, associated mainly with positive "
@@ -1538,6 +1545,150 @@ set_text(ORIG[320],
     "tropicais.")
 
 # =============================================================================
+# 15b. ROBUSTEZ DA SELEÇÃO, IMPORTÂNCIA POR PERMUTAÇÃO E NULOS TEMPORAIS (revisão JSAES)
+# =============================================================================
+def _par(prefix):
+    for p in d.paragraphs:
+        if p.text.startswith(prefix): return p
+    raise KeyError(prefix)
+def _r2g(b, g, e): return GT[(GT.bioma == nome[b]) & (GT.grau == g) & (GT.esquema == e)]['r2_teste'].iloc[0]
+def _mg(b, e): return RJ[b]['melhor_grau'][e]
+def _rk(b, e): return RJ[b]['rank_selecionado'][e]
+def _dif(b): return RJ[b]['dif']
+def _pi(b, e): return {r[0]: r for r in RJ[b]['perm'][e]}
+def _nul(b, i): return RJ[b]['nulos'][i]
+# --- 5.5 métodos: três parágrafos após os indicadores do Y-randomization (ORIG[220])
+add_paras_after(ORIG[220], BODY_TPL, [
+    "Robustez da seleção sob os esquemas temporais de validação. Como o grau polinomial e o conjunto de variáveis foram escolhidos com base "
+    "no RepeatedKFold, verificou-se se as mesmas escolhas seriam feitas quando a própria seleção emprega esquemas que "
+    "consideram a estrutura temporal da série: os graus 1 a 5 e as 10 combinações de três variáveis ambientais foram "
+    "reavaliados, com o mesmo pipeline, sob GroupKFold por ano e sob TimeSeriesSplit, registrando-se o grau de maior R² de "
+    "teste e a posição da combinação selecionada em cada esquema (Tabelas A7 e A8). A estabilidade da seleção foi ainda "
+    "medida partição a partição no RepeatedKFold: a frequência com que cada combinação foi a melhor entre as 150 partições "
+    "e a diferença pareada de R² de teste entre a primeira e a segunda combinações de cada bioma, com intervalo de confiança "
+    "de 95% por bootstrap das partições (5.000 reamostragens) e teste de Wilcoxon pareado.",
+    "Importância por permutação fora da amostra. Como complemento ao índice baseado nos coeficientes (seção 6.2), cuja "
+    "comparabilidade entre termos de ordens diferentes é limitada, calculou-se a importância por permutação (Breiman, 2001) "
+    "de forma compatível com a dependência temporal: em cada bloco de teste do GroupKFold por ano e do TimeSeriesSplit, o "
+    "modelo ajustado no treino foi avaliado no teste com cada preditor original (as três variáveis ambientais e as duas "
+    "componentes harmônicas) embaralhado 20 vezes. A queda média do R² de teste e a razão entre o RMSE com e sem "
+    "embaralhamento medem quanto o desempenho fora da amostra depende de cada variável; reportam-se a média e o desvio-padrão "
+    "entre blocos e a parcela de cada variável na queda total (Tabela A9). Como o embaralhamento de um preditor rompe também "
+    "suas correlações com os demais, variáveis colineares, como EV e WAI no Cerrado, partilham importância, e a medida deve ser "
+    "lida como preditiva, não causal.",
+    "Nulos que preservam a estrutura temporal. A permutação completa da PSN no Y-randomization destrói toda a dependência "
+    "temporal da resposta, o que torna o teste pouco exigente em séries autocorrelacionadas. Por isso, o mesmo procedimento "
+    "(R² de validação cruzada RepeatedKFold com α fixo) foi repetido sob dois nulos que mantêm a autocorrelação e o ciclo "
+    "sazonal da PSN: (i) o deslocamento circular da série da PSN em relação aos preditores, para todos os 296 deslocamentos "
+    "possíveis, entre os quais os 24 múltiplos de 12 meses preservam integralmente o calendário; e (ii) a permutação de anos "
+    "inteiros (100 permutações dos 24 anos completos, mantidos no lugar os nove meses de 2025), que também preserva o "
+    "calendário. Nesses nulos o modelo continua a dispor da sazonalidade e da memória temporal da série; o que se perde é o "
+    "alinhamento entre a PSN e as condições climáticas do mesmo período. O p-valor empírico foi definido como (número de "
+    "nulos com R² igual ou superior ao original + 1)/(n + 1) (Tabela A10)."])
+# --- 6.2 resultados: grau sob esquemas temporais (após ORIG[250])
+def _frase_grau(b):
+    g1, g2 = _mg(b, 'GroupKFold'), _mg(b, 'TimeSeriesSplit')
+    if g1 == 2 and g2 == 2:
+        return f"{nome[b]}: grau 2 nos dois esquemas ({v(_r2g(b, 2, 'GroupKFold'), 1)}% e {v(_r2g(b, 2, 'TimeSeriesSplit'), 1)}%)"
+    def _um(g, e, rot):
+        return (f"grau 2 no {rot} ({v(_r2g(b, 2, e), 1)}%)" if g == 2 else
+                f"grau {g} no {rot} ({v(_r2g(b, g, e), 1)}% contra {v(_r2g(b, 2, e), 1)}% do grau 2)")
+    return f"{nome[b]}: {_um(g1, 'GroupKFold', 'GroupKFold')} e {_um(g2, 'TimeSeriesSplit', 'TimeSeriesSplit')}"
+def _frase_excecoes_grau():
+    exc = [(b, e, _mg(b, e), _r2g(b, _mg(b, e), e) - _r2g(b, 2, e)) for b in ('MA', 'CE', 'CA') for e in ('GroupKFold', 'TimeSeriesSplit') if _mg(b, e) != 2]
+    if not exc: return "O grau 2 foi o de maior R² de teste em todos os biomas e esquemas."
+    partes = [f"grau {g} {'na' if b != 'CE' else 'no'} {nome[b]} sob {e} (+{v(m, 1)} pp)" for b, e, g, m in exc]
+    return ("Nos casos em que outro grau superou o grau 2 (" + "; ".join(partes) + "), a vantagem não ultrapassou "
+            f"{v(max(m for *_, m in exc), 1)} ponto percentual, dentro da variação entre partições; o grau 3 traz o quase triplo de "
+            "termos e maior diferença treino–teste, e o grau 1 na Caatinga reflete a resposta quase linear desse bioma já observada.")
+add_paras_after(ORIG[250], BODY_TPL, [
+    "A seleção do grau não dependeu do esquema de validação (Tabela A7). Quando a comparação dos graus 1 a 5 é refeita sob os "
+    "esquemas que consideram a estrutura temporal, o maior R² de teste é obtido por: " + "; ".join(_frase_grau(b) for b in ('MA', 'CE', 'CA')) +
+    ". " + _frase_excecoes_grau() + " Os graus 4 e 5 degradam o desempenho de teste em todos os esquemas, e o grau 2 permanece "
+    "o de melhor compromisso entre desempenho, estabilidade e parcimônia também sob os esquemas agrupado por ano e cronológico."])
+# --- 6.2 resultados: WAI x TST reescrito + estabilidade da seleção (ORIG[255])
+_dce = _dif('CE')
+set_text(ORIG[255],
+    "O resultado mais relevante dessa etapa é a ausência da Temperatura de Superfície Terrestre (TST) no conjunto selecionado "
+    "do Cerrado: o WAI foi selecionado em lugar da TST na combinação de melhor desempenho. Isso indica que, na presença do WAI, "
+    "a TST não agrega poder preditivo independente sobre a PSN do Cerrado, tendo sua informação já representada pelo WAI. "
+    f"A vantagem do conjunto com WAI sobre a melhor combinação com TST é pequena ({v(ce_wai_vs_tst)} ponto percentual no R² de "
+    "teste), ainda que consistente também na menor diferença treino–teste. Partição a partição (Tabela A8), a combinação "
+    f"{_dce['primeira']} foi a melhor em {v(RJ['CE']['freq_melhor'], 0)}% das 150 partições do RepeatedKFold, e sua diferença "
+    f"pareada de R² de teste em relação a {_dce['segunda']} foi de {v(_dce['dif_media_pp'], 2)} pp (IC 95% por bootstrap: "
+    f"{v(_dce['ic95_inf'], 2)} a {v(_dce['ic95_sup'], 2)} pp; Wilcoxon, {pj(_dce['p_wilcoxon'])}), positiva em "
+    f"{v(_dce['prop_particoes_primeira_maior'], 0)}% das partições; sob os esquemas temporais, EV + PRE + WAI ficou em "
+    f"{_ord(_rk('CE', 'GroupKFold'))} lugar no GroupKFold por ano e em {_ord(_rk('CE', 'TimeSeriesSplit'))} no TimeSeriesSplit. A preferência "
+    "pelo WAI é, portanto, estatisticamente consistente, mas de magnitude pequena, e aponta redundância da TST na presença do "
+    "WAI, e não sua irrelevância ecológica. Para a Mata Atlântica e a Caatinga, as combinações selecionadas foram as melhores em "
+    f"{v(RJ['MA']['freq_melhor'], 0)}% e {v(RJ['CA']['freq_melhor'], 0)}% das partições e ocuparam, respectivamente, a "
+    f"{_ORDF[_rk('MA', 'GroupKFold')]} e a {_ORDF[_rk('CA', 'GroupKFold')]} posições no GroupKFold por ano e a "
+    f"{_ORDF[_rk('MA', 'TimeSeriesSplit')]} e a {_ORDF[_rk('CA', 'TimeSeriesSplit')]} no TimeSeriesSplit (Tabela A8); na Caatinga, as três "
+    "melhores combinações distam menos de 0,3 ponto percentual entre si, e a escolha entre elas é a menos estável dos três biomas.")
+# --- 6.2 resultados: importância por permutação (após ORIG[257])
+def _frase_perm(b):
+    pg = _pi(b, 'GroupKFold'); ordem = sorted(pg, key=lambda k: -pg[k][5])
+    return (f"{'na' if b != 'CE' else 'no'} {nome[b]}, {ordem[0]} concentra {v(pg[ordem[0]][5], 0)}% da queda total do R² (razão de RMSE "
+            f"{v(pg[ordem[0]][3], 1)}), seguida de {ordem[1]} ({v(pg[ordem[1]][5], 0)}%) e {ordem[2]} ({v(pg[ordem[2]][5], 0)}%)")
+add_paras_after(ORIG[257], BODY_TPL, [
+    "A importância por permutação fora da amostra (Tabela A9), que não depende da escala dos coeficientes, coincide com o índice "
+    "da Figura 8 no preditor dominante, a evapotranspiração, mas lhe atribui parcela muito maior: " + "; ".join(_frase_perm(b) for b in ('MA', 'CE', 'CA')) +
+    ". Os valores absolutos das quedas são grandes porque o embaralhamento de um preditor central leva os termos quadráticos e de "
+    "interação a extrapolar, mas as parcelas são semelhantes entre GroupKFold e TimeSeriesSplit. As duas medidas divergem na "
+    "posição das variáveis secundárias, o que é esperado: o índice de coeficientes reparte o peso entre termos correlacionados, ao "
+    "passo que a permutação atribui a cada variável apenas a informação que ela carrega além das demais; por isso, no Cerrado, o WAI "
+    f"recebe {v(_pi('CE', 'GroupKFold')['WAI'][5], 0)}% da queda total sob permutação, apesar dos {v(imp['CE']['WAI'] if isinstance(imp.get('CE'), dict) and 'WAI' in imp['CE'] else 0, 0)}% do índice de "
+    "coeficientes, porque grande parte de sua informação é partilhada com a EV (VIF elevado, Tabela 5). Esse contraste reforça a "
+    "leitura do índice da Figura 8 como descrição da estrutura do modelo ajustado, e não como medida de importância no sentido estrito."])
+# --- 6.3 discussão: dependência algorítmica PSN–EV (após ORIG[280]: "Nesse contexto, o WAI ...")
+_p_wai = _par("Nesse contexto, o WAI")
+add_paras_after(_p_wai, BODY_TPL, [
+    "Uma ressalva sobre a origem dos dados aplica-se à associação entre a PSN e a evapotranspiração. A PSN (MOD17A2HGF) e a "
+    "EV (MOD16A2GF) são estimadas por algoritmos da mesma família, que partilham entradas: ambos utilizam a fração da radiação "
+    "fotossinteticamente ativa absorvida e o índice de área foliar do produto MOD15A2H, a classificação de cobertura do solo do "
+    "MCD12Q1 e os mesmos campos meteorológicos de reanálise (temperatura, déficit de pressão de vapor e radiação do GMAO/MERRA-2) "
+    "(Running et al., 2004; Running; Zhao, 2021; Running et al., 2021). Parte da forte associação entre EV e PSN observada nos "
+    "três biomas pode, portanto, refletir dependência algorítmica entre os produtos, e não apenas o acoplamento ecofisiológico "
+    "entre transpiração e assimilação de carbono pelos estômatos (Lawson; Vialet-Chabrand, 2019). Essa dependência não "
+    "invalida o uso do modelo para o fim proposto, que é representar e prever a PSN estimada pelo MOD17 a partir de variáveis "
+    "disponíveis na mesma escala; e a associação da PSN com a precipitação (IMERG) e com a temperatura da superfície (MOD11A2), "
+    "produtos independentes do MOD17, aponta na mesma direção. Ela recomenda, contudo, cautela ao interpretar a magnitude da "
+    "contribuição da EV como evidência ecológica autônoma. A validação das relações com dados independentes, como as medições "
+    "de fluxo por covariância de vórtices disponíveis para a Caatinga (Mendes et al., 2020, 2025) e para o Cerrado (Vourlitis et "
+    "al., 2022), é indicada como etapa futura."])
+# --- 6.4 resultados: nulos temporais (após "O teste de Y-randomization responde ...")
+_p_yr = _par("O teste de Y-randomization responde")
+def _frase_nulo(b):
+    n0, n1, n2 = _nul(b, 0), _nul(b, 1), _nul(b, 2)
+    return (f"{'na' if b != 'CE' else 'no'} {nome[b]}, o R² médio dos modelos nulos foi de {_vm(n0['r2_nulo_media'])}% com o deslocamento circular "
+            f"(máximo {_vm(n0['r2_nulo_max'])}%) e de {_vm(n1['r2_nulo_media'])}% e {_vm(n2['r2_nulo_media'])}% nos nulos que "
+            f"preservam o calendário (deslocamentos múltiplos de 12 meses e permutação de anos), contra {v(n0['r2_original'], 1)}% do modelo original")
+add_paras_after(_p_yr, BODY_TPL, [
+    "Os nulos que preservam a estrutura temporal da PSN (Tabela A10) são mais exigentes, como esperado, porque mantêm a "
+    "autocorrelação e, no caso dos deslocamentos múltiplos de 12 meses e da permutação de anos inteiros, também o ciclo sazonal: "
+    + "; ".join(_frase_nulo(b) for b in ('MA', 'CE', 'CA')) + ". Nenhum dos nulos alcançou o modelo original em nenhum bioma "
+    f"(p empírico entre {pv3(min(_nul(b, i)['p_empirico'] for b in ('MA', 'CE', 'CA') for i in range(3)))} e "
+    f"{pv3(max(_nul(b, i)['p_empirico'] for b in ('MA', 'CE', 'CA') for i in range(3)))}). A diferença entre o R² original e o dos "
+    "nulos com calendário preservado quantifica o ganho que decorre do alinhamento entre a PSN e as condições climáticas do "
+    "próprio período, além do que a sazonalidade e a memória temporal da série já explicam; esse ganho é maior nos biomas "
+    "sazonais e menor na Mata Atlântica, coerente com a menor previsibilidade climática desse bioma."])
+# --- Tabela 4: cabeçalho causal
+for _t in d.tables:
+    for _c in _t.rows[0].cells:
+        if _c.text.strip() == 'Controlador dominante': set_cell(_c, 'Preditor dominante', bold=True)
+# --- 7: limitações e perspectivas
+set_text(ORIG[317], ORIG[317].text.rstrip() +
+    " Três limitações de origem dos dados devem ainda ser explicitadas: (i) a PSN e a EV provêm de algoritmos MODIS que "
+    "compartilham entradas (seção 6.3), de modo que parte da associação entre elas pode ser algorítmica; (ii) a temperatura da "
+    "superfície (MOD11A2) não passou por filtro pela banda de qualidade QC_Day, e a sensibilidade da série de TST a esse filtro "
+    "não foi avaliada; e (iii) os períodos aqui chamados mensais são janelas fixas de 32 dias, associadas a um mês civil de "
+    "referência, e não meses civis estritos.")
+set_text(ORIG[320], ORIG[320].text.replace(
+    "a extensão da análise do ENSO a compósitos",
+    "a validação das relações entre PSN e variáveis climáticas com medições independentes de fluxo por covariância de "
+    "vórtices e a reextração da TST com filtro pela banda QC_Day; a extensão da análise do ENSO a compósitos"))
+
+# =============================================================================
 # 16. APÊNDICE A — base de dados + combinações (antes das REFERÊNCIAS)
 # =============================================================================
 base = pd.read_excel(os.path.join(BASE, 'Dados_base_nova_2001_2025.xlsx'))
@@ -1572,7 +1723,8 @@ intro = new_para_after(h, BODY_TPL,
     "Atlântica, CE = Cerrado, CA = Caatinga). Unidades: PSN em gC·m⁻²·mês⁻¹; EV e PRE em mm·mês⁻¹; TST em °C; WAI "
     "adimensional (ETR/ETP); BURN em hectares. A Tabela A2 apresenta o desempenho das 10 combinações de variáveis "
     "ambientais avaliadas por bioma; a Tabela A3, o efeito da remoção das componentes de sazonalidade; e a Tabela A4, "
-    "a proporção da variância de cada variável climática explicada pelo ciclo anual.")
+    "a proporção da variância de cada variável climática explicada pelo ciclo anual; as Tabelas A7 a A10 reúnem a robustez "
+    "da seleção sob validação temporal, a importância por permutação e os nulos que preservam a estrutura temporal (seção 5.5).")
 cap = new_para_after(intro, TABCAP_TPL, "Tabela A1 - Base de dados mensal dos três biomas (2001–2025).", bold=True)
 cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
 cols = ['ANO', 'MÊS', 'ONI', 'Enso']; hdr = ['Ano', 'Mês', 'ONI', 'Fase']; fmt = {'ANO': '{:.0f}', 'MÊS': '{:.0f}', 'ONI': '{:.2f}'}
@@ -1663,7 +1815,88 @@ for i, r in enumerate(SW.itertuples(), start=1):
     for j, sval in enumerate([r.bioma if r.bioma != _prev else '', str(int(r.percentil)), v(r.r2_treino, 1), v(r.r2_teste, 1), v(r.gap_pp, 1), v(r.rmse, 2)]):
         set_cell(t.rows[i].cells[j], sval, size=9)
     _prev = r.bioma
-fim = new_para_after(t.rows[-1].cells[0].paragraphs[0], BODY_TPL, ""); fim._p.getparent().remove(fim._p); t._tbl.addnext(fim._p)
+mid = new_para_after(t.rows[-1].cells[0].paragraphs[0], BODY_TPL, ""); mid._p.getparent().remove(mid._p); t._tbl.addnext(mid._p)
+def _left(t):
+    for row in t.rows:
+        for c in row.cells:
+            for par in c.paragraphs: par.alignment = WD_ALIGN_PARAGRAPH.LEFT
+# Tabela A7 — grau x esquema de validação
+cap = new_para_after(mid, TABCAP_TPL, "Tabela A7 - R² de teste (%) do MRMP-N por grau polinomial (1 a 5) sob os três esquemas de validação: "
+                     "RepeatedKFold 5 × 30 (critério usado na seleção), GroupKFold por ano e TimeSeriesSplit com janela expansível. "
+                     "Conjunto de variáveis selecionado de cada bioma.", bold=True)
+cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
+t = table_after(cap, 16, 5); t.alignment = 1
+set_widths(t, [3.4, 2.0, 4.0, 4.0, 4.0]); _left_pending = t
+for j, hname in enumerate(['Bioma', 'Grau', 'RepeatedKFold\n(%)', 'GroupKFold por ano\n(%)', 'TimeSeriesSplit\n(%)']):
+    set_cell(t.rows[0].cells[j], hname, bold=True, size=9)
+_i = 1
+for b in ('MA', 'CE', 'CA'):
+    for g_ in range(1, 6):
+        _gk = GT[(GT.bioma == nome[b]) & (GT.grau == g_) & (GT.esquema == 'GroupKFold')]['r2_teste'].iloc[0]
+        _ts = GT[(GT.bioma == nome[b]) & (GT.grau == g_) & (GT.esquema == 'TimeSeriesSplit')]['r2_teste'].iloc[0]
+        for j, sval in enumerate([nome[b] if g_ == 1 else '', str(g_), v(sg(b, g_, 'r2_teste'), 1), v(_gk, 1), v(_ts, 1)]):
+            set_cell(t.rows[_i].cells[j], sval, size=9)
+        _i += 1
+_left(t); mid = new_para_after(t.rows[-1].cells[0].paragraphs[0], BODY_TPL, ""); mid._p.getparent().remove(mid._p); t._tbl.addnext(mid._p)
+# Tabela A8 — combinações sob esquemas temporais + estabilidade
+cap = new_para_after(mid, TABCAP_TPL, "Tabela A8 - As 10 combinações de três variáveis ambientais (mais SAZsin e SAZcos) por bioma, grau 2: R² de teste "
+                     "sob RepeatedKFold 5 × 30, frequência com que cada combinação foi a melhor entre as 150 partições, e R² de teste "
+                     "(posição entre parênteses) sob GroupKFold por ano e TimeSeriesSplit. Em negrito, a combinação selecionada.", bold=True)
+cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
+t = table_after(cap, 31, 6); t.alignment = 1
+set_widths(t, [3.0, 4.4, 3.0, 3.2, 3.6, 3.6]); _left_pending = t
+for j, hname in enumerate(['Bioma', 'Variáveis', 'RepeatedKFold\n(%)', 'Melhor em\n(% das partições)', 'GroupKFold\n(%) (posição)', 'TimeSeriesSplit\n(%) (posição)']):
+    set_cell(t.rows[0].cells[j], hname, bold=True, size=9)
+_i = 1
+for b in ('MA', 'CE', 'CA'):
+    _e = ES[ES.bioma == nome[b]]
+    for k_, r in enumerate(_e.itertuples()):
+        _g = CT[(CT.bioma == nome[b]) & (CT.esquema == 'GroupKFold') & (CT.variaveis == r.variaveis)].iloc[0]
+        _t = CT[(CT.bioma == nome[b]) & (CT.esquema == 'TimeSeriesSplit') & (CT.variaveis == r.variaveis)].iloc[0]
+        _sel = (r.variaveis == RJ[b]['selecionado'])
+        for j, sval in enumerate([nome[b] if k_ == 0 else '', r.variaveis, v(r.r2_teste, 1), v(r.freq_melhor_pct, 1),
+                                  f"{v(_g.r2_teste, 1)} ({_ord(int(_g['rank']))})", f"{v(_t.r2_teste, 1)} ({_ord(int(_t['rank']))})"]):
+            set_cell(t.rows[_i].cells[j], sval, size=9, bold=(True if _sel and j == 1 else None))
+        _i += 1
+_left(t); mid = new_para_after(t.rows[-1].cells[0].paragraphs[0], BODY_TPL, ""); mid._p.getparent().remove(mid._p); t._tbl.addnext(mid._p)
+# Tabela A9 — importância por permutação
+cap = new_para_after(mid, TABCAP_TPL, "Tabela A9 - Importância por permutação fora da amostra, por bloco temporal: queda do R² de teste (pontos "
+                     "percentuais, média ± desvio-padrão entre os cinco blocos; 20 embaralhamentos por bloco), razão entre o RMSE com e sem "
+                     "embaralhamento e parcela de cada variável na queda total (%), sob GroupKFold por ano e TimeSeriesSplit.", bold=True)
+cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
+t = table_after(cap, 16, 8); t.alignment = 1
+set_widths(t, [2.8, 2.0, 3.4, 2.4, 2.4, 3.4, 2.4, 2.4]); _left_pending = t
+for j, hname in enumerate(['Bioma', 'Variável', 'GroupKFold\nqueda R² (pp)', 'GroupKFold\nrazão RMSE', 'GroupKFold\nparcela (%)',
+                           'TimeSeriesSplit\nqueda R² (pp)', 'TimeSeriesSplit\nrazão RMSE', 'TimeSeriesSplit\nparcela (%)']):
+    set_cell(t.rows[0].cells[j], hname, bold=True, size=8)
+_i = 1
+for b in ('MA', 'CE', 'CA'):
+    _pg = PI[(PI.bioma == nome[b]) & (PI.esquema == 'GroupKFold')].set_index('variavel'); _pt = PI[(PI.bioma == nome[b]) & (PI.esquema == 'TimeSeriesSplit')].set_index('variavel')
+    for k_, var_ in enumerate(_pg.sort_values('parcela_media_pct', ascending=False).index):
+        rg, rt = _pg.loc[var_], _pt.loc[var_]
+        for j, sval in enumerate([nome[b] if k_ == 0 else '', var_, f"{v(rg.queda_media_pp, 1)} ± {v(rg.queda_dp_pp, 1)}", v(rg.razao_rmse_media, 2),
+                                  f"{v(rg.parcela_media_pct, 1)} ± {v(rg.parcela_dp_pct, 1)}", f"{v(rt.queda_media_pp, 1)} ± {v(rt.queda_dp_pp, 1)}",
+                                  v(rt.razao_rmse_media, 2), f"{v(rt.parcela_media_pct, 1)} ± {v(rt.parcela_dp_pct, 1)}"]):
+            set_cell(t.rows[_i].cells[j], sval, size=8)
+        _i += 1
+_left(t); mid = new_para_after(t.rows[-1].cells[0].paragraphs[0], BODY_TPL, ""); mid._p.getparent().remove(mid._p); t._tbl.addnext(mid._p)
+# Tabela A10 — nulos temporais
+cap = new_para_after(mid, TABCAP_TPL, "Tabela A10 - Nulos que preservam a estrutura temporal da PSN: R² de validação cruzada (RepeatedKFold 5 × 30, "
+                     "α fixo) do modelo original e dos modelos nulos obtidos por deslocamento circular da PSN (todos os 296 deslocamentos; "
+                     "subconjunto dos múltiplos de 12 meses, que preservam o calendário) e por permutação de anos inteiros (100 permutações). "
+                     "p empírico = (nº de nulos com R² ≥ original + 1)/(n + 1).", bold=True)
+cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
+t = table_after(cap, len(NT) + 1, 7); t.alignment = 1
+set_widths(t, [2.8, 7.0, 1.4, 2.4, 3.0, 2.4, 2.0]); _left_pending = t
+for j, hname in enumerate(['Bioma', 'Nulo', 'n', 'R² original (%)', 'R² nulo média ± dp (%)', 'R² nulo máx. (%)', 'p empírico']):
+    set_cell(t.rows[0].cells[j], hname, bold=True, size=8)
+_prev = None
+for i, r in enumerate(NT.itertuples(), start=1):
+    for j, sval in enumerate([r.bioma if r.bioma != _prev else '', r.teste, str(int(r.n)), v(r.r2_original, 1), f"{v(r.r2_nulo_media, 1)} ± {v(r.r2_nulo_dp, 1)}",
+                              v(r.r2_nulo_max, 1), pv3(r.p_empirico)]):
+        set_cell(t.rows[i].cells[j], sval, size=8)
+    _prev = r.bioma
+_left(t); fim = new_para_after(t.rows[-1].cells[0].paragraphs[0], BODY_TPL, ""); fim._p.getparent().remove(fim._p); t._tbl.addnext(fim._p)
 sect_break(fim, landscape=True)
 
 # =============================================================================
@@ -1677,10 +1910,11 @@ _bo = add_ref_after(ORIG[341], "BORCHERT, R.; RIVERA, G. Photoperiodic control o
               "trees. Tree Physiology, v. 21, n. 4, p. 213-221, 2001. DOI: 10.1093/treephys/21.4.213.")
 _br = add_ref_after(_bo, "BRASIL. Ministério do Meio Ambiente. O Corredor Central da Mata Atlântica: uma nova escala de conservação da "
               "biodiversidade. Brasília: MMA; Conservação Internacional; Fundação SOS Mata Atlântica, 2006. 46 p.")
-add_ref_after(_br, "BRASIL. Ministério do Meio Ambiente. Plano Nacional de Recuperação da Vegetação Nativa (Planaveg). Brasília: "
+_br = add_ref_after(_br, "BRASIL. Ministério do Meio Ambiente. Plano Nacional de Recuperação da Vegetação Nativa (Planaveg). Brasília: "
               "MMA, 2017. Instituído pela Portaria Interministerial nº 230, de 14 de novembro de 2017. Disponível em: "
               "https://www.gov.br/mma/pt-br/composicao/sbio/dflo/plano-nacional-de-recuperacao-da-vegetacao-nativa-planaveg. "
               "Acesso em: 21 set. 2026.")
+add_ref_after(_br, "BREIMAN, L. Random forests. Machine Learning, v. 45, n. 1, p. 5-32, 2001. DOI: 10.1023/A:1010933404324.")
 _ba = add_ref_after(ORIG[339], "BAHIA. Secretaria do Meio Ambiente. A zona costeira no Estado da Bahia. Salvador: SEMA, 2024. Disponível em: "
               "https://www.ba.gov.br/meioambiente/16479/1-zona-costeira-no-estado-da-bahia. Acesso em: 21 set. 2026.")
 add_ref_after(_ba, "BAHIA. Secretaria do Meio Ambiente; Secretaria do Planejamento. Zoneamento Ecológico-Econômico do Estado da Bahia: "
@@ -1783,7 +2017,11 @@ TABS = ["Variáveis para predição da Fotossíntese Líquida (PSN)",
         "Efeito da remoção das componentes de sazonalidade harmônica no desempenho do MRMP-N [A3]",
         "Ciclo anual, correlação com a PSN e importância das variáveis com e sem harmônicos [A4]",
         "Valores dos diagramas de caixa das Figuras 11 a 13 por fase ENSO [A5]",
-        "Sensibilidade do desempenho ao percentil de winsorização da PSN [A6]"]
+        "Sensibilidade do desempenho ao percentil de winsorização da PSN [A6]",
+        "R² de teste por grau polinomial sob os três esquemas de validação [A7]",
+        "Combinações de variáveis sob validação temporal e estabilidade da seleção [A8]",
+        "Importância por permutação fora da amostra por bloco temporal [A9]",
+        "Nulos que preservam a estrutura temporal da PSN [A10]"]
 PAGES = json.load(open(os.path.join(BASE, 'banca', 'paginas.json'))) if os.path.exists(os.path.join(BASE, 'banca', 'paginas.json')) else {}
 
 def rebuild_list(tbl, prefix, items):
@@ -1975,6 +2213,20 @@ _SUBS = [
     (r"forçante climática indireta, mediada principalmente pelas variáveis de temperatura e precipitação, transmitida pela evapotranspiração no Cerrado e na Caatinga e pela temperatura na Mata Atlântica,",
      "forçante climática indireta, associada principalmente à evapotranspiração no Cerrado e na Caatinga e à temperatura na Mata Atlântica,"),
     (r"forçante climática indireta, mediada principalmente pelas variáveis de temperatura e precipitação,", "forçante climática indireta, associada principalmente à evapotranspiração no Cerrado e na Caatinga e à temperatura na Mata Atlântica,"),
+    (r"não se aplicou filtro adicional pela banda de controle de qualidade, uma vez que as versões com preenchimento de falhas \(GF\) já substituem as observações de baixa qualidade por valores interpolados \(Running; Zhao, 2021\), o que não elimina a incerteza inerente a esses produtos\.",
+     "para os produtos com preenchimento de falhas (MOD17A2HGF e MOD16A2GF) não se aplicou filtro adicional pela banda de controle de qualidade, uma vez que essas versões já substituem as observações de baixa qualidade por valores interpolados (Running; Zhao, 2021), o que não elimina a incerteza inerente a esses produtos. O MOD11A2 não possui versão com preenchimento de falhas: os pixels sem observação de céu claro não recebem valor de TST e ficam fora da média do composto, mas a banda de qualidade QC_Day, que classifica a incerteza dos pixels retidos, não foi usada como filtro; a sensibilidade da série de TST a esse filtro não foi avaliada e é registrada como limitação (Capítulo 7)."),
+    (r"os períodos aqui denominados mensais são, portanto, janelas fixas de compostos, e não meses civis estritos\.",
+     "os períodos aqui denominados mensais são, portanto, janelas fixas de 32 dias, e não meses civis estritos; as componentes harmônicas de sazonalidade (SAZsin e SAZcos) usam o índice do mês civil de referência de cada janela, e as janelas são as mesmas de Benfica et al. (2022), o que mantém a comparabilidade com a série original."),
+    (r"regimes ecológicos distintos de controle da PSN", "regimes ecológicos distintos de associação entre o clima e a PSN"),
+    (r"os regimes de controle da PSN identificados", "os regimes de associação entre o clima e a PSN identificados"),
+    (r"no Cerrado, em substituição à Temperatura de Superfície Terrestre \(TST\), configura", "no Cerrado, selecionado em lugar da Temperatura de Superfície Terrestre (TST), configura"),
+    (r"compreensão dos controles ecofisiológicos da produtividade", "compreensão dos fatores ecofisiológicos associados à produtividade"),
+    (r"o WAI atua como integrador eficiente dos múltiplos controles climáticos sobre a PSN", "o WAI resume, em uma única variável, múltiplos fatores climáticos associados à PSN"),
+    (r"a maior predominância de controles climáticos coincidiu com maior previsibilidade estatística, e o controle mais multifatorial,",
+     "a maior predominância de preditores climáticos coincidiu com maior previsibilidade estatística, e a associação mais multifatorial,"),
+    (r"os principais controles climáticos e hídricos da PSN", "os principais preditores climáticos e hídricos da PSN"),
+    (r"onde a produtividade é governada pelo balanço hídrico", "onde a produtividade está associada predominantemente ao balanço hídrico"),
+    (r"grau em que cada ecossistema é governado por forçantes climáticas", "grau em que a PSN de cada ecossistema é previsível a partir de forçantes climáticas"),
     (r"esquemas complementares de validação temporal \(GroupKFold por ano e TimeSeriesSplit com janela expansível\)", "validação agrupada por ano (GroupKFold) e cronológica (TimeSeriesSplit com janela expansível)"),
     (r"esquemas de validação temporal \(GroupKFold por ano e TimeSeriesSplit\)", "validação agrupada por ano (GroupKFold) e cronológica (TimeSeriesSplit)"),
     (r"esquemas de validação temporal \(GroupKFold por ano e", "validação agrupada por ano (GroupKFold) e cronológica ("),
@@ -2148,9 +2400,16 @@ for sdt in d.element.body.findall(qn('w:sdt')):          # Sumário em espaçame
             spc = _ppr_insert(ppr, OxmlElement('w:spacing'))
         spc.set(qn('w:line'), '240'); spc.set(qn('w:lineRule'), 'auto'); spc.set(qn('w:before'), '0'); spc.set(qn('w:after'), '120')
 # 17.6 "Fonte:" abaixo de todas as figuras e tabelas (NBR 14724), fonte 10, espaçamento simples
+def _keep_next(pel):
+    ppr = pel.find(qn('w:pPr'))
+    if ppr is None: ppr = OxmlElement('w:pPr'); pel.insert(0, ppr)
+    if ppr.find(qn('w:keepNext')) is None: _ppr_insert(ppr, OxmlElement('w:keepNext'))
 def _fonte_apos(el, texto):
     q = new_para_after(d.paragraphs[0], CAPTION_TPL, texto)      # cria e depois move para depois de el
     el.addnext(q._p)
+    if el.tag == qn('w:p'): _keep_next(el)                          # imagem fica com a sua fonte
+    else:
+        for pel in el.findall(qn('w:tr'))[-1].iter(qn('w:p')): _keep_next(pel)   # última linha da tabela fica com a fonte
     q.alignment = WD_ALIGN_PARAGRAPH.CENTER
     pf = q.paragraph_format; pf.first_line_indent = Cm(0); pf.left_indent = Cm(0); pf.right_indent = Cm(0)
     pf.space_before = Pt(0); pf.space_after = Pt(12); pf.line_spacing = 1.0; pf.keep_with_next = False

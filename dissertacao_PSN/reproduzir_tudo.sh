@@ -11,6 +11,8 @@ python3 Selecao_Variaveis_PSN.py                                                
 python3 Ablacao_Sazonalidade_PSN.py                                                      # Tabela A3 e ciclo anual
 python3 Analise_ENSO_Anomalias_PSN.py                                                    # 6.5: Tabela 6, Figura 14, Tabelas A4/A5
 python3 Analise_Interanual_PSN.py                                                        # 6.6: Figura 15, Tabela 7
+python3 Sensibilidade_Winsor_PSN.py                                                      # Tabela A6
+python3 Robustez_Selecao_PSN.py                                                          # 5.5/6.2/6.4: Tabelas A7-A10 (seleção sob validação temporal, permutação, nulos)
 python3 Figuras_Dissertacao.py                                                           # figuras da dissertação
 python3 banca/aplicar_revisao_docx.py && bash banca/render_e_paginas.sh                  # Word + PDF (1ª passagem: páginas)
 python3 banca/aplicar_revisao_docx.py && bash banca/render_e_paginas.sh                  # 2ª passagem: listas e sumário com páginas
