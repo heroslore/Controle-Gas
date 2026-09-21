@@ -897,11 +897,10 @@ set_text(ORIG[220],
 set_text(ORIG[223], ORIG[223].text.replace("Shapiro-Wilk e Kruskal-Wallis", "Shapiro-Wilk, Kruskal-Wallis, Mann-Whitney, Fligner-Killeen e qui-quadrado, e para a correlação de Spearman"))
 set_text(ORIG[224],
     "A semente aleatória foi fixada em random_state = 42 em todos os procedimentos que envolvem aleatoriedade "
-    "(partições, permutações e reamostragens), para permitir a reprodução exata dos resultados. A robustez do "
+    "(partições, permutações e reamostragens), o que permite reproduzir exatamente os resultados. A robustez do "
     "desempenho não decorre do valor específico da semente, mas do uso de validação repetida (150 partições) e dos "
-    "esquemas complementares de validação, que reduzem a sensibilidade a uma partição particular. Todas as etapas de "
-    "validação descritas na seção 5.5, inclusive as análises de robustez das Tabelas A7 a A10, são executadas pelo próprio "
-    "script do modelo (Modelo_PSN.py), de modo que uma única execução reproduz o ajuste e todos os testes. As análises foram "
+    "esquemas complementares de validação. Uma única execução do script do modelo (Modelo_PSN.py) reproduz o ajuste e "
+    "todas as validações da seção 5.5, inclusive as Tabelas A7 a A10. As análises foram "
     "executadas em Python 3.11, com numpy 2.4, pandas 3.0, scikit-learn 1.9, scipy 1.17 e statsmodels 0.15; o código, "
     "a base de dados e os scripts de extração estão disponíveis em repositório público "
     "(https://github.com/heroslore/Controle-Gas, pastas dissertacao_PSN e npp_modis).")
