@@ -36,6 +36,19 @@ ALPHAS = [0.1, 1.0, 10.0, 50.0, 100.0]
 COR = {"El Niño": "#c0392b", "La Niña": "#2471a3", "Neutro": "#7f8c8d"}
 
 
+def classificar_fase(oni, criterio="mensal"):
+    s = np.where(oni >= 0.5, 1, np.where(oni <= -0.5, -1, 0))
+    if criterio == "noaa":                      # >= 5 trimestres móveis consecutivos
+        f = np.zeros(len(s), int); i = 0
+        while i < len(s):
+            j = i
+            while j + 1 < len(s) and s[j + 1] == s[i]: j += 1
+            if s[i] != 0 and j - i + 1 >= 5: f[i:j + 1] = s[i]
+            i = j + 1
+        s = f
+    return np.select([s == 1, s == -1], ["El Niño", "La Niña"], "Neutro")
+
+
 def ajustar(X, y):
     m = GridSearchCV(make_pipeline(StandardScaler(), PolynomialFeatures(2, include_bias=False), Ridge()),
                      {"ridge__alpha": ALPHAS}, cv=5, scoring="r2").fit(X, np.asarray(winsorize(y, limits=[0.03, 0])))
@@ -66,10 +79,13 @@ def anomalias(d, cols):
 
 def main():
     p = argparse.ArgumentParser(); p.add_argument("--dados", required=True); p.add_argument("--saida", default="enso_sazonalidade")
+    p.add_argument("--criterio", choices=["mensal", "noaa"], default="mensal", help="fase por mês (±0,5) ou critério oficial NOAA (5 trimestres consecutivos)")
+    p.add_argument("--ma-vars", nargs="+", default=None, help="preditores da Mata Atlântica (ex.: EV_MA TST_MA WAI_MA)")
     a = p.parse_args(); out = Path(a.saida); out.mkdir(exist_ok=True)
+    if a.ma_vars: CFG["MA"] = ("Mata Atlântica", "NP_MA", a.ma_vars)
     d = pd.read_excel(a.dados); d.columns = d.columns.str.strip()
     d["saz_sin"] = np.sin(2 * np.pi * d["MÊS"] / 12); d["saz_cos"] = np.cos(2 * np.pi * d["MÊS"] / 12)
-    d["fase"] = np.where(d.ONI >= 0.5, "El Niño", np.where(d.ONI <= -0.5, "La Niña", "Neutro"))
+    d["fase"] = classificar_fase(d.ONI.values, a.criterio)
     d["t"] = pd.to_datetime(dict(year=d.ANO, month=d["MÊS"], day=1))
 
     # ======================= A. SAZONALIDADE =======================

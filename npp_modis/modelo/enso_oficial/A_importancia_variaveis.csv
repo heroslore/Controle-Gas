@@ -1,0 +1,19 @@
+﻿bioma,variavel,imp_coef_sem_saz,imp_coef_com_saz,queda_r2_permut_sem_saz,queda_r2_permut_com_saz
+Mata Atlântica,EV,30.54,26.56,111.2,391.15
+Mata Atlântica,TST,38.89,14.83,174.07,87.08
+Mata Atlântica,WAI,30.57,19.8,110.88,187.43
+Mata Atlântica,saz_sin,,19.51,,102.23
+Mata Atlântica,saz_cos,,19.3,,144.96
+Mata Atlântica,R2_cv_modelo,51.54,69.99,,
+Cerrado,EV,34.34,38.17,60.96,486.37
+Cerrado,PRE,28.78,10.08,51.92,19.75
+Cerrado,WAI,36.88,16.97,297.48,10.64
+Cerrado,saz_sin,,19.01,,18.56
+Cerrado,saz_cos,,15.78,,23.98
+Cerrado,R2_cv_modelo,92.84,95.42,,
+Caatinga,EV,49.59,42.51,149.49,257.6
+Caatinga,PRE,23.73,10.08,11.45,7.3
+Caatinga,TST,26.67,16.33,25.63,11.25
+Caatinga,saz_sin,,13.33,,14.26
+Caatinga,saz_cos,,17.75,,27.83
+Caatinga,R2_cv_modelo,91.58,92.92,,

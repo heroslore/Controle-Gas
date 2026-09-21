@@ -22,10 +22,12 @@ def stats_box(v):
 
 
 def main():
-    p = argparse.ArgumentParser(); p.add_argument("--dados", required=True); p.add_argument("--saida", default="enso_sazonalidade"); a = p.parse_args()
+    p = argparse.ArgumentParser(); p.add_argument("--dados", required=True); p.add_argument("--saida", default="enso_sazonalidade")
+    p.add_argument("--criterio", choices=["mensal", "noaa"], default="mensal"); a = p.parse_args()
     out = Path(a.saida); out.mkdir(exist_ok=True)
     d = pd.read_excel(a.dados); d.columns = d.columns.str.strip()
-    d["fase"] = np.where(d.ONI >= 0.5, "El Niño", np.where(d.ONI <= -0.5, "La Niña", "Neutro"))
+    from analise_enso_sazonalidade import classificar_fase
+    d["fase"] = classificar_fase(d.ONI.values, a.criterio)
     linhas, testes = [], []
     for tipo in ("bruto", "anomalia"):
         for b, cols in VARS.items():
