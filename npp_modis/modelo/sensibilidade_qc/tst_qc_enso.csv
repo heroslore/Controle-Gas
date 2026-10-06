@@ -1,19 +1,19 @@
-﻿bioma,versao,fase,n,anomalia_media_C,anomalia_media_pct,p_mannwhitney_vs_neutro,p_kruskal,pct_meses_acima_P90,pct_neutro_acima_P90
-Mata Atlântica,sem filtro,El Niño,76,0.8881,3.0425,0.0,0.0,25.0,5.4054
-Mata Atlântica,sem filtro,La Niña,73,-0.1887,-0.5665,0.2526,0.0,4.1096,5.4054
-Mata Atlântica,erro ≤ 3 K,El Niño,76,0.8881,3.0425,0.0,0.0,25.0,5.4054
-Mata Atlântica,erro ≤ 3 K,La Niña,73,-0.1887,-0.5665,0.2526,0.0,4.1096,5.4054
-Mata Atlântica,boa qualidade,El Niño,76,0.7757,2.5374,0.0007,0.0003,22.3684,6.7568
-Mata Atlântica,boa qualidade,La Niña,73,-0.1916,-0.554,0.3051,0.0003,4.1096,6.7568
-Cerrado,sem filtro,El Niño,76,0.4321,1.3774,0.1985,0.0336,19.7368,6.7568
-Cerrado,sem filtro,La Niña,73,-0.3292,-1.0072,0.0785,0.0336,6.8493,6.7568
-Cerrado,erro ≤ 3 K,El Niño,76,0.4321,1.3774,0.1985,0.0336,19.7368,6.7568
-Cerrado,erro ≤ 3 K,La Niña,73,-0.3292,-1.0072,0.0785,0.0336,6.8493,6.7568
-Cerrado,boa qualidade,El Niño,76,0.3961,1.2514,0.2031,0.0474,19.7368,6.7568
-Cerrado,boa qualidade,La Niña,73,-0.2746,-0.8321,0.1071,0.0474,6.8493,6.7568
-Caatinga,sem filtro,El Niño,76,0.4899,1.5013,0.1107,0.0011,15.7895,9.4595
-Caatinga,sem filtro,La Niña,73,-0.7171,-2.1329,0.0122,0.0011,5.4795,9.4595
-Caatinga,erro ≤ 3 K,El Niño,76,0.4899,1.5013,0.1107,0.0011,15.7895,9.4595
-Caatinga,erro ≤ 3 K,La Niña,73,-0.7171,-2.1329,0.0122,0.0011,5.4795,9.4595
-Caatinga,boa qualidade,El Niño,76,0.4641,1.4152,0.1187,0.0006,17.1053,9.4595
-Caatinga,boa qualidade,La Niña,73,-0.69,-2.0376,0.0052,0.0006,4.1096,9.4595
+﻿bioma,versao,fase,n_meses,n_neutro,anomalia_media,anomalia_media_pct,anomalia_neutro_pct,dif_vs_neutro_C,dif_vs_neutro_pct,p_mannwhitney_vs_neutro,p_kruskal_3fases,epsilon2,pct_meses_acima_P90,pct_neutro_acima_P90
+Mata Atlântica,sem filtro,El Niño,76,151,0.7072,2.4032,-0.621,0.8832,3.0242,0.0,0.0,0.0757,25.0,5.9603
+Mata Atlântica,sem filtro,La Niña,70,151,-0.3882,-1.2695,-0.621,-0.2122,-0.6485,0.253,0.0,0.0757,2.8571,5.9603
+Mata Atlântica,erro ≤ 3 K,El Niño,76,151,0.7073,2.4032,-0.621,0.8832,3.0242,0.0,0.0,0.0757,25.0,5.9603
+Mata Atlântica,erro ≤ 3 K,La Niña,70,151,-0.3882,-1.2695,-0.621,-0.2122,-0.6485,0.253,0.0,0.0757,2.8571,5.9603
+Mata Atlântica,boa qualidade,El Niño,76,151,0.6243,2.0243,-0.5123,0.7763,2.5366,0.0007,0.0003,0.0483,22.3684,7.2848
+Mata Atlântica,boa qualidade,La Niña,70,151,-0.35,-1.0926,-0.5123,-0.198,-0.5803,0.3405,0.0003,0.0483,2.8571,7.2848
+Cerrado,sem filtro,El Niño,76,151,0.4025,1.2725,-0.0383,0.4097,1.3107,0.2393,0.0144,0.0221,19.7368,6.6225
+Cerrado,sem filtro,La Niña,70,151,-0.4212,-1.299,-0.0383,-0.414,-1.2607,0.0272,0.0144,0.0221,7.1429,6.6225
+Cerrado,erro ≤ 3 K,El Niño,76,151,0.4025,1.2725,-0.0383,0.4097,1.3107,0.2393,0.0144,0.0221,19.7368,6.6225
+Cerrado,erro ≤ 3 K,La Niña,70,151,-0.4212,-1.299,-0.0383,-0.414,-1.2607,0.0272,0.0144,0.0221,7.1429,6.6225
+Cerrado,boa qualidade,El Niño,76,151,0.3622,1.1357,-0.0543,0.3754,1.1899,0.2427,0.0227,0.0189,19.7368,6.6225
+Cerrado,boa qualidade,La Niña,70,151,-0.3648,-1.116,-0.0543,-0.3516,-1.0617,0.0422,0.0227,0.0189,7.1429,6.6225
+Caatinga,sem filtro,El Niño,76,151,0.5408,1.6414,0.1209,0.497,1.5205,0.1029,0.0011,0.0395,15.7895,9.2715
+Caatinga,sem filtro,La Niña,70,151,-0.6817,-2.0428,0.1209,-0.7256,-2.1636,0.0117,0.0011,0.0395,5.7143,9.2715
+Caatinga,erro ≤ 3 K,El Niño,76,151,0.5408,1.6414,0.1209,0.497,1.5205,0.1029,0.0011,0.0395,15.7895,9.2715
+Caatinga,erro ≤ 3 K,La Niña,70,151,-0.6817,-2.0428,0.1209,-0.7256,-2.1636,0.0117,0.0011,0.0395,5.7143,9.2715
+Caatinga,boa qualidade,El Niño,76,151,0.5149,1.5539,0.1215,0.4699,1.4324,0.1157,0.0005,0.0446,17.1053,9.2715
+Caatinga,boa qualidade,La Niña,70,151,-0.6562,-1.9491,0.1215,-0.7012,-2.0706,0.0046,0.0005,0.0446,4.2857,9.2715

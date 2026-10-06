@@ -79,31 +79,43 @@ def resumo(mensal, pre):
     return pd.DataFrame(linhas)
 
 def enso(mensal, fases):
+    """Mesma definição de analise_enso_sazonalidade.py (B_enso_efeito_nas_variaveis): anomalia = valor - média do mês
+    do calendário calculada sobre os mesmos 297 meses; fase pelo critério NOAA aplicado à mesma coluna ONI da base do modelo."""
     from scipy import stats
     rows = []
     for b in BIOMAS:
-        d = mensal[mensal.bioma == b].merge(fases, on=["ano", "mes"], how="inner")
+        d = mensal[mensal.bioma == b].merge(fases, on=["ano", "mes"], how="inner").sort_values(["ano", "mes"]).reset_index(drop=True)
         for v in VERS:
             s = d[f"tst_{v}"]; clim = d.groupby("mes")[f"tst_{v}"].transform("mean"); an = s - clim; anp = 100 * an / clim
             g = {f: an[d.fase == f].dropna() for f in ["El Niño", "La Niña", "Neutro"]}; gp = {f: anp[d.fase == f].dropna() for f in g}
-            kw = stats.kruskal(*g.values()); p90 = np.nanpercentile(an, 90)
+            kw = stats.kruskal(*g.values()); eps2 = max((kw.statistic - 2) / (len(an) - 3), 0); p90 = np.nanpercentile(an, 90)
             for f in ["El Niño", "La Niña"]:
                 mw = stats.mannwhitneyu(g[f], g["Neutro"])
-                rows.append(dict(bioma=b, versao=ROT[v], fase=f, n=len(g[f]), anomalia_media_C=g[f].mean() - g["Neutro"].mean(), anomalia_media_pct=gp[f].mean() - gp["Neutro"].mean(),
-                                 p_mannwhitney_vs_neutro=mw.pvalue, p_kruskal=kw.pvalue, pct_meses_acima_P90=100 * (g[f] > p90).mean(), pct_neutro_acima_P90=100 * (g["Neutro"] > p90).mean()))
+                rows.append(dict(bioma=b, versao=ROT[v], fase=f, n_meses=len(g[f]), n_neutro=len(g["Neutro"]),
+                                 anomalia_media=g[f].mean(), anomalia_media_pct=gp[f].mean(), anomalia_neutro_pct=gp["Neutro"].mean(),
+                                 dif_vs_neutro_C=g[f].mean() - g["Neutro"].mean(), dif_vs_neutro_pct=gp[f].mean() - gp["Neutro"].mean(),
+                                 p_mannwhitney_vs_neutro=mw.pvalue, p_kruskal_3fases=kw.pvalue, epsilon2=eps2,
+                                 pct_meses_acima_P90=100 * (g[f] > p90).mean(), pct_neutro_acima_P90=100 * (g["Neutro"] > p90).mean()))
     return pd.DataFrame(rows)
 
-def analisar(comp_csv, out, base_longo, dados_modelo):
+def analisar(comp_csv, out, base_longo, dados_modelo, criterio="noaa"):
+    """Todas as saídas ficam restritas aos meses presentes na base do modelo (2001-01 a 2025-09, 297 meses),
+    e a fase ENSO usa a mesma coluna ONI dessa base, classificada pelo mesmo critério da rodada oficial (NOAA)."""
+    sys.path.insert(0, str(Path(__file__).resolve().parent)); from analise_enso_sazonalidade import classificar_fase
     out = Path(out); out.mkdir(exist_ok=True)
-    comp = pd.read_csv(comp_csv); mensal = agregar(comp)
+    dm = pd.read_excel(dados_modelo); dm.columns = dm.columns.str.strip()
+    fases = pd.DataFrame(dict(ano=dm["ANO"].astype(int), mes=dm["MÊS"].astype(int), oni=dm["ONI"], fase=classificar_fase(dm["ONI"].values, criterio)))
+    comp = pd.read_csv(comp_csv); mensal = agregar(comp).merge(fases[["ano", "mes"]], on=["ano", "mes"], how="inner")
+    print(f"período restrito à base do modelo: {fases.ano.min()}-{fases.mes.iloc[0]:02d} a {fases.ano.max()}-{fases.mes.iloc[-1]:02d}, "
+          f"{len(fases)} meses; fases ({criterio}): {fases.fase.value_counts().to_dict()}")
     base = pd.read_csv(base_longo); chk = mensal.merge(base[["ano", "mes", "bioma", "lst_dia_c", "precip_mm"]], on=["ano", "mes", "bioma"])
     print(f"checagem: |TST sem filtro - base atual| máx = {(chk.tst_sem_filtro - chk.lst_dia_c).abs().max():.4f} °C")
     mensal["data"] = pd.to_datetime(dict(year=mensal.ano, month=mensal.mes, day=1))
     cols = ["data", "ano", "mes", "bioma"] + [f"tst_{v}" for v in VERS] + [f"pix_{v}" for v in VERS] + [f"retido_pct_{v}" for v in VERS[1:]]
-    mensal[cols].round(3).to_csv(out / "tst_qc_series_mensais.csv", index=False, encoding="utf-8-sig")
     res = resumo(mensal, base[["ano", "mes", "bioma", "precip_mm"]]); res.round(4).to_csv(out / "tst_qc_resumo.csv", index=False, encoding="utf-8-sig")
-    dm = pd.read_excel(dados_modelo); dm.columns = dm.columns.str.strip(); fases = dm[["ANO", "MÊS", "Enso"]].rename(columns={"ANO": "ano", "MÊS": "mes", "Enso": "fase"})
-    en = enso(mensal, fases); en.round(4).to_csv(out / "tst_qc_enso.csv", index=False, encoding="utf-8-sig")
+    mensal = mensal.merge(fases, on=["ano", "mes"]); cols += ["oni", "fase"]
+    mensal[cols].round(3).to_csv(out / "tst_qc_series_mensais.csv", index=False, encoding="utf-8-sig")
+    en = enso(mensal, fases[["ano", "mes"]]); en.round(4).to_csv(out / "tst_qc_enso.csv", index=False, encoding="utf-8-sig")
     import matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt
     fig, axes = plt.subplots(3, 1, figsize=(15, 10), sharex=True)
     for ax, b in zip(axes, BIOMAS):
@@ -129,7 +141,7 @@ if __name__ == "__main__":
     p = argparse.ArgumentParser(); p.add_argument("--extrair", action="store_true"); p.add_argument("--analisar", action="store_true")
     p.add_argument("--project", default="decoded-agency-465400-g8"); p.add_argument("--ibge", default="/tmp/claude-0/-home-user-Controle-Gas/176caef1-394a-5444-8d64-0af8cd0ef5b0/scratchpad/ibge_flat")
     p.add_argument("--comp", default="sensibilidade_qc/tst_qc_compostos_8dias.csv"); p.add_argument("--saida", default="sensibilidade_qc")
-    p.add_argument("--base", default="../resultados/base_final_2001_2025_longo.csv"); p.add_argument("--dados", default="Dados_base_nova_2001_2025.xlsx")
+    p.add_argument("--base", default="../resultados/base_final_2001_2025_longo.csv"); p.add_argument("--dados", default="Dados_base_nova_2001_2025.xlsx"); p.add_argument("--criterio", choices=["mensal", "noaa"], default="noaa")
     a = p.parse_args()
     if a.extrair: extrair(a.project, a.ibge, a.comp)
-    if a.analisar: analisar(a.comp, a.saida, a.base, a.dados)
+    if a.analisar: analisar(a.comp, a.saida, a.base, a.dados, a.criterio)
