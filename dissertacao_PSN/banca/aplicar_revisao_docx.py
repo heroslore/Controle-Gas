@@ -78,6 +78,10 @@ A11 = pd.read_csv(os.path.join(RES, 'enso_anomalias', 'tabelaA11_unidade_amostra
 def ua(b, var, f): return UA['tabela'][f"{nome[b]}|{var}|{f}"]
 def _ic(r, pre): return f"{sgn(r[pre + '_ic_inf'], 1)} a {sgn(r[pre + '_ic_sup'], 1)} pp"
 SAZ_E = JA['sazonal']; CHU = JA['chuva_acumulada']
+QC = pd.read_csv(os.path.join(RES, 'sensibilidade_qc', 'tst_qc_resumo.csv'))
+QCE = pd.read_csv(os.path.join(RES, 'sensibilidade_qc', 'tst_qc_enso.csv'))
+def qc(b, per='ano todo'): return QC[(QC.bioma == nome[b]) & (QC.versao == 'boa qualidade') & (QC.periodo.str.startswith(per))].iloc[0]
+def qce(b, ver, f): return QCE[(QCE.bioma == nome[b]) & (QCE.versao == ver) & (QCE.fase == f)].iloc[0]
 A12 = pd.read_csv(os.path.join(RES, 'enso_anomalias', 'tabelaA12_estratificacao_sazonal.csv'))
 A13 = pd.read_csv(os.path.join(RES, 'enso_anomalias', 'tabelaA13_chuva_acumulada.csv'))
 def sz(b, f): return SAZ_E['tabela'][f"{nome[b]}|{f}"]
@@ -1830,6 +1834,43 @@ add_paras_after(_p_yr, BODY_TPL, [
     "nulos com calendário preservado quantifica o ganho que decorre do alinhamento entre a PSN e as condições climáticas do "
     "próprio período, além do que a sazonalidade e a memória temporal da série já explicam; esse ganho é maior nos biomas "
     "sazonais e menor na Mata Atlântica, coerente com a menor previsibilidade climática desse bioma."])
+# --- 6.4: sensibilidade da TST ao filtro de qualidade QC_Day
+_p_qc = _par("Em conjunto, os procedimentos de diagnóstico convergem")
+_qc_ma, _qc_ce, _qc_ca = qc('MA'), qc('CE'), qc('CA')
+add_paras_after(_p_qc, BODY_TPL, [
+    "Um último teste trata da qualidade da temperatura da superfície. O produto MOD11A2 não tem versão com "
+    "preenchimento de falhas e traz, para cada pixel retido, uma banda de qualidade (QC_Day) que não foi usada como "
+    "filtro adicional na série do estudo (seção 5.2). Para medir o efeito dessa escolha, a TST foi reextraída dos "
+    "mesmos compostos, com a mesma máscara e a mesma agregação, sob dois critérios: um moderado, que exige erro "
+    "estimado de até 3 K, e um estrito, que mantém apenas os pixels classificados como de boa qualidade (Tabela A14). "
+    "O critério moderado não descartou pixel algum em nenhum bioma, e a série resultante é idêntica à utilizada: na "
+    "Coleção 6.1, os pixels com nuvem ou com erro superior a 3 K já saem do produto como valor de preenchimento, de "
+    "modo que a banda de qualidade dos pixels retidos só registra erro de até 2 K. A série do estudo corresponde, "
+    "portanto, ao critério moderado.",
+    "O critério estrito, por sua vez, descartaria em média "
+    f"{v(_qc_ma.pct_descartado_medio, 0)}% dos pixels da Mata Atlântica, {v(_qc_ca.pct_descartado_medio, 0)}% da "
+    f"Caatinga e {v(_qc_ce.pct_descartado_medio, 0)}% do Cerrado, chegando a {v(_qc_ma.pct_descartado_max, 0)}% em "
+    "meses nublados na Mata Atlântica. Como os pixels descartados são sistematicamente mais frios, por estarem em "
+    "borda de nuvem ou sob neblina, o filtro aquece a série: a diferença média é de "
+    f"{sgn(_qc_ma.dif_media_C, 2)} °C na Mata Atlântica no ano, {sgn(qc('MA', 'trimestre seco').dif_media_C, 2)} °C "
+    f"no seu trimestre seco e {sgn(qc('CA', 'trimestre seco').dif_media_C, 2)} °C no trimestre seco da Caatinga, "
+    f"contra {sgn(_qc_ce.dif_media_C, 2)} °C no Cerrado. A forma da série, porém, não muda: a correlação de "
+    f"Pearson entre as versões não fica abaixo de {v(QC[QC.versao == 'boa qualidade'].r_pearson.min(), 2)} em nenhum "
+    "bioma ou período. A perda de pixels é maior justamente nos meses mais "
+    "nublados, o que introduziria um viés dependente da própria condição atmosférica que se deseja medir.",
+    "As conclusões sobre o ENSO não dependem desse critério. O aquecimento da superfície da Mata Atlântica em meses "
+    f"de El Niño, o efeito mais robusto do estudo, é de {sgn(qce('MA', 'sem filtro', 'El Niño').anomalia_media_C, 2)} °C "
+    f"na série utilizada ({pj(qce('MA', 'sem filtro', 'El Niño').p_mannwhitney_vs_neutro)}) e de "
+    f"{sgn(qce('MA', 'boa qualidade', 'El Niño').anomalia_media_C, 2)} °C sob o critério estrito "
+    f"({pj(qce('MA', 'boa qualidade', 'El Niño').p_mannwhitney_vs_neutro)}), com a proporção de meses no decil mais "
+    f"quente passando de {v(qce('MA', 'sem filtro', 'El Niño').pct_meses_acima_P90, 0)}% para "
+    f"{v(qce('MA', 'boa qualidade', 'El Niño').pct_meses_acima_P90, 0)}%. O resfriamento da Caatinga em La Niña vai de "
+    f"{sgn(qce('CA', 'sem filtro', 'La Niña').anomalia_media_C, 2)} °C "
+    f"({pj(qce('CA', 'sem filtro', 'La Niña').p_mannwhitney_vs_neutro)}) a "
+    f"{sgn(qce('CA', 'boa qualidade', 'La Niña').anomalia_media_C, 2)} °C "
+    f"({pj(qce('CA', 'boa qualidade', 'La Niña').p_mannwhitney_vs_neutro)}), e no Cerrado nenhuma fase é "
+    "significativa em qualquer das versões. Sinal, ordem de grandeza e significância se mantêm nos três critérios, "
+    "razão pela qual se optou por manter a série sem filtro adicional, que preserva a representatividade espacial."])
 # --- Tabela 4: cabeçalho causal
 for _t in d.tables:
     for _c in _t.rows[0].cells:
@@ -1846,13 +1887,14 @@ set_text(ORIG[317], ORIG[317].text.rstrip() +
     "para superar o alargamento dos intervalos. "
     "Três limitações de origem dos dados devem ainda ser explicitadas: (i) a PSN e a EV provêm de algoritmos MODIS que "
     "compartilham entradas (seção 6.3), de modo que parte da associação entre elas pode ser algorítmica; (ii) a temperatura da "
-    "superfície (MOD11A2) não passou por filtro pela banda de qualidade QC_Day, e a sensibilidade da série de TST a esse filtro "
-    "não foi avaliada; e (iii) os períodos aqui chamados mensais são janelas fixas de 32 dias, associadas a um mês civil de "
+    "superfície (MOD11A2) não passou por filtro adicional pela banda de qualidade QC_Day, escolha cuja sensibilidade foi "
+    "avaliada (seção 6.4 e Tabela A14) e que não altera as conclusões, mas que mantém na série pixels de qualidade "
+    "intermediária; e (iii) os períodos aqui chamados mensais são janelas fixas de 32 dias, associadas a um mês civil de "
     "referência, e não meses civis estritos.")
 set_text(ORIG[320], ORIG[320].text.replace(
     "a extensão da análise do ENSO a compósitos",
     "a validação das relações entre PSN e variáveis climáticas com medições independentes de fluxo por covariância de "
-    "vórtices e a reextração da TST com filtro pela banda QC_Day; a ampliação do número de episódios de ENSO "
+    "vórtices; a ampliação do número de episódios de ENSO "
     "disponíveis, por meio de sensores anteriores ao MODIS ou de reconstruções, e o aumento da replicação espacial, "
     "com sub-regiões dentro de cada bioma em vez de uma única média por bioma, para reduzir a incerteza identificada "
     "na Tabela A11; a extensão da análise do ENSO a compósitos"))
@@ -1895,7 +1937,8 @@ intro = new_para_after(h, BODY_TPL,
     "a proporção da variância de cada variável climática explicada pelo ciclo anual; as Tabelas A7 a A10 reúnem a robustez "
     "da seleção sob validação temporal, a importância por permutação e os nulos que preservam a estrutura temporal (seção 5.5); "
     "a Tabela A11 compara os dois esquemas de unidade amostral nos compósitos do ENSO; a Tabela A12 traz a estratificação "
-    "sazonal da resposta; e a Tabela A13, a escala em que cada bioma integra a chuva (seção 5.4.1).")
+    "sazonal da resposta; a Tabela A13, a escala em que cada bioma integra a chuva (seção 5.4.1); e a Tabela A14, a "
+    "sensibilidade da temperatura da superfície ao filtro de qualidade do MOD11A2 (seção 6.4).")
 cap = new_para_after(intro, TABCAP_TPL, "Tabela A1 - Base de dados mensal dos três biomas (2001–2025).", bold=True)
 cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
 cols = ['ANO', 'MÊS', 'ONI', 'Enso']; hdr = ['Ano', 'Mês', 'ONI', 'Fase']; fmt = {'ANO': '{:.0f}', 'MÊS': '{:.0f}', 'ONI': '{:.2f}'}
@@ -2127,6 +2170,29 @@ for i, (jan, row) in enumerate(_piv.iterrows(), start=1):
     set_cell(t.rows[i].cells[0], str(int(jan)), size=9)
     for j, b in enumerate(('MA', 'CE', 'CA'), start=1):
         set_cell(t.rows[i].cells[j], sgn(row[nome[b]], 2), size=9, bold=(True if _jmax[nome[b]] == jan else None))
+_left(t); mid = new_para_after(t.rows[-1].cells[0].paragraphs[0], BODY_TPL, ""); mid._p.getparent().remove(mid._p); t._tbl.addnext(mid._p)
+# Tabela A14 — sensibilidade da TST ao filtro de qualidade QC_Day
+cap = new_para_after(mid, TABCAP_TPL, "Tabela A14 - Sensibilidade da temperatura da superfície (MOD11A2) ao filtro pela banda de qualidade QC_Day. "
+                     "Para cada bioma, a série foi reextraída sob dois critérios: moderado (erro estimado de até 3 K) e estrito (apenas pixels de "
+                     "boa qualidade). A diferença é em relação à série sem filtro adicional, usada no estudo. O teste cobre todos os compostos de "
+                     "2001 a dezembro de 2025 (300 janelas), período um pouco mais longo que o da base do modelo, por não depender da "
+                     "precipitação. O critério moderado não descartou pixel algum em nenhum bioma nem período, e sua série é idêntica à "
+                     "utilizada (diferença máxima de 0,0006 °C), razão pela qual não consta da tabela. As anomalias de TST por fase do ENSO "
+                     "nas três versões, as séries completas, as figuras e o dado por composto estão no repositório, em "
+                     "npp_modis/modelo/sensibilidade_qc.", bold=True)
+cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
+_QCB = QC[QC.versao == 'boa qualidade']
+t = table_after(cap, len(_QCB) + 1, 7); t.alignment = 1
+set_widths(t, [2.8, 4.2, 2.6, 2.4, 2.6, 2.8, 2.6]); _left_pending = t
+for j, hname in enumerate(['Bioma', 'Período', 'Dif. média (°C)', 'RMSE (°C)', 'r de Pearson', 'Descartado médio (%)', 'Descartado máx. (%)']):
+    set_cell(t.rows[0].cells[j], hname, bold=True, size=8)
+_prev = None
+for i, r in enumerate(_QCB.itertuples(), start=1):
+    _per = r.periodo.replace('trimestre chuvoso', 'trim. chuvoso').replace('trimestre seco', 'trim. seco')
+    for j, sval in enumerate([r.bioma if r.bioma != _prev else '', _per, sgn(r.dif_media_C, 2), v(r.rmse_C, 2),
+                              v(r.r_pearson, 3), v(r.pct_descartado_medio, 1), v(r.pct_descartado_max, 1)]):
+        set_cell(t.rows[i].cells[j], sval, size=8)
+    _prev = r.bioma
 _left(t); fim = new_para_after(t.rows[-1].cells[0].paragraphs[0], BODY_TPL, ""); fim._p.getparent().remove(fim._p); t._tbl.addnext(fim._p)
 sect_break(fim, landscape=True)
 
@@ -2261,7 +2327,8 @@ TABS = ["Variáveis para predição da Fotossíntese Líquida (PSN)",
         "Nulos que preservam a estrutura temporal da PSN [A10]",
         "Unidade amostral nos compósitos do ENSO: mês e episódio [A11]",
         "Estratificação sazonal da resposta da PSN às fases do ENSO [A12]",
-        "Escala de integração hídrica: correlação com a chuva acumulada [A13]"]
+        "Escala de integração hídrica: correlação com a chuva acumulada [A13]",
+        "Sensibilidade da TST ao filtro de qualidade QC_Day do MOD11A2 [A14]"]
 PAGES = json.load(open(os.path.join(BASE, 'banca', 'paginas.json'))) if os.path.exists(os.path.join(BASE, 'banca', 'paginas.json')) else {}
 
 def rebuild_list(tbl, prefix, items):
@@ -2454,7 +2521,7 @@ _SUBS = [
      "forçante climática indireta, associada principalmente à evapotranspiração no Cerrado e na Caatinga e à temperatura na Mata Atlântica,"),
     (r"forçante climática indireta, mediada principalmente pelas variáveis de temperatura e precipitação,", "forçante climática indireta, associada principalmente à evapotranspiração no Cerrado e na Caatinga e à temperatura na Mata Atlântica,"),
     (r"não se aplicou filtro adicional pela banda de controle de qualidade, uma vez que as versões com preenchimento de falhas \(GF\) já substituem as observações de baixa qualidade por valores interpolados \(Running; Zhao, 2021\), o que não elimina a incerteza inerente a esses produtos\.",
-     "para os produtos com preenchimento de falhas (MOD17A2HGF e MOD16A2GF) não se aplicou filtro adicional pela banda de controle de qualidade, uma vez que essas versões já substituem as observações de baixa qualidade por valores interpolados (Running; Zhao, 2021), o que não elimina a incerteza inerente a esses produtos. O MOD11A2 não possui versão com preenchimento de falhas: os pixels sem observação de céu claro não recebem valor de TST e ficam fora da média do composto, mas a banda de qualidade QC_Day, que classifica a incerteza dos pixels retidos, não foi usada como filtro; a sensibilidade da série de TST a esse filtro não foi avaliada e é registrada como limitação (Capítulo 7)."),
+     "para os produtos com preenchimento de falhas (MOD17A2HGF e MOD16A2GF) não se aplicou filtro adicional pela banda de controle de qualidade, uma vez que essas versões já substituem as observações de baixa qualidade por valores interpolados (Running; Zhao, 2021), o que não elimina a incerteza inerente a esses produtos. O MOD11A2 não possui versão com preenchimento de falhas: os pixels sem observação de céu claro não recebem valor de TST e ficam fora da média do composto, e a banda de qualidade QC_Day, que classifica a incerteza dos pixels retidos, não foi usada como filtro adicional. A sensibilidade da série a essa escolha foi avaliada por reextração dos mesmos compostos sob dois critérios de qualidade, com resultado apresentado na seção 6.4 e detalhado na Tabela A14 do Apêndice."),
     (r"os períodos aqui denominados mensais são, portanto, janelas fixas de compostos, e não meses civis estritos\.",
      "os períodos aqui denominados mensais são, portanto, janelas fixas de 32 dias, e não meses civis estritos; as componentes harmônicas de sazonalidade (SAZsin e SAZcos) usam o índice do mês civil de referência de cada janela, e as janelas são as mesmas de Benfica et al. (2022), o que mantém a comparabilidade com a série original."),
     (r"regimes ecológicos distintos de controle da PSN", "regimes ecológicos distintos de associação entre o clima e a PSN"),

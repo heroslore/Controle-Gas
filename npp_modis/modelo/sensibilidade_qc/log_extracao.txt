@@ -1,0 +1,30 @@
+*** Earth Engine *** Share your feedback by taking our Annual Developer Satisfaction Survey: https://google.qualtrics.com/jfe/form/SV_9oS0DRcPvElRMNw?source=python
+  Mata Atlântica: 113,214 km² na Bahia, 4611 vértices enviados ao GEE
+  Cerrado: 104,630 km² na Bahia, 9609 vértices enviados ao GEE
+  Caatinga: 359,718 km² na Bahia, 11393 vértices enviados ao GEE
+2000 120
+2001 135
+2002 138
+2003 138
+2004 138
+2005 138
+2006 138
+2007 138
+2008 138
+2009 138
+2010 138
+2011 138
+2012 138
+2013 138
+2014 138
+2015 138
+2016 138
+2017 138
+2018 138
+2019 138
+2020 138
+2021 138
+2022 138
+2023 138
+2024 138
+2025 138

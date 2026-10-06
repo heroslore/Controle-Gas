@@ -378,3 +378,26 @@ que os artigos submetidos passaram a reportar. Duas delas qualificam afirmaçõe
 - Referência nova: Nadeau e Bengio (2003). Os números foram conferidos contra os dois artigos derivados e
   coincidem, incluindo os doze valores da estratificação sazonal e os intervalos corrigidos.
 - 96 páginas; sumário, listas e paginação conferidos; validação XSD aprovada.
+
+## 15. Versão 16 (06/10/2026): sensibilidade da TST ao filtro de qualidade QC_Day
+
+A última limitação declarada como não avaliada deixou de existir. A TST foi reextraída dos mesmos compostos
+do MOD11A2, com a mesma máscara e a mesma agregação, sob dois critérios de qualidade (script
+`npp_modis/modelo/sensibilidade_qc_tst.py`; resultados em `npp_modis/modelo/sensibilidade_qc/` e, resumidos,
+em `resultados_2001_2025/sensibilidade_qc/`). A série da base **não** foi alterada.
+
+- **5.2** deixa de registrar a sensibilidade como não avaliada e remete à seção 6.4 e à Tabela A14.
+- **6.4** ganha três parágrafos: o critério moderado (erro de até 3 K) não descarta pixel algum, porque na
+  Coleção 6.1 os pixels com nuvem ou erro maior já saem como valor de preenchimento, de modo que a série do
+  estudo corresponde na prática a esse critério; o critério estrito descartaria 72% dos pixels da Mata
+  Atlântica (até 95% em meses nublados), 36% da Caatinga e 20% do Cerrado, aquecendo a série em +1,36 °C na
+  Mata Atlântica no ano e +2,02 °C no seu trimestre seco, porque os pixels descartados são mais frios; e as
+  conclusões sobre o ENSO não mudam de sinal, de ordem de grandeza nem de significância (aquecimento da Mata
+  Atlântica em El Niño: +0,89 °C contra +0,78 °C; resfriamento da Caatinga em La Niña: −0,72 °C contra
+  −0,69 °C; Cerrado não significativo em nenhuma versão).
+- **Tabela A14** nova, com diferença média, RMSE, correlação de Pearson e percentual de pixels descartados
+  por bioma e período.
+- **Capítulo 7**: a limitação (ii) passa de "sensibilidade não avaliada" para "avaliada, não altera as
+  conclusões, mas mantém na série pixels de qualidade intermediária"; a reextração com QC_Day sai das
+  perspectivas, por já ter sido feita.
+- 98 páginas; sumário, listas e paginação conferidos; validação XSD aprovada.
