@@ -1301,7 +1301,8 @@ def rodar_modelo_bioma(bioma, dados_total):
 #       própria seleção usasse esquemas que consideram a estrutura temporal
 #       (GroupKFold por ano e TimeSeriesSplit)?
 #   (c) quão estável é a escolha do conjunto partição a partição no RepeatedKFold
-#       (frequência de vitória; diferença pareada 1ª-2ª com IC bootstrap e Wilcoxon)?
+#       (frequência de vitória; diferença pareada 1ª-2ª com IC bootstrap, Wilcoxon e o
+#       teste t corrigido de Nadeau e Bengio (2003) para partições sobrepostas)?
 #   (d) que importância cada variável tem fora da amostra, por bloco temporal
 #       (importância por permutação, Breiman 2001), independentemente da escala dos
 #       coeficientes?
@@ -1435,11 +1436,22 @@ def rodar_robustez(dados_total, config, alphas, biomas, pasta_saida, max_workers
         for i in ordem: est_rows.append(dict(bioma=nome[b], variaveis=nomes[i], r2_teste=F[i].mean(), freq_melhor_pct=vence[i]))
         i1, i2 = ordem[0], ordem[1]; d = F[i1] - F[i2]
         rng = np.random.default_rng(42); boots = [rng.choice(d, size=len(d), replace=True).mean() for _ in range(5000)]
+        # Correção de Nadeau e Bengio (2003): as 150 partições do RepeatedKFold reembaralham as mesmas
+        # n observações, de modo que os conjuntos de treino de partições distintas se sobrepõem. Tratar as
+        # 150 diferenças como independentes subestima a variância. A variância corrigida substitui 1/J por
+        # (1/J + n2/n1), em que J é o número de partições e n1 e n2 os tamanhos de treino e de teste.
+        J = len(d); n2 = int(round(n_meses / 5)); n1 = n_meses - n2
+        se_nb = np.sqrt((1 / J + n2 / n1) * d.var(ddof=1))
+        tcrit = stats.t.ppf(0.975, J - 1); t_nb = d.mean() / se_nb
         dif_rows.append(dict(bioma=nome[b], primeira=nomes[i1], segunda=nomes[i2], dif_media_pp=d.mean(), ic95_inf=np.percentile(boots, 2.5),
-                             ic95_sup=np.percentile(boots, 97.5), prop_particoes_primeira_maior=(d > 0).mean() * 100, p_wilcoxon=stats.wilcoxon(d).pvalue))
+                             ic95_sup=np.percentile(boots, 97.5), prop_particoes_primeira_maior=(d > 0).mean() * 100, p_wilcoxon=stats.wilcoxon(d).pvalue,
+                             nb_ic_inf=d.mean() - tcrit * se_nb, nb_ic_sup=d.mean() + tcrit * se_nb,
+                             nb_p=2 * (1 - stats.t.cdf(abs(t_nb), J - 1)), nb_fator_se=np.sqrt((1 / J + n2 / n1) / (1 / J))))
     est = pd.DataFrame(est_rows); est.to_csv(os.path.join(OUT, 'estabilidade_selecao.csv'), index=False)
     dif = pd.DataFrame(dif_rows); dif.to_csv(os.path.join(OUT, 'diferenca_pareada.csv'), index=False)
     print("\n(c) Estabilidade da seleção (RepeatedKFold):\n" + est.round(2).to_string(index=False) + "\n" + dif.round(4).to_string(index=False))
+    print(f"    Correção de Nadeau e Bengio: o erro-padrão da diferença pareada cresce "
+          f"{dif.nb_fator_se.iloc[0]:.1f} vezes; intervalos corrigidos na coluna nb_ic_*.")
     # (e) nulos temporais
     nulos.to_csv(os.path.join(OUT, 'nulos_temporais_bruto.csv'), index=False)
     orig = {b: _rob_r2_cv_fixo(b, x_sel[b], alphas[b], dd[b], dd[b][f'PSN_{b}'].values) for b in biomas}; nul_rows = []

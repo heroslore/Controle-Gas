@@ -77,6 +77,14 @@ UA  = JA['unidade_amostral']; EPI = JA['episodios']
 A11 = pd.read_csv(os.path.join(RES, 'enso_anomalias', 'tabelaA11_unidade_amostral.csv'))
 def ua(b, var, f): return UA['tabela'][f"{nome[b]}|{var}|{f}"]
 def _ic(r, pre): return f"{sgn(r[pre + '_ic_inf'], 1)} a {sgn(r[pre + '_ic_sup'], 1)} pp"
+SAZ_E = JA['sazonal']; CHU = JA['chuva_acumulada']
+A12 = pd.read_csv(os.path.join(RES, 'enso_anomalias', 'tabelaA12_estratificacao_sazonal.csv'))
+A13 = pd.read_csv(os.path.join(RES, 'enso_anomalias', 'tabelaA13_chuva_acumulada.csv'))
+def sz(b, f): return SAZ_E['tabela'][f"{nome[b]}|{f}"]
+_MESES = {1: 'janeiro', 2: 'fevereiro', 3: 'março', 4: 'abril', 5: 'maio', 6: 'junho', 7: 'julho',
+          8: 'agosto', 9: 'setembro', 10: 'outubro', 11: 'novembro', 12: 'dezembro'}
+def _tri(ms): return '-'.join(_MESES[m] for m in ms)
+def _oni_max(b): return max(abs(x['rho']) for x in JA['lag'][nome[b]])
 T6  = pd.read_csv(os.path.join(RES, 'enso_anomalias', 'tabela6_anomalias_por_fase.csv'))
 A5  = pd.read_csv(os.path.join(RES, 'enso_anomalias', 'tabelaA5_boxplots_por_fase.csv'))
 A4X = pd.read_csv(os.path.join(RES, 'enso_anomalias', 'tabelaA4_sazonalidade_importancia.csv'))
@@ -370,9 +378,13 @@ resumo = (
     "no Cerrado e na Caatinga, associada principalmente a anomalias positivas de evapotranspiração; na Mata Atlântica, "
     f"os meses de El Niño apresentaram redução média de {v(abs(t6('MA','PSN')['delta_EN']))}% na PSN e aumento da "
     f"frequência de meses extremamente baixos (de {v(P10_MA[1],0)}% para {v(P10_MA[0],0)}%), associados ao aquecimento "
-    "da superfície. Tomando o episódio, e não o mês, como unidade amostral, apenas "
-    f"{UA['sig_episodio']} dos {UA['n_testes']} contrastes permanecem distinguíveis de zero, o que indica que 24 anos "
-    "de registro contêm poucos episódios para sustentar afirmações fortes sobre o efeito do ENSO. Os resultados "
+    f"da superfície. Tomando o episódio, e não o mês, como unidade amostral, apenas {UA['sig_episodio']} dos "
+    f"{UA['n_testes']} contrastes permanecem distinguíveis de zero, e nenhum após correção para múltiplas comparações. "
+    "Restrita à estação chuvosa, porém, a resposta à La Niña cresce ao longo do gradiente, de "
+    f"{sgn(sz('MA', 'La Niña')['delta_chuvoso'])} pp na Mata Atlântica a {sgn(sz('CA', 'La Niña')['delta_chuvoso'])} pp na "
+    "Caatinga, e nesses dois biomas resiste à correção. A PSN associa-se muito mais à chuva acumulada "
+    f"(ρ de {v(min(CHU[b]['rho_max'] for b in ('MA','CE','CA')), 2)} a {v(max(CHU[b]['rho_max'] for b in ('MA','CE','CA')), 2)}) "
+    f"do que ao índice oceânico (|ρ| ≤ {v(max(_oni_max(b) for b in ('MA','CE','CA')), 2)}). Os resultados "
     "indicam a viabilidade da regressão "
     "polinomial regularizada para representar relações ambientais complexas e reforçam a importância de abordagens "
     "diferenciadas para o monitoramento dos biomas baianos."
@@ -401,8 +413,14 @@ abstract = (
     f"{v(abs(t6('MA','PSN')['delta_EN'])).replace(',', '.')}% and a higher frequency of extremely low months (from "
     f"{v(P10_MA[1],0)}% to {v(P10_MA[0],0)}%), associated with surface warming. Taking the episode, rather than the "
     f"month, as the sampling unit, only {UA['sig_episodio']} of the {UA['n_testes']} contrasts remain distinguishable "
-    "from zero, indicating that 24 years of record contain too few episodes to support strong claims about the ENSO "
-    "effect. The results indicate the feasibility of regularized polynomial regression to represent "
+    "from zero, and none after correction for multiple comparisons. Restricted to the rainy quarter, however, the La "
+    f"Niña response increases along the gradient, from {sgn(sz('MA', 'La Niña')['delta_chuvoso'])} pp in the Atlantic "
+    f"Forest to {sgn(sz('CA', 'La Niña')['delta_chuvoso'])} pp in the Caatinga, surviving the correction in these two "
+    "biomes. PSN is far more strongly associated with accumulated rainfall (ρ from "
+    f"{v(min(CHU[b]['rho_max'] for b in ('MA','CE','CA')), 2).replace(',', '.')} to "
+    f"{v(max(CHU[b]['rho_max'] for b in ('MA','CE','CA')), 2).replace(',', '.')}) than with the oceanic index "
+    f"(|ρ| ≤ {v(max(_oni_max(b) for b in ('MA','CE','CA')), 2).replace(',', '.')}). "
+    "The results indicate the feasibility of regularized polynomial regression to represent "
     "complex environmental relationships and reinforce the importance of differentiated approaches for monitoring "
     "the biomes of Bahia."
 )
@@ -844,7 +862,21 @@ _p541 = add_paras_after(_h541, BODY_TPL, [
     "sorteia meses com reposição dentro de cada grupo, que é a premissa implícita nos testes acima; o segundo sorteia "
     "sequências contíguas inteiras de meses na mesma fase, isto é, o episódio como unidade amostral (Künsch, 1989; "
     "Politis; Romano, 1994). Os dois esquemas foram aplicados à PSN e aos quatro preditores nos três biomas, "
-    f"totalizando {UA['n_testes']} comparações, e os resultados constam da Tabela A11 do Apêndice.",
+    f"totalizando {UA['n_testes']} comparações, e os resultados constam da Tabela A11 do Apêndice. Os valores-p do "
+    "esquema por episódio receberam a mesma correção de Benjamini-Hochberg aplicada aos demais testes.",
+    "Estratificação sazonal. O canal hídrico só pode operar quando há chuva a ser modulada, e o ENSO tem seu pico no "
+    "verão austral. Por essa razão física, a comparação entre fases foi repetida em dois recortes sazonais, definidos "
+    "pela climatologia de precipitação de cada bioma: o trimestre civil consecutivo de maior precipitação média e o de "
+    "menor. O trimestre seco funciona como controle negativo, no sentido de que uma associação transmitida pelo canal "
+    "hídrico deve estar ausente nele. Nesse recorte a unidade amostral é o episódio, e o contraste direto entre os dois "
+    "trimestres foi calculado como diferença das diferenças, reamostrando os mesmos episódios simultaneamente nos dois "
+    "recortes, de modo que o contraste seja pareado por episódio (Tabela A12).",
+    "Escala de integração hídrica. Para medir em que janela de tempo a produtividade de cada bioma integra a chuva "
+    "recebida, calculou-se a chuva acumulada nos períodos terminados em cada mês, para janelas de 1 a 12 períodos, e a "
+    "correlação de Spearman entre a anomalia dessa chuva acumulada e a anomalia de PSN do mesmo mês. A janela de maior "
+    "correlação é uma medida empírica de quanto tempo o sistema integra a água disponível (Tabela A13). Como nessa "
+    "análise os meses voltam a ser tratados como independentes, os coeficientes descrevem a forma das curvas e não "
+    "sustentam teste individual.",
     "Para estimar quanto da resposta da PSN pode ser reproduzido pelas variáveis intermediárias, realizou-se um "
     "experimento de perturbação baseado no modelo, sem pretensão de inferência causal: o MRMP-N ajustado à série "
     "completa foi usado para prever a PSN com os preditores em sua climatologia mensal e, alternativamente, com cada "
@@ -919,8 +951,8 @@ set_text(ORIG[224],
     "A semente aleatória foi fixada em random_state = 42 em todos os procedimentos que envolvem aleatoriedade "
     "(partições, permutações e reamostragens), o que permite reproduzir exatamente os resultados. A robustez do "
     "desempenho não decorre do valor específico da semente, mas do uso de validação repetida (150 partições) e dos "
-    "esquemas complementares de validação. Uma única execução do script do modelo (Modelo_PSN.py) reproduz o ajuste e "
-    "todas as validações da seção 5.5, inclusive as Tabelas A7 a A10. As análises foram "
+    "esquemas complementares de validação. Uma única execução do script do modelo reproduz o ajuste e todas as "
+    "validações da seção 5.5, inclusive as Tabelas A7 a A10. As análises foram "
     "executadas em Python 3.11, com numpy 2.4, pandas 3.0, scikit-learn 1.9, scipy 1.17 e statsmodels 0.15; o código, "
     "a base de dados e os scripts de extração estão disponíveis em repositório público "
     "(https://github.com/heroslore/MRMP-N-PSN-Bahia) e arquivados de forma permanente no Zenodo, sob o identificador "
@@ -1412,11 +1444,52 @@ _p_ua = add_paras_after(ORIG[299], BODY_TPL, [
     f"tocam o zero. Deixam de ser distinguíveis de zero: {_perd}. A mudança mais expressiva ocorre no Cerrado, onde o "
     f"aumento de {v(_ce_psn['delta_pp'])} pp da PSN em La Niña, o efeito mais forte sob o esquema convencional, passa a "
     f"{pj(_ce_psn['ep_p'])}, com intervalo de {sgn(_ce_psn['ep_ic_inf'])} a {sgn(_ce_psn['ep_ic_sup'])} pp quando as "
-    f"nove sequências de La Niña são tomadas como as nove observações que de fato são. Não se trata de dados "
+    f"nove sequências de La Niña são tomadas como as nove observações que de fato são. Submetidos à correção de "
+    f"Benjamini-Hochberg na família dos {UA['n_testes']} contrastes, nem esses três permanecem: o menor valor corrigido "
+    f"é {pv3(UA['q_ep_min'])}, no aquecimento da Mata Atlântica em El Niño. Não se trata de dados "
     "diferentes nem de outra estatística: a diferença Δ é a mesma nas duas colunas da Tabela A11, e o que muda é apenas "
     "a reamostragem. O bootstrap em blocos com oito ou nove blocos é ele próprio impreciso, de modo que os valores-p "
     "marginais devem ser lidos como indicativos; a leitura honesta, contudo, é que 24 anos de registro contêm poucos "
     "episódios para sustentar afirmações fortes sobre diferenças de poucos pontos percentuais entre fases."])
+# --- 6.5: estratificação sazonal e escala de integração hídrica
+_tri_w = SAZ_E['trimestres']['Caatinga']['chuvoso']
+_sig_w = [k.split('|') for k in SAZ_E['sig_chuvoso']]
+add_paras_after(_p_ua, BODY_TPL, [
+    "A baixa precisão da análise agregada não significa ausência de padrão. Como o canal hídrico só pode operar quando "
+    f"há chuva a ser modulada (seção 5.4.1), a comparação foi repetida dentro do trimestre mais chuvoso de cada bioma, "
+    f"que é {_tri(_tri_w)} nos três, e dentro do mais seco (Tabela A12). Restrita à estação chuvosa, a resposta à La "
+    f"Niña cresce ao longo do gradiente: {sgn(sz('MA', 'La Niña')['delta_chuvoso'])} pp na Mata Atlântica "
+    f"(IC 95% de {sgn(sz('MA', 'La Niña')['lo_chuvoso'])} a {sgn(sz('MA', 'La Niña')['hi_chuvoso'])} pp), "
+    f"{sgn(sz('CE', 'La Niña')['delta_chuvoso'])} pp no Cerrado "
+    f"({sgn(sz('CE', 'La Niña')['lo_chuvoso'])} a {sgn(sz('CE', 'La Niña')['hi_chuvoso'])} pp) e "
+    f"{sgn(sz('CA', 'La Niña')['delta_chuvoso'])} pp na Caatinga "
+    f"({sgn(sz('CA', 'La Niña')['lo_chuvoso'])} a {sgn(sz('CA', 'La Niña')['hi_chuvoso'])} pp), esta a maior do estudo. "
+    "A Mata Atlântica e a Caatinga resistem à correção de Benjamini-Hochberg nessa família de testes; o Cerrado não, "
+    f"apesar do valor-p bruto de {v(sz('CE', 'La Niña')['p_chuvoso'], 3)}. No trimestre seco nenhuma associação foi detectada, em nenhuma fase e em "
+    "nenhum bioma, e o El Niño não produziu associação detectável em nenhum dos dois recortes.",
+    "O contraste direto entre as duas estações, pareado por episódio, é conclusivo em apenas um bioma: na Mata "
+    f"Atlântica a resposta à La Niña é {sgn(sz('MA', 'La Niña')['contraste'])} pp maior na estação chuvosa do que na "
+    f"seca ({pj(sz('MA', 'La Niña')['contraste_p'])}). Na Caatinga o contraste é o maior em magnitude "
+    f"({sgn(sz('CA', 'La Niña')['contraste'])} pp), mas não se distingue de zero "
+    f"({pj(sz('CA', 'La Niña')['contraste_p'])}), porque a própria estimativa do trimestre seco é imprecisa; e no "
+    f"Cerrado é praticamente nulo ({sgn(sz('CE', 'La Niña')['contraste'])} pp; "
+    f"{pj(sz('CE', 'La Niña')['contraste_p'])}), isto é, as duas estações apresentam magnitude equivalente. O "
+    "confinamento sazonal da resposta é, portanto, um padrão observado nos três biomas, mas uma diferença estabelecida "
+    "apenas na Mata Atlântica.",
+    "A escala em que cada bioma integra a chuva completa o quadro e, ao contrário das correlações com o Índice Oceânico "
+    f"Niño, separa os três biomas com nitidez (Tabela A13). Enquanto a correlação com o ONI não ultrapassa "
+    f"{v(max(_oni_max(b) for b in ('MA', 'CE', 'CA')), 2).replace('-', '−')} em módulo em nenhuma defasagem, a correlação "
+    "entre a anomalia de PSN e a anomalia da chuva acumulada alcança valores entre "
+    f"{v(min(CHU[b]['rho_max'] for b in ('MA', 'CE', 'CA')), 2)} e {v(max(CHU[b]['rho_max'] for b in ('MA', 'CE', 'CA')), 2)}. "
+    f"A Caatinga é o único bioma que responde à chuva do próprio período (ρ = {v(CHU['CA']['rho_L1'], 2)}, contra "
+    f"{v(CHU['CE']['rho_L1'], 2)} no Cerrado e {sgn(CHU['MA']['rho_L1'], 2)} na Mata Atlântica), atinge a associação mais "
+    f"alta de todo o estudo na janela de {CHU['CA']['janela_max']} períodos (ρ = {v(CHU['CA']['rho_max'], 2)}) e retém "
+    f"{v(CHU['CA']['retencao_L12_pct'], 0)}% dela doze períodos depois. O Cerrado tem máximo em "
+    f"{CHU['CE']['janela_max']} períodos (ρ = {v(CHU['CE']['rho_max'], 2)}) e retém {v(CHU['CE']['retencao_L12_pct'], 0)}%, "
+    f"a curva mais achatada dos três; a Mata Atlântica, máximo em {CHU['MA']['janela_max']} períodos "
+    f"(ρ = {v(CHU['MA']['rho_max'], 2)}) e retenção de {v(CHU['MA']['retencao_L12_pct'], 0)}%. A produtividade destes "
+    "biomas associa-se, portanto, muito mais à água efetivamente acumulada do que ao índice oceânico que a modula, e a "
+    "janela de acumulação mais informativa difere por bioma: curta na Caatinga, longa e achatada no Cerrado."])
 set_text(ORIG[300],
     "A interpretação conjunta desses resultados sustenta um padrão de influência indireta, na qual o ENSO atua como "
     "forçante de larga escala que modula variáveis intermediárias, com canais distintos por bioma: a evapotranspiração "
@@ -1576,8 +1649,15 @@ set_text(ORIG[314],
     "distinguíveis de zero (o aquecimento da Mata Atlântica em El Niño, a redução da PSN desse bioma e fase e o "
     "aumento da PSN da Caatinga em La Niña, os dois últimos marginais), e o efeito mais forte sob o esquema "
     f"convencional, o ganho de {v(ua('CE', 'PSN', 'La Niña')['delta_pp'])} pp da PSN do Cerrado em La Niña, deixa de "
-    "sê-lo. A evidência disponível sobre o efeito do ENSO na produtividade destes biomas é, portanto, mais fraca do "
-    "que o procedimento convencional sugere, e deve ser apresentada como tal.")
+    "sê-lo; submetidos à correção para múltiplas comparações, nenhum dos três resiste na análise agregada. A evidência "
+    "sobre efeitos isolados do ENSO é, portanto, mais fraca do que o procedimento convencional sugere. O padrão, "
+    "contudo, não desaparece: restrita à estação chuvosa, quando o canal hídrico pode operar, a resposta à La Niña "
+    f"cresce ao longo do gradiente, de {sgn(sz('MA', 'La Niña')['delta_chuvoso'])} pp na Mata Atlântica a "
+    f"{sgn(sz('CA', 'La Niña')['delta_chuvoso'])} pp na Caatinga, e resiste à correção nesses dois biomas. E a "
+    "produtividade dos três associa-se muito mais à chuva acumulada, com correlações entre "
+    f"{v(min(CHU[b]['rho_max'] for b in ('MA','CE','CA')), 2)} e {v(max(CHU[b]['rho_max'] for b in ('MA','CE','CA')), 2)}, "
+    f"do que ao próprio Índice Oceânico Niño, cujo módulo não passa de {v(max(_oni_max(b) for b in ('MA','CE','CA')), 2)} "
+    "em qualquer defasagem, com janela de acumulação curta na Caatinga e longa e achatada no Cerrado.")
 set_text(ORIG[316], ORIG[316].text.replace(
     "sem efeito linear direto significativo sobre a PSN.",
     "transmitida pela evapotranspiração no Cerrado e na Caatinga e pela temperatura na Mata Atlântica, com respostas da "
@@ -1615,6 +1695,8 @@ def _r2g(b, g, e): return GT[(GT.bioma == nome[b]) & (GT.grau == g) & (GT.esquem
 def _mg(b, e): return RJ[b]['melhor_grau'][e]
 def _rk(b, e): return RJ[b]['rank_selecionado'][e]
 def _dif(b): return RJ[b]['dif']
+_DIF = pd.read_csv(os.path.join(ROB, 'diferenca_pareada.csv'))
+def _nb(b): return _DIF[_DIF.bioma == nome[b]].iloc[0]
 def _pi(b, e): return {r[0]: r for r in RJ[b]['perm'][e]}
 def _nul(b, i): return RJ[b]['nulos'][i]
 # --- 5.5 métodos: três parágrafos após os indicadores do Y-randomization (ORIG[220])
@@ -1626,7 +1708,12 @@ add_paras_after(ORIG[220], BODY_TPL, [
     "teste e a posição da combinação selecionada em cada esquema (Tabelas A7 e A8). A estabilidade da seleção foi ainda "
     "medida partição a partição no RepeatedKFold: a frequência com que cada combinação foi a melhor entre as 150 partições "
     "e a diferença pareada de R² de teste entre a primeira e a segunda combinações de cada bioma, com intervalo de confiança "
-    "de 95% por bootstrap das partições (5.000 reamostragens) e teste de Wilcoxon pareado.",
+    "de 95% por bootstrap das partições (5.000 reamostragens) e teste de Wilcoxon pareado. Como as 30 repetições do "
+    "RepeatedKFold reembaralham as mesmas observações, os conjuntos de treino de partições distintas se sobrepõem, e "
+    "tratar as 150 partições como independentes subestima a variância da diferença. Por isso a mesma diferença recebeu "
+    "também o intervalo do teste t corrigido de Nadeau e Bengio (2003), que substitui a variância 1/J por (1/J + n₂/n₁), "
+    "em que J é o número de partições e n₁ e n₂ são os tamanhos de treino e de teste; esse intervalo é reportado ao lado "
+    "do intervalo sem correção, para comparação.",
     "Importância por permutação fora da amostra. Como complemento ao índice baseado nos coeficientes (seção 6.2), cuja "
     "comparabilidade entre termos de ordens diferentes é limitada, calculou-se a importância por permutação (Breiman, 2001) "
     "de forma compatível com a dependência temporal: em cada bloco de teste do GroupKFold por ano e do TimeSeriesSplit, o "
@@ -1678,13 +1765,24 @@ set_text(ORIG[255],
     f"pareada de R² de teste em relação a {_dce['segunda']} foi de {v(_dce['dif_media_pp'], 2)} pp (IC 95% por bootstrap: "
     f"{v(_dce['ic95_inf'], 2)} a {v(_dce['ic95_sup'], 2)} pp; Wilcoxon, {pj(_dce['p_wilcoxon'])}), positiva em "
     f"{v(_dce['prop_particoes_primeira_maior'], 0)}% das partições; sob os esquemas temporais, EV + PRE + WAI ficou em "
-    f"{_ord(_rk('CE', 'GroupKFold'))} lugar no GroupKFold por ano e em {_ord(_rk('CE', 'TimeSeriesSplit'))} no TimeSeriesSplit. A preferência "
-    "pelo WAI é, portanto, estatisticamente consistente, mas de magnitude pequena, e aponta redundância da TST na presença do "
+    f"{_ord(_rk('CE', 'GroupKFold'))} lugar no GroupKFold por ano e em {_ord(_rk('CE', 'TimeSeriesSplit'))} no TimeSeriesSplit. "
+    "Essa consistência, porém, é medida sobre partições que se sobrepõem. Corrigida a dependência entre elas pelo "
+    f"procedimento de Nadeau e Bengio (2003), que faz o erro-padrão crescer {v(_nb('CE')['nb_fator_se'], 1)} vezes, o "
+    f"intervalo da diferença passa a {sgn(_nb('CE')['nb_ic_inf'], 2)} a {sgn(_nb('CE')['nb_ic_sup'], 2)} pp "
+    f"({pj(_nb('CE')['nb_p'])}): mantém o sinal, mas quase toca o zero. A preferência "
+    "pelo WAI é, portanto, de magnitude pequena e de precisão limitada, e aponta redundância da TST na presença do "
     "WAI, e não sua irrelevância ecológica. Para a Mata Atlântica e a Caatinga, as combinações selecionadas foram as melhores em "
     f"{v(RJ['MA']['freq_melhor'], 0)}% e {v(RJ['CA']['freq_melhor'], 0)}% das partições e ocuparam, respectivamente, a "
     f"{_ORDF[_rk('MA', 'GroupKFold')]} e a {_ORDF[_rk('CA', 'GroupKFold')]} posições no GroupKFold por ano e a "
     f"{_ORDF[_rk('MA', 'TimeSeriesSplit')]} e a {_ORDF[_rk('CA', 'TimeSeriesSplit')]} no TimeSeriesSplit (Tabela A8); na Caatinga, as três "
-    "melhores combinações distam menos de 0,3 ponto percentual entre si, e a escolha entre elas é a menos estável dos três biomas.")
+    "melhores combinações distam menos de 0,3 ponto percentual entre si, e a escolha entre elas é a menos estável dos "
+    "três biomas. Sob a mesma correção de Nadeau e Bengio, nenhuma dessas duas vantagens se distingue de zero: na Mata "
+    f"Atlântica o intervalo da diferença vai de {sgn(_nb('MA')['nb_ic_inf'], 2)} a {sgn(_nb('MA')['nb_ic_sup'], 2)} pp "
+    f"({pj(_nb('MA')['nb_p'])}) e na Caatinga, de {sgn(_nb('CA')['nb_ic_inf'], 2)} a {sgn(_nb('CA')['nb_ic_sup'], 2)} pp "
+    f"({pj(_nb('CA')['nb_p'])}). Em termos práticos, os três conjuntos selecionados são os de melhor desempenho médio e "
+    "reaparecem no topo sob os esquemas temporais, mas apenas no Cerrado a vantagem sobre a alternativa imediata "
+    "sobrevive, e por pouco, a uma correção que leve em conta a sobreposição entre as partições; a seleção de variáveis "
+    "em séries desta extensão é, portanto, mais incerta do que a validação cruzada repetida isoladamente sugere.")
 # --- 6.2 resultados: importância por permutação (após ORIG[257])
 def _frase_perm(b):
     pg = _pi(b, 'GroupKFold'); ordem = sorted(pg, key=lambda k: -pg[k][5])
@@ -1741,8 +1839,11 @@ set_text(ORIG[317], ORIG[317].text.rstrip() +
     " A análise do ENSO tem ainda uma limitação de desenho: com 24 anos de registro, cada fase dispõe de menos de dez "
     "episódios, e os testes mês a mês tratam observações do mesmo episódio como independentes; a Tabela A11 mostra que, "
     f"corrigida essa premissa, apenas {UA['sig_episodio']} dos {UA['n_testes']} contrastes permanecem distinguíveis de "
-    "zero, dois deles de forma marginal. O bootstrap em blocos com oito ou nove blocos é, por sua vez, impreciso, de "
-    "modo que os dois procedimentos delimitam o que a série permite afirmar, em vez de um substituir o outro. "
+    "zero, dois deles de forma marginal, e nenhum após a correção para múltiplas comparações. O bootstrap em blocos com "
+    "oito ou nove blocos é, por sua vez, impreciso, de modo que os dois procedimentos delimitam o que a série permite "
+    "afirmar, em vez de um substituir o outro; a estratificação sazonal é a exceção parcial, e pela razão correta, "
+    "porque restringir a análise à estação em que o canal hídrico pode operar aumenta a magnitude do efeito o bastante "
+    "para superar o alargamento dos intervalos. "
     "Três limitações de origem dos dados devem ainda ser explicitadas: (i) a PSN e a EV provêm de algoritmos MODIS que "
     "compartilham entradas (seção 6.3), de modo que parte da associação entre elas pode ser algorítmica; (ii) a temperatura da "
     "superfície (MOD11A2) não passou por filtro pela banda de qualidade QC_Day, e a sensibilidade da série de TST a esse filtro "
@@ -1793,7 +1894,8 @@ intro = new_para_after(h, BODY_TPL,
     "ambientais avaliadas por bioma; a Tabela A3, o efeito da remoção das componentes de sazonalidade; e a Tabela A4, "
     "a proporção da variância de cada variável climática explicada pelo ciclo anual; as Tabelas A7 a A10 reúnem a robustez "
     "da seleção sob validação temporal, a importância por permutação e os nulos que preservam a estrutura temporal (seção 5.5); "
-    "e a Tabela A11 compara os dois esquemas de unidade amostral nos compósitos do ENSO (seção 5.4.1).")
+    "a Tabela A11 compara os dois esquemas de unidade amostral nos compósitos do ENSO; a Tabela A12 traz a estratificação "
+    "sazonal da resposta; e a Tabela A13, a escala em que cada bioma integra a chuva (seção 5.4.1).")
 cap = new_para_after(intro, TABCAP_TPL, "Tabela A1 - Base de dados mensal dos três biomas (2001–2025).", bold=True)
 cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
 cols = ['ANO', 'MÊS', 'ONI', 'Enso']; hdr = ['Ano', 'Mês', 'ONI', 'Fase']; fmt = {'ANO': '{:.0f}', 'MÊS': '{:.0f}', 'ONI': '{:.2f}'}
@@ -1983,6 +2085,48 @@ for i, r in enumerate(A11.itertuples(), start=1):
                               f"{sgn(r.ep_ic_inf)} a {sgn(r.ep_ic_sup)}", pv3(r.ep_p)]):
         set_cell(t.rows[i].cells[j], sval, size=8, bold=(True if (j >= 6 and r.sig_episodio) or (4 <= j <= 5 and r.sig_mes) else None))
     _prev = r.bioma
+_left(t); mid = new_para_after(t.rows[-1].cells[0].paragraphs[0], BODY_TPL, ""); mid._p.getparent().remove(mid._p); t._tbl.addnext(mid._p)
+# Tabela A12 — estratificação sazonal
+cap = new_para_after(mid, TABCAP_TPL, "Tabela A12 - Estratificação sazonal da resposta da PSN: diferença entre a anomalia percentual média de cada "
+                     "fase ativa e a dos meses neutros, restrita ao trimestre climatologicamente mais chuvoso e ao mais seco de cada bioma, com "
+                     "intervalo de confiança de 95% e valor-p por bootstrap em blocos sobre episódios, e contraste direto entre os dois trimestres "
+                     "pareado por episódio. ‡ = sobrevive à correção de Benjamini-Hochberg na família dos seis testes de cada trimestre.", bold=True)
+cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
+t = table_after(cap, len(A12) + 1, 8); t.alignment = 1
+set_widths(t, [2.8, 1.9, 3.2, 1.8, 3.2, 1.8, 3.0, 1.8]); _left_pending = t
+for j, hname in enumerate(['Bioma', 'Fase', 'Chuvoso: Δ (IC 95%)', 'Chuvoso: p', 'Seco: Δ (IC 95%)', 'Seco: p', 'Contraste (IC 95%)', 'Contraste: p']):
+    set_cell(t.rows[0].cells[j], hname, bold=True, size=8)
+_prev = None
+for i, r in enumerate(A12.itertuples(), start=1):
+    _w = f"{sgn(r.delta_chuvoso)}{'‡' if r.bh_chuvoso else ''} ({sgn(r.lo_chuvoso)} a {sgn(r.hi_chuvoso)})"
+    _d = f"{sgn(r.delta_seco)}{'‡' if r.bh_seco else ''} ({sgn(r.lo_seco)} a {sgn(r.hi_seco)})"
+    _c = f"{sgn(r.contraste)} ({sgn(r.contraste_lo)} a {sgn(r.contraste_sup)})"
+    for j, sval in enumerate([r.bioma if r.bioma != _prev else '', r.fase, _w, pv3(r.p_chuvoso), _d, pv3(r.p_seco), _c, pv3(r.contraste_p)]):
+        set_cell(t.rows[i].cells[j], sval, size=8)
+    _prev = r.bioma
+_nt = new_para_after(t.rows[-1].cells[0].paragraphs[0], BODY_TPL, ""); _nt._p.getparent().remove(_nt._p); t._tbl.addnext(_nt._p)
+set_text(_nt, "Trimestre mais chuvoso: " + "; ".join(
+    f"{nome[b]} {_tri(SAZ_E['trimestres'][nome[b]]['chuvoso'])} ({v(SAZ_E['trimestres'][nome[b]]['mm_chuvoso'], 0)} mm de "
+    f"{v(SAZ_E['trimestres'][nome[b]]['mm_ano'], 0)} mm anuais)" for b in ('MA', 'CE', 'CA')) + ". Trimestre mais seco: " + "; ".join(
+    f"{nome[b]} {_tri(SAZ_E['trimestres'][nome[b]]['seco'])} ({v(SAZ_E['trimestres'][nome[b]]['mm_seco'], 0)} mm)" for b in ('MA', 'CE', 'CA')) + ".")
+for _r in _nt.runs: _r.font.size = Pt(9)
+_nt.paragraph_format.first_line_indent = Cm(0); _nt.paragraph_format.left_indent = Cm(0); _nt.paragraph_format.line_spacing = 1.0
+_left(t); mid = new_para_after(_nt, BODY_TPL, ""); mid._p.getparent().remove(mid._p); _nt._p.addnext(mid._p)
+# Tabela A13 — chuva acumulada
+cap = new_para_after(mid, TABCAP_TPL, "Tabela A13 - Escala de integração hídrica: correlação de Spearman entre a anomalia de PSN e a anomalia da "
+                     "chuva acumulada nos períodos terminados no mesmo mês, por janela de acumulação (1 a 12 períodos). Em negrito, a janela de "
+                     "maior associação em cada bioma.", bold=True)
+cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
+_piv = A13.pivot_table(index='janela', columns='bioma', values='rho')[[nome[b] for b in ('MA', 'CE', 'CA')]]
+t = table_after(cap, len(_piv) + 1, 4); t.alignment = 1
+set_widths(t, [3.0, 4.0, 4.0, 4.0]); _left_pending = t
+for j, hname in enumerate(['Janela (períodos)'] + [nome[b] for b in ('MA', 'CE', 'CA')]):
+    set_cell(t.rows[0].cells[j], hname, bold=True, size=9)
+_jmax = {nome[b]: CHU[b]['janela_max'] for b in ('MA', 'CE', 'CA')}
+for i, (jan, row) in enumerate(_piv.iterrows(), start=1):
+    set_cell(t.rows[i].cells[0], str(int(jan)), size=9)
+    for j, b in enumerate(('MA', 'CE', 'CA'), start=1):
+        set_cell(t.rows[i].cells[j], sgn(row[nome[b]], 2), size=9, bold=(True if _jmax[nome[b]] == jan else None))
 _left(t); fim = new_para_after(t.rows[-1].cells[0].paragraphs[0], BODY_TPL, ""); fim._p.getparent().remove(fim._p); t._tbl.addnext(fim._p)
 sect_break(fim, landscape=True)
 
@@ -2064,6 +2208,8 @@ _ib = add_ref_after(_ib, "INSTITUTO BRASILEIRO DE GEOGRAFIA E ESTATÍSTICA (IBGE
 add_ref_after(_ib, "KÜNSCH, H. R. The jackknife and the bootstrap for general stationary observations. The Annals of Statistics, "
               "v. 17, n. 3, p. 1217-1241, 1989. DOI: 10.1214/aos/1176347265.")
 remove_para(ORIG[349])   # INPE (Monitoramento do El Niño e La Niña) não é citado no texto; as fases ENSO vêm do ONI/NOAA
+add_ref_after(ORIG[356], "NADEAU, C.; BENGIO, Y. Inference for the generalization error. Machine Learning, v. 52, n. 3, p. 239-281, "
+              "2003. DOI: 10.1023/A:1024068626366.")
 _nasa = add_ref_after(ORIG[356], "NATIONAL AERONAUTICS AND SPACE ADMINISTRATION (NASA). IMERG V08 transition schedule. Greenbelt: NASA Global "
               "Precipitation Measurement, 2026. Disponível em: https://gpm.nasa.gov/data/news/imerg-v08-transition-schedule. Acesso em: 17 set. 2026.")
 add_ref_after(_nasa, ORIG[359].text.strip())   # NOAA (ONI) reposicionada em ordem alfabética
@@ -2113,7 +2259,9 @@ TABS = ["Variáveis para predição da Fotossíntese Líquida (PSN)",
         "Combinações de variáveis sob validação temporal e estabilidade da seleção [A8]",
         "Importância por permutação fora da amostra por bloco temporal [A9]",
         "Nulos que preservam a estrutura temporal da PSN [A10]",
-        "Unidade amostral nos compósitos do ENSO: mês e episódio [A11]"]
+        "Unidade amostral nos compósitos do ENSO: mês e episódio [A11]",
+        "Estratificação sazonal da resposta da PSN às fases do ENSO [A12]",
+        "Escala de integração hídrica: correlação com a chuva acumulada [A13]"]
 PAGES = json.load(open(os.path.join(BASE, 'banca', 'paginas.json'))) if os.path.exists(os.path.join(BASE, 'banca', 'paginas.json')) else {}
 
 def rebuild_list(tbl, prefix, items):

@@ -13,7 +13,13 @@ pela orientação e feitas originalmente em npp_modis/modelo/analise_enso_sazona
   2b. Unidade amostral: a mesma diferença (anomalia média da fase ativa menos a dos meses
      neutros) com intervalo de confiança de 95% por bootstrap de 10.000 reamostragens em dois
      esquemas — mês como unidade (i.i.d.) e episódio como unidade (blocos, sorteando sequências
-     contíguas inteiras de meses na mesma fase). Tabela A11.
+     contíguas inteiras de meses na mesma fase), com correção de Benjamini-Hochberg sobre os
+     valores-p do esquema por episódio. Tabela A11.
+  2c. Estratificação sazonal: a mesma diferença restrita ao trimestre climatologicamente mais
+     chuvoso e ao mais seco de cada bioma, com o episódio como unidade e contraste direto entre
+     os dois trimestres pareado por episódio. Tabela A12.
+  2d. Escala de integração hídrica: correlação de Spearman entre a anomalia de PSN e a anomalia
+     da chuva acumulada em janelas de 1 a 12 períodos. Tabela A13.
   3. Mediação: quanto da resposta da PSN o modelo reproduz via cada preditor.
   4. Defasagem: Spearman ONI(t) x anomalia PSN(t+L) e compósitos por fase (Figura 14).
   5. Valores exatos dos boxplots brutos por fase (Tabela A5).
@@ -165,6 +171,104 @@ print(f"sequências contíguas: {J['episodios']['total_sequencias']} " +
       "; ".join(f"{f}: {J['episodios'][f]['n_meses']} meses em {J['episodios'][f]['n_sequencias']} sequências" for f in FASES))
 print(f"significativos: {_sm}/30 com o mês como unidade, {_se}/30 com o episódio como unidade")
 print(A11[['bioma', 'variavel', 'fase', 'delta_pp', 'mes_ic_inf', 'mes_ic_sup', 'mes_p', 'ep_ic_inf', 'ep_ic_sup', 'ep_p', 'razao_largura']].round(3).to_string(index=False))
+
+# correção de Benjamini-Hochberg sobre os valores-p do esquema por episódio (família dos 30 testes)
+A11['bh_ep'] = bh(A11.ep_p.values)
+_ord = np.argsort(A11.ep_p.values); _n = len(A11)
+_q = np.minimum.accumulate((A11.ep_p.values[_ord] * _n / np.arange(1, _n + 1))[::-1])[::-1]
+A11['q_ep'] = np.empty(_n); A11.loc[A11.index[_ord], 'q_ep'] = _q
+A11.round(4).to_csv(os.path.join(OUT, 'tabelaA11_unidade_amostral.csv'), index=False)
+J['unidade_amostral']['sig_episodio_bh'] = int(A11.bh_ep.sum())
+J['unidade_amostral']['q_ep_min'] = float(A11.q_ep.min())
+J['unidade_amostral']['q_resistem'] = {f"{r.bioma}|{r.variavel}|{r.fase}": float(r.q_ep) for r in A11[A11.sig_episodio].itertuples()}
+for _r in J['unidade_amostral']['resistem']:
+    _r['q_ep'] = float(A11[(A11.bioma == _r['bioma']) & (A11.variavel == _r['variavel']) & (A11.fase == _r['fase'])].q_ep.iloc[0])
+print(f"após Benjamini-Hochberg sobre os p por episódio: {int(A11.bh_ep.sum())}/30 significativos "
+      f"(menor q = {A11.q_ep.min():.3f})")
+
+# ------------------------------------------------------------------ Tabela A12: estratificação sazonal
+# O canal hídrico só pode operar quando há chuva a ser modulada. A mesma diferença entre fases foi
+# recalculada dentro do trimestre civil climatologicamente mais chuvoso e do mais seco de cada bioma,
+# com o episódio como unidade; o contraste entre os dois trimestres é pareado, reamostrando os mesmos
+# episódios simultaneamente nos dois recortes.
+def _trimestres(b):
+    clim = d.groupby('MÊS')[f'PRE_{b}'].mean()
+    soma = {m: sum(clim[((m - 1 + k) % 12) + 1] for k in range(3)) for m in range(1, 13)}
+    ini_w, ini_s = max(soma, key=soma.get), min(soma, key=soma.get)
+    tri = lambda m: [((m - 1 + k) % 12) + 1 for k in range(3)]
+    return tri(ini_w), tri(ini_s), soma[ini_w], soma[ini_s], float(clim.sum())
+
+a12 = []
+for b in ['MA', 'CE', 'CA']:
+    wet, dry, mm_w, mm_s, mm_ano = _trimestres(b)
+    _, ap_s = anom(f'NP_{b}'); ap = ap_s.values
+    for f in ATIVAS:
+        est = {}
+        for rot, meses in (('chuvoso', wet), ('seco', dry)):
+            sel = d['MÊS'].isin(meses).values
+            bl_a = [ap[i[np.isin(i, np.where(sel)[0])]] for i in _eps[f]]
+            bl_n = [ap[i[np.isin(i, np.where(sel)[0])]] for i in _eps['Neutro']]
+            bl_a = [x for x in bl_a if len(x)]; bl_n = [x for x in bl_n if len(x)]
+            delta = np.concatenate(bl_a).mean() - np.concatenate(bl_n).mean()
+            lo, hi, p, _ = _ic_boot(None, None, bl_a, bl_n)
+            est[rot] = dict(delta=delta, lo=lo, hi=hi, p=p, n_meses=int(sum(len(x) for x in bl_a)), n_ep=len(bl_a))
+        # contraste pareado entre trimestres: mesmos episódios reamostrados nos dois recortes
+        selw, seld = d['MÊS'].isin(wet).values, d['MÊS'].isin(dry).values
+        A_w = [ap[i[np.isin(i, np.where(selw)[0])]] for i in _eps[f]]; A_d = [ap[i[np.isin(i, np.where(seld)[0])]] for i in _eps[f]]
+        N_w = [ap[i[np.isin(i, np.where(selw)[0])]] for i in _eps['Neutro']]; N_d = [ap[i[np.isin(i, np.where(seld)[0])]] for i in _eps['Neutro']]
+        # o mesmo sorteio de episódios vale para os dois trimestres (contraste pareado por episódio);
+        # cada episódio contribui com os meses que possui em cada recorte, e as reamostragens em que
+        # algum dos quatro grupos fica vazio são descartadas
+        rng = np.random.default_rng(42); difs = np.full(N_BOOT, np.nan)
+        for k in range(N_BOOT):
+            ia = rng.integers(0, len(A_w), len(A_w)); inn = rng.integers(0, len(N_w), len(N_w))
+            gr = [[A_w[j] for j in ia if len(A_w[j])], [A_d[j] for j in ia if len(A_d[j])],
+                  [N_w[j] for j in inn if len(N_w[j])], [N_d[j] for j in inn if len(N_d[j])]]
+            if any(len(g) == 0 for g in gr): continue
+            aw, ad, nw, nd = (np.concatenate(g) for g in gr)
+            difs[k] = (aw.mean() - nw.mean()) - (ad.mean() - nd.mean())
+        difs = difs[~np.isnan(difs)]
+        p_c = min(1.0, 2 * min((difs <= 0).mean(), (difs >= 0).mean()))
+        a12.append(dict(bioma=NOME[b], fase=f, tri_chuvoso='-'.join(str(m) for m in wet), mm_chuvoso=mm_w,
+                        tri_seco='-'.join(str(m) for m in dry), mm_seco=mm_s, mm_ano=mm_ano,
+                        **{f'{k2}_{r2_}': est[r2_][k2] for r2_ in ('chuvoso', 'seco') for k2 in ('delta', 'lo', 'hi', 'p', 'n_meses', 'n_ep')},
+                        n_boot_validos=len(difs), contraste=est['chuvoso']['delta'] - est['seco']['delta'],
+                        contraste_lo=np.percentile(difs, 2.5), contraste_sup=np.percentile(difs, 97.5), contraste_p=p_c))
+A12 = pd.DataFrame(a12)
+A12['bh_chuvoso'] = bh(A12.p_chuvoso.values); A12['bh_seco'] = bh(A12.p_seco.values)
+A12.round(4).to_csv(os.path.join(OUT, 'tabelaA12_estratificacao_sazonal.csv'), index=False)
+J['sazonal'] = dict(
+    trimestres={NOME[b]: dict(zip(('chuvoso', 'seco', 'mm_chuvoso', 'mm_seco', 'mm_ano'), _trimestres(b))) for b in ['MA', 'CE', 'CA']},
+    tabela={f"{r.bioma}|{r.fase}": {k: (float(v) if not isinstance(v, (str, bool, np.bool_)) else (bool(v) if isinstance(v, np.bool_) else v))
+            for k, v in r._asdict().items() if k not in ('Index', 'bioma', 'fase')} for r in A12.itertuples()},
+    sig_chuvoso=[f"{r.bioma}|{r.fase}" for r in A12[A12.bh_chuvoso].itertuples()],
+    sig_seco=[f"{r.bioma}|{r.fase}" for r in A12[A12.bh_seco].itertuples()])
+print("\n===== ESTRATIFICAÇÃO SAZONAL (Tabela A12) =====")
+print(A12[['bioma', 'fase', 'tri_chuvoso', 'delta_chuvoso', 'p_chuvoso', 'bh_chuvoso', 'delta_seco', 'p_seco', 'contraste', 'contraste_p']].round(3).to_string(index=False))
+
+# ------------------------------------------------------------------ Tabela A13: escala de integração hídrica
+# Quanto tempo de chuva a produtividade de cada bioma integra: correlação entre a anomalia de PSN e a
+# anomalia da chuva acumulada nos L períodos terminados no próprio período, para L de 1 a 12.
+a13 = []
+for b in ['MA', 'CE', 'CA']:
+    _, ap_s = anom(f'NP_{b}'); psn = ap_s.values; pre = d[f'PRE_{b}'].values
+    for L in range(1, 13):
+        acc = pd.Series(pre).rolling(L).sum()
+        clim = acc.groupby(d['MÊS'].values).transform('mean')
+        a_acc = 100 * (acc - clim) / clim; ok = ~a_acc.isna()
+        rho = stats.spearmanr(a_acc[ok], psn[ok.values])
+        a13.append(dict(bioma=NOME[b], janela=L, rho=rho.statistic, p=rho.pvalue, n=int(ok.sum())))
+A13 = pd.DataFrame(a13)
+A13.round(4).to_csv(os.path.join(OUT, 'tabelaA13_chuva_acumulada.csv'), index=False)
+J['chuva_acumulada'] = {}
+for b in ['MA', 'CE', 'CA']:
+    sub = A13[A13.bioma == NOME[b]]; imax = sub.rho.idxmax()
+    J['chuva_acumulada'][b] = dict(rho_L1=float(sub[sub.janela == 1].rho.iloc[0]), janela_max=int(sub.loc[imax, 'janela']),
+                                   rho_max=float(sub.loc[imax, 'rho']), rho_L12=float(sub[sub.janela == 12].rho.iloc[0]),
+                                   retencao_L12_pct=float(100 * sub[sub.janela == 12].rho.iloc[0] / sub.loc[imax, 'rho']),
+                                   curva=[float(x) for x in sub.sort_values('janela').rho.values])
+print("\n===== CHUVA ACUMULADA (Tabela A13) =====")
+print(A13.pivot_table(index='janela', columns='bioma', values='rho').round(3).to_string())
 
 # ------------------------------------------------------------------ modelo (mesmo da Figura 9) e mediação
 def ajuste_completo(b, cols):

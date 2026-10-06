@@ -1031,7 +1031,8 @@
     "ep_largura": 9.182047746882548,
     "razao_largura": 1.4250604932980269,
     "sig_mes": 1.0,
-    "sig_episodio": 1.0
+    "sig_episodio": 1.0,
+    "q_ep": 0.44999999999999996
    },
    {
     "bioma": "Mata Atlântica",
@@ -1048,7 +1049,8 @@
     "ep_largura": 4.451913798433978,
     "razao_largura": 1.6704048580466286,
     "sig_mes": 1.0,
-    "sig_episodio": 1.0
+    "sig_episodio": 1.0,
+    "q_ep": 0.174
    },
    {
     "bioma": "Caatinga",
@@ -1065,7 +1067,8 @@
     "ep_largura": 16.51681827993595,
     "razao_largura": 1.383037153409693,
     "sig_mes": 1.0,
-    "sig_episodio": 1.0
+    "sig_episodio": 1.0,
+    "q_ep": 0.44999999999999996
    }
   ],
   "perdidos": [
@@ -1610,6 +1613,290 @@
     "sig_mes": true,
     "sig_episodio": false
    }
+  },
+  "sig_episodio_bh": 0,
+  "q_ep_min": 0.174,
+  "q_resistem": {
+   "Mata Atlântica|PSN|El Niño": 0.44999999999999996,
+   "Mata Atlântica|TST|El Niño": 0.174,
+   "Caatinga|PSN|La Niña": 0.44999999999999996
+  }
+ },
+ "sazonal": {
+  "trimestres": {
+   "Mata Atlântica": {
+    "chuvoso": [
+     11,
+     12,
+     1
+    ],
+    "seco": [
+     8,
+     9,
+     10
+    ],
+    "mm_chuvoso": 346.1230781666667,
+    "mm_seco": 177.014765,
+    "mm_ano": 1068.1394031666669
+   },
+   "Cerrado": {
+    "chuvoso": [
+     11,
+     12,
+     1
+    ],
+    "seco": [
+     6,
+     7,
+     8
+    ],
+    "mm_chuvoso": 544.4727825,
+    "mm_seco": 6.200652,
+    "mm_ano": 1048.5705858333333
+   },
+   "Caatinga": {
+    "chuvoso": [
+     11,
+     12,
+     1
+    ],
+    "seco": [
+     7,
+     8,
+     9
+    ],
+    "mm_chuvoso": 301.206316,
+    "mm_seco": 51.080156,
+    "mm_ano": 693.8712681666666
+   }
+  },
+  "tabela": {
+   "Mata Atlântica|El Niño": {
+    "tri_chuvoso": "11-12-1",
+    "mm_chuvoso": 346.1230781666667,
+    "tri_seco": "8-9-10",
+    "mm_seco": 177.014765,
+    "mm_ano": 1068.1394031666669,
+    "delta_chuvoso": -3.129601413742167,
+    "lo_chuvoso": -11.481538677748825,
+    "hi_chuvoso": 7.114739133167246,
+    "p_chuvoso": 0.5508,
+    "n_meses_chuvoso": 27.0,
+    "n_ep_chuvoso": 8.0,
+    "delta_seco": -0.40278937140856774,
+    "lo_seco": -5.360634235682398,
+    "hi_seco": 4.001891549992162,
+    "p_seco": 0.8478,
+    "n_meses_seco": 21.0,
+    "n_ep_seco": 8.0,
+    "n_boot_validos": 9968.0,
+    "contraste": -2.726812042333599,
+    "contraste_lo": -10.199532156474863,
+    "contraste_sup": 7.837540848524681,
+    "contraste_p": 0.5872792937399679,
+    "bh_chuvoso": false,
+    "bh_seco": false
+   },
+   "Mata Atlântica|La Niña": {
+    "tri_chuvoso": "11-12-1",
+    "mm_chuvoso": 346.1230781666667,
+    "tri_seco": "8-9-10",
+    "mm_seco": 177.014765,
+    "mm_ano": 1068.1394031666669,
+    "delta_chuvoso": 7.422927508119496,
+    "lo_chuvoso": 1.4568617756401476,
+    "hi_chuvoso": 15.370974856177583,
+    "p_chuvoso": 0.0106,
+    "n_meses_chuvoso": 28.0,
+    "n_ep_chuvoso": 9.0,
+    "delta_seco": -3.426885499420399,
+    "lo_seco": -7.187388987366434,
+    "hi_seco": 0.26190483754058674,
+    "p_seco": 0.0828,
+    "n_meses_seco": 16.0,
+    "n_ep_seco": 5.0,
+    "n_boot_validos": 9964.0,
+    "contraste": 10.849813007539895,
+    "contraste_lo": 3.2912365173961655,
+    "contraste_sup": 20.13104983901564,
+    "contraste_p": 0.003010839020473705,
+    "bh_chuvoso": true,
+    "bh_seco": false
+   },
+   "Cerrado|El Niño": {
+    "tri_chuvoso": "11-12-1",
+    "mm_chuvoso": 544.4727825,
+    "tri_seco": "6-7-8",
+    "mm_seco": 6.200652,
+    "mm_ano": 1048.5705858333333,
+    "delta_chuvoso": -2.89847331170366,
+    "lo_chuvoso": -19.12782380163223,
+    "hi_chuvoso": 14.924595202473796,
+    "p_chuvoso": 0.754,
+    "n_meses_chuvoso": 27.0,
+    "n_ep_chuvoso": 8.0,
+    "delta_seco": 7.560771566290478,
+    "lo_seco": -19.36847209969909,
+    "hi_seco": 31.70826291325232,
+    "p_seco": 0.5606,
+    "n_meses_seco": 12.0,
+    "n_ep_seco": 6.0,
+    "n_boot_validos": 9967.0,
+    "contraste": -10.459244877994138,
+    "contraste_lo": -28.568078430967045,
+    "contraste_sup": 16.08548148081142,
+    "contraste_p": 0.3682151098625464,
+    "bh_chuvoso": false,
+    "bh_seco": false
+   },
+   "Cerrado|La Niña": {
+    "tri_chuvoso": "11-12-1",
+    "mm_chuvoso": 544.4727825,
+    "tri_seco": "6-7-8",
+    "mm_seco": 6.200652,
+    "mm_ano": 1048.5705858333333,
+    "delta_chuvoso": 11.881055485951551,
+    "lo_chuvoso": 0.2326479292140397,
+    "hi_chuvoso": 23.680484686532033,
+    "p_chuvoso": 0.046,
+    "n_meses_chuvoso": 28.0,
+    "n_ep_chuvoso": 9.0,
+    "delta_seco": 12.48580265009219,
+    "lo_seco": -2.8646975063294224,
+    "hi_seco": 27.873668994829657,
+    "p_seco": 0.1138,
+    "n_meses_seco": 9.0,
+    "n_ep_seco": 4.0,
+    "n_boot_validos": 9920.0,
+    "contraste": -0.6047471641406386,
+    "contraste_lo": -18.569648237812313,
+    "contraste_sup": 20.457686727852128,
+    "contraste_p": 0.9298387096774193,
+    "bh_chuvoso": false,
+    "bh_seco": false
+   },
+   "Caatinga|El Niño": {
+    "tri_chuvoso": "11-12-1",
+    "mm_chuvoso": 301.206316,
+    "tri_seco": "7-8-9",
+    "mm_seco": 51.080156,
+    "mm_ano": 693.8712681666666,
+    "delta_chuvoso": -2.473174149470358,
+    "lo_chuvoso": -18.674033917689908,
+    "hi_chuvoso": 16.28624133704676,
+    "p_chuvoso": 0.816,
+    "n_meses_chuvoso": 27.0,
+    "n_ep_chuvoso": 8.0,
+    "delta_seco": -1.2434145575299174,
+    "lo_seco": -13.54010853249961,
+    "hi_seco": 11.502656648347939,
+    "p_seco": 0.8214,
+    "n_meses_seco": 16.0,
+    "n_ep_seco": 7.0,
+    "n_boot_validos": 9968.0,
+    "contraste": -1.2297595919404407,
+    "contraste_lo": -16.669806917486564,
+    "contraste_sup": 20.787939207427165,
+    "contraste_p": 0.9071027287319422,
+    "bh_chuvoso": false,
+    "bh_seco": false
+   },
+   "Caatinga|La Niña": {
+    "tri_chuvoso": "11-12-1",
+    "mm_chuvoso": 301.206316,
+    "tri_seco": "7-8-9",
+    "mm_seco": 51.080156,
+    "mm_ano": 693.8712681666666,
+    "delta_chuvoso": 24.996326029526013,
+    "lo_chuvoso": 8.049884844189151,
+    "hi_chuvoso": 43.08558206350083,
+    "p_chuvoso": 0.0004,
+    "n_meses_chuvoso": 28.0,
+    "n_ep_chuvoso": 9.0,
+    "delta_seco": 4.472818337752623,
+    "lo_seco": -5.726081679649257,
+    "hi_seco": 15.994856993034219,
+    "p_seco": 0.3932,
+    "n_meses_seco": 12.0,
+    "n_ep_seco": 5.0,
+    "n_boot_validos": 9964.0,
+    "contraste": 20.52350769177339,
+    "contraste_lo": -5.4703632942040725,
+    "contraste_sup": 47.97561122831144,
+    "contraste_p": 0.14130871136089923,
+    "bh_chuvoso": true,
+    "bh_seco": false
+   }
+  },
+  "sig_chuvoso": [
+   "Mata Atlântica|La Niña",
+   "Caatinga|La Niña"
+  ],
+  "sig_seco": []
+ },
+ "chuva_acumulada": {
+  "MA": {
+   "rho_L1": -0.02986650469871947,
+   "janela_max": 5,
+   "rho_max": 0.4789621023967117,
+   "rho_L12": 0.34397053524139526,
+   "retencao_L12_pct": 71.81581455404867,
+   "curva": [
+    -0.02986650469871947,
+    0.3068740543316814,
+    0.4211200650667964,
+    0.46361297801934453,
+    0.4789621023967117,
+    0.45453559566459883,
+    0.4502617495093719,
+    0.42673966765769894,
+    0.3933634610030625,
+    0.3721838089611742,
+    0.36830953599246286,
+    0.34397053524139526
+   ]
+  },
+  "CE": {
+   "rho_L1": 0.0822014815303406,
+   "janela_max": 5,
+   "rho_max": 0.5568063309292113,
+   "rho_L12": 0.49100963221630745,
+   "retencao_L12_pct": 88.1831985273765,
+   "curva": [
+    0.0822014815303406,
+    0.28136379831295083,
+    0.3827914216534072,
+    0.4869359185798459,
+    0.5568063309292113,
+    0.5468154215506285,
+    0.5401492093947378,
+    0.4983985622855821,
+    0.4388264129181084,
+    0.47028129759794884,
+    0.5062259894576968,
+    0.49100963221630745
+   ]
+  },
+  "CA": {
+   "rho_L1": 0.31114885477301585,
+   "janela_max": 4,
+   "rho_max": 0.6677914157506585,
+   "rho_L12": 0.4635095328291734,
+   "retencao_L12_pct": 69.40932780756793,
+   "curva": [
+    0.31114885477301585,
+    0.6229750551784449,
+    0.6634714444641806,
+    0.6677914157506585,
+    0.6383216244092663,
+    0.598269753264637,
+    0.5830303532035707,
+    0.5636187399825575,
+    0.5167591377321721,
+    0.5089815696723453,
+    0.5022315083290693,
+    0.4635095328291734
+   ]
   }
  },
  "mediacao": {

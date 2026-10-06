@@ -301,3 +301,46 @@ Só duas exceções ao grau 2: grau 3 na Mata Atlântica sob GroupKFold (+0,8 pp
 | Caatinga | Deslocamento circular (todos os 296) | 296 | 94.162 | 23.915 | 8.879 | 72.523 | 0.003 |
 | Caatinga | Deslocamento circular múltiplo de 12 meses (calendário preservado) | 24 | 94.162 | 22.464 | 7.45 | 36.472 | 0.04 |
 | Caatinga | Permutação de anos inteiros (calendário preservado) | 100 | 94.162 | 40.205 | 2.323 | 44.739 | 0.01 |
+
+## 13. Alinhamento com os artigos derivados (06/10/2026)
+
+**Teste t corrigido de Nadeau e Bengio (2003)** sobre a diferença pareada entre a 1ª e a 2ª combinações
+(o erro-padrão cresce 6,2 vezes; J = 150, n1 = 238, n2 = 59):
+
+| bioma | primeira | segunda | dif_media_pp | ic95_inf | ic95_sup | nb_ic_inf | nb_ic_sup | nb_p |
+|---|---|---|---|---|---|---|---|---|
+| Mata Atlântica | EV + TST + WAI | EV + PRE + TST | 2.688 | 2.099 | 3.296 | -1.092 | 6.469 | 0.162 |
+| Cerrado | EV + PRE + WAI | EV + PRE + TST | 0.39 | 0.334 | 0.448 | 0.028 | 0.753 | 0.035 |
+| Caatinga | EV + PRE + TST | EV + PRE + WAI | 0.149 | 0.053 | 0.244 | -0.437 | 0.734 | 0.617 |
+
+**Benjamini-Hochberg sobre os valores-p do esquema por episódio** (família dos 30 contrastes):
+3 excluíam o zero, 0 resistem; menor valor corrigido = 0.174.
+
+**Estratificação sazonal (Tabela A12)** — trimestre mais chuvoso = novembro a janeiro nos três biomas:
+
+| bioma | fase | delta_chuvoso | p_chuvoso | bh_chuvoso | delta_seco | p_seco | contraste | contraste_p |
+|---|---|---|---|---|---|---|---|---|
+| Mata Atlântica | El Niño | -3.13 | 0.551 | False | -0.403 | 0.848 | -2.727 | 0.587 |
+| Mata Atlântica | La Niña | 7.423 | 0.011 | True | -3.427 | 0.083 | 10.85 | 0.003 |
+| Cerrado | El Niño | -2.898 | 0.754 | False | 7.561 | 0.561 | -10.459 | 0.368 |
+| Cerrado | La Niña | 11.881 | 0.046 | False | 12.486 | 0.114 | -0.605 | 0.93 |
+| Caatinga | El Niño | -2.473 | 0.816 | False | -1.243 | 0.821 | -1.23 | 0.907 |
+| Caatinga | La Niña | 24.996 | 0.0 | True | 4.473 | 0.393 | 20.524 | 0.141 |
+
+**Escala de integração hídrica (Tabela A13)** — ρ de Spearman entre a anomalia de PSN e a anomalia da
+chuva acumulada, por janela:
+
+| janela | Caatinga | Cerrado | Mata Atlântica |
+|---|---|---|---|
+| 1 | 0.311 | 0.082 | -0.03 |
+| 2 | 0.623 | 0.281 | 0.307 |
+| 3 | 0.664 | 0.383 | 0.421 |
+| 4 | 0.668 | 0.487 | 0.464 |
+| 5 | 0.638 | 0.557 | 0.479 |
+| 6 | 0.598 | 0.547 | 0.454 |
+| 7 | 0.583 | 0.54 | 0.45 |
+| 8 | 0.564 | 0.498 | 0.427 |
+| 9 | 0.517 | 0.439 | 0.393 |
+| 10 | 0.509 | 0.47 | 0.372 |
+| 11 | 0.502 | 0.506 | 0.368 |
+| 12 | 0.464 | 0.491 | 0.344 |

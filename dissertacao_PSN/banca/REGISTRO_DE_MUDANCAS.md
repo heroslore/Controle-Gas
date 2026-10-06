@@ -349,3 +349,32 @@ Novo script `Robustez_Selecao_PSN.py` (saídas em `resultados_2001_2025/robustez
   pelo `coletar_resultados.py` para `resultados_2001_2025/robustez/`.
 - `Robustez_Selecao_PSN.py` virou um atalho que chama a mesma função sem refazer o modelo.
 - Rodada de conferência do modelo com o bloco embutido reproduziu os oito arquivos de robustez da versão 13.
+
+## 14. Versão 15 (06/10/2026): alinhamento com os dois artigos derivados
+
+Três análises novas, rodadas sobre a mesma base e com a mesma semente, que a versão anterior não tinha e
+que os artigos submetidos passaram a reportar. Duas delas qualificam afirmações do texto anterior.
+
+- **Teste t corrigido de Nadeau e Bengio (2003)** sobre a diferença pareada entre a primeira e a segunda
+  combinações de variáveis (`Modelo_PSN.py`, bloco de robustez). As 150 partições do RepeatedKFold
+  reembaralham as mesmas observações, de modo que tratar as diferenças como independentes subestima a
+  variância; corrigido, o erro-padrão cresce 6,2 vezes. Consequência direta no texto: a vantagem de 2,7 pp
+  do conjunto da Mata Atlântica, que a seção 6.2 afirmava sem ressalva, passa a −1,09 a +6,47 pp (p = 0,162)
+  e não se distingue de zero; na Caatinga, −0,44 a +0,73 pp (p = 0,617); só o Cerrado resiste, por pouco
+  (+0,03 a +0,75 pp; p = 0,035). A seção 6.2 passa a dizer que a seleção de variáveis em séries desta
+  extensão é mais incerta do que a validação cruzada repetida isoladamente sugere.
+- **Correção de Benjamini-Hochberg sobre os valores-p do esquema por episódio** (Tabela A11). Dos três
+  contrastes que excluíam o zero, nenhum resiste na família dos 30: o menor valor corrigido é 0,174.
+  Resumo, abstract, seção 6.5, limitações e conclusões passam a registrar isso.
+- **Estratificação sazonal (Tabela A12) e escala de integração hídrica (Tabela A13)**, em
+  `Analise_ENSO_Anomalias_PSN.py`. Restrita ao trimestre mais chuvoso, que é novembro a janeiro nos três
+  biomas, a resposta à La Niña cresce ao longo do gradiente (+7,4 pp na Mata Atlântica, +11,9 no Cerrado e
+  +25,0 na Caatinga) e resiste à correção na Mata Atlântica e na Caatinga; no trimestre seco não há
+  associação em nenhum bioma. O contraste entre estações, pareado por episódio, só é conclusivo na Mata
+  Atlântica (+10,8 pp; p = 0,003); no Cerrado é nulo (−0,6 pp), isto é, as duas estações têm magnitude
+  equivalente. A correlação da PSN com a chuva acumulada (0,48 a 0,67) é muito maior que a correlação com o
+  Índice Oceânico Niño (|ρ| ≤ 0,19), com janela de acumulação curta na Caatinga (4 períodos) e longa e
+  achatada no Cerrado (5 períodos, retendo 88% doze períodos depois).
+- Referência nova: Nadeau e Bengio (2003). Os números foram conferidos contra os dois artigos derivados e
+  coincidem, incluindo os doze valores da estratificação sazonal e os intervalos corrigidos.
+- 96 páginas; sumário, listas e paginação conferidos; validação XSD aprovada.
